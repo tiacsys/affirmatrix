@@ -92,6 +92,18 @@ def test_content_is_hashed_verbatim(tmp_path: Path) -> None:
     assert left.content_hashes != right.content_hashes
 
 
+def test_a_loaded_node_locates_each_hash_in_the_store(tmp_path: Path) -> None:
+    """The location is honest scaffolding: an unversioned content directory
+    plays the repository, the manifest's path is the path, and the whole file
+    is the span — which is literally what was hashed."""
+    root = make_store(tmp_path, nodes=ONE_REQUIREMENT, content={"r.txt": "a statement\n"})
+    (node,) = store.StoreLoader(root).nodes()
+    location = node.content_anchors["contentHash"]
+    assert location.repository == str(root / "content")
+    assert location.path == "r.txt"
+    assert location.locator == "file"
+
+
 def test_a_node_carries_every_content_hash_its_entry_declares(tmp_path: Path) -> None:
     manifest = """
     kind = "Implementation"

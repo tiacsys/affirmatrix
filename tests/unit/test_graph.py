@@ -40,8 +40,18 @@ class Source:
         return iter(self._edges)
 
 
+def anchors(digests: dict[str, bytes]) -> dict[str, records.ContentAnchor]:
+    """Name→digest pairs as anchors; the builder cares about names and digests only."""
+    return {
+        name: records.ContentAnchor(
+            digest=digest, repository="the-source-repo", path="pkg/module.py", locator="file"
+        )
+        for name, digest in digests.items()
+    }
+
+
 def requirement(local_id: str, digest: bytes = D1) -> records.NodeRecord:
-    return records.NodeRecord(local_id, "Requirement", {"contentHash": digest})
+    return records.NodeRecord(local_id, "Requirement", anchors({"contentHash": digest}))
 
 
 def refines(child: str, parent: str, **kwargs) -> records.EdgeRecord:
@@ -85,7 +95,7 @@ def test_adjacency_is_indexed_in_both_directions() -> None:
 def test_adjacency_can_be_narrowed_to_one_kind() -> None:
     source = Source(
         [requirement("r"), requirement("p"), records.NodeRecord("t", "TestSpecification",
-            {"specHash": D1, "implHash": D2})],
+            anchors({"specHash": D1, "implHash": D2}))],
         [refines("r", "p"), records.EdgeRecord("t", "r", "Verifies", records.LinkState.PENDING)],
     )
     built = graph.build(source)
@@ -104,7 +114,7 @@ def test_an_unknown_node_is_reported_rather_than_returning_nothing() -> None:
 
 
 def test_a_node_of_an_undeclared_kind_is_rejected() -> None:
-    source = Source([records.NodeRecord("x", "Speculation", {"contentHash": D1})])
+    source = Source([records.NodeRecord("x", "Speculation", anchors({"contentHash": D1}))])
     with pytest.raises(graph.GraphError, match="Speculation"):
         graph.build(source)
 
@@ -125,7 +135,7 @@ def test_rejection_stops_the_build_rather_than_skipping_the_record() -> None:
     graph that never had them — and it would seal, and the seal would verify.
     """
     source = Source(
-        [requirement("a"), records.NodeRecord("b", "Speculation", {"contentHash": D1})]
+        [requirement("a"), records.NodeRecord("b", "Speculation", anchors({"contentHash": D1}))]
     )
     with pytest.raises(graph.GraphError):
         graph.build(source)
@@ -135,13 +145,13 @@ def test_a_node_carrying_a_content_hash_its_kind_does_not_declare_is_rejected() 
     """The vocabulary fixes which hashes a kind carries, and the node hash folds
     those names in — so an undeclared name would change the hash of a node the
     vocabulary cannot describe."""
-    source = Source([records.NodeRecord("a", "Requirement", {"apiHash": D1})])
+    source = Source([records.NodeRecord("a", "Requirement", anchors({"apiHash": D1}))])
     with pytest.raises(graph.GraphError, match="apiHash"):
         graph.build(source)
 
 
 def test_a_node_missing_a_content_hash_its_kind_declares_is_rejected() -> None:
-    source = Source([records.NodeRecord("i", "Implementation", {"apiHash": D1})])
+    source = Source([records.NodeRecord("i", "Implementation", anchors({"apiHash": D1}))])
     with pytest.raises(graph.GraphError, match="bodyHash"):
         graph.build(source)
 
@@ -214,7 +224,7 @@ def test_cycles_in_other_edge_kinds_are_not_refines_cycles() -> None:
     """Only refines must be acyclic — it is the relation satisfaction recurses on."""
     source = Source(
         [
-            records.NodeRecord("t", "TestSpecification", {"specHash": D1, "implHash": D2}),
+            records.NodeRecord("t", "TestSpecification", anchors({"specHash": D1, "implHash": D2})),
             requirement("r"),
         ],
         [
@@ -289,7 +299,9 @@ def test_two_kinds_may_not_share_a_local_identifier() -> None:
     source = Source(
         [
             requirement("shared"),
-            records.NodeRecord("shared", "TestSpecification", {"specHash": D1, "implHash": D2}),
+            records.NodeRecord(
+                "shared", "TestSpecification", anchors({"specHash": D1, "implHash": D2})
+            ),
         ]
     )
     with pytest.raises(graph.GraphError, match="shared"):

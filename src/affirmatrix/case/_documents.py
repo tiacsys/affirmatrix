@@ -27,6 +27,7 @@ from pathlib import Path
 from affirmatrix import identity
 from affirmatrix.case._errors import AffirmationStoreError
 from affirmatrix.records import (
+    ContentAnchor,
     EdgeRecord,
     LinkState,
     NodeRecord,
@@ -42,24 +43,35 @@ _CONTEXT = "@context"
 _ID = "id"
 _PREFIX = "seg:"
 _NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId"})
+_SOURCE_SUFFIX = "Source"
+_SOURCE_MEMBERS = ("seg:sourceRepo", "seg:sourcePath", "seg:sourceLocator")
 
 
 def node_entry(record: NodeRecord) -> Entry:
     """One node record as a JSON-LD entry.
 
     :implements: SEG-SREQ-018
+    :implements: SEG-SREQ-050
 
-    Every value is an identifier, a kind token or a digest. The content those
-    digests cover has no field to travel in, which is the structural half of
-    the guarantee; the schema's refusal of any undeclared property is the other.
+    Every value is an identifier, a kind token, a digest, or the source
+    location of what a digest covers. The content itself has no field to travel
+    in, which is the structural half of the guarantee; the schema's refusal of
+    any undeclared property is the other. Each digest's location is written
+    beside it under the digest's own name plus ``Source``, so the pairing is a
+    spelling rule a reader can apply without a table.
     """
     entry: Entry = {
         _ID: identity.node_iri(record.local_id),
         "type": f"seg:{record.kind}",
         "seg:localId": record.local_id,
     }
-    for name, digest in sorted(record.content_hashes.items()):
-        entry[f"seg:{name}"] = hex_digest(digest)
+    for name, anchor in sorted(record.content_anchors.items()):
+        entry[f"seg:{name}"] = hex_digest(anchor.digest)
+        entry[f"seg:{name}{_SOURCE_SUFFIX}"] = {
+            "seg:sourceRepo": anchor.repository,
+            "seg:sourcePath": anchor.path,
+            "seg:sourceLocator": anchor.locator,
+        }
     return entry
 
 
@@ -74,6 +86,11 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
     read from ``seg:localId`` and then verified by re-minting: an entry whose
     ``id`` and local identifier disagree carries two identities, and reading
     back either one silently would let the record move on its next rewrite.
+
+    Digests and source locations are paired by the ``Source`` spelling rule and
+    the pairing is re-established here, not leaned on the schema: a digest
+    without its location, or a location without its digest, is half a record,
+    and half a record is refused rather than guessed at.
     """
     local_id = str(entry["seg:localId"])
     minted = identity.node_iri(local_id)
@@ -82,7 +99,8 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             f"{document} holds {entry[_ID]}, but its local identifier {local_id!r} mints "
             f"{minted}; two spellings of one identity must agree"
         )
-    hashes: dict[str, bytes] = {}
+    digests: dict[str, bytes] = {}
+    sources: dict[str, tuple[str, str, str]] = {}
     for name in entry:
         if name in _NODE_FIXED_FIELDS:
             continue
@@ -91,9 +109,33 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
                 f"{document} holds {entry[_ID]}, whose field {name!r} is not in the "
                 "case's vocabulary"
             )
-        hashes[name.removeprefix(_PREFIX)] = _read_digest(entry, name, document)
+        local = name.removeprefix(_PREFIX)
+        if local.endswith(_SOURCE_SUFFIX):
+            sources[local.removesuffix(_SOURCE_SUFFIX)] = _read_source(entry, name, document)
+        else:
+            digests[local] = _read_digest(entry, name, document)
+    unpaired = sorted(set(digests) ^ set(sources))
+    if unpaired:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose content hashes and source locations do "
+            f"not pair up: {', '.join(repr(name) for name in unpaired)}"
+        )
     return _reconstructed(
-        lambda: NodeRecord(local_id=local_id, kind=kind, content_hashes=hashes), entry, document
+        lambda: NodeRecord(
+            local_id=local_id,
+            kind=kind,
+            content_anchors={
+                name: ContentAnchor(
+                    digest=digest,
+                    repository=sources[name][0],
+                    path=sources[name][1],
+                    locator=sources[name][2],
+                )
+                for name, digest in digests.items()
+            },
+        ),
+        entry,
+        document,
     )
 
 
@@ -185,6 +227,7 @@ def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
             "seg:fromRevision": event.from_source_revision,
             "seg:toRevision": event.to_source_revision,
         },
+        "seg:affirmingRole": event.role,
         "seg:reason": event.reason,
     }
 
@@ -220,6 +263,7 @@ def review_event_record(entry: Entry, document: Path) -> ReviewEvent:
             to_node_hash=_read_digest(entry, "seg:toNodeHash", document),
             from_source_revision=str(revisions["seg:fromRevision"]),
             to_source_revision=str(revisions["seg:toRevision"]),
+            role=str(entry["seg:affirmingRole"]),
             reason=str(entry["seg:reason"]),
         ),
         entry,
@@ -235,6 +279,23 @@ def _read_endpoint(entry: Entry, field: str, document: Path) -> str:
         raise AffirmationStoreError(
             f"{document} holds {entry[_ID]}, whose {field} cannot be read back: {error}"
         ) from error
+
+
+def _read_source(entry: Entry, field: str, document: Path) -> tuple[str, str, str]:
+    """One source-location field back as its (repository, path, locator) triple.
+
+    Exactly the three members, no more and no fewer: a member this module did
+    not write is a member it cannot reproduce on the next rewrite, and a
+    missing one is a location that cannot fetch.
+    """
+    value = entry[field]
+    if not isinstance(value, Mapping) or set(value) != set(_SOURCE_MEMBERS):
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose {field} is not the source location of a "
+            "content hash: it must carry exactly repository, path and locator"
+        )
+    repository, path, locator = (str(value[member]) for member in _SOURCE_MEMBERS)
+    return repository, path, locator
 
 
 def _read_digest(entry: Entry, field: str, document: Path) -> bytes:

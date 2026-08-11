@@ -17,4 +17,17 @@ class AffirmationStoreError(Exception):
     """
 
 
-__all__ = ["AffirmationStoreError"]
+class DemotionNotRequestedError(AffirmationStoreError):
+    """A write and its demotion request disagree about which edges lose standing.
+
+    Raised when a write would replace an edge record carrying the hash it was
+    affirmed against with one carrying none, and no demotion request names that
+    edge (SEG-SREQ-051) — and equally when a request names an edge the write
+    does not demote, because a request that did nothing, silently, is the same
+    disagreement seen from the other side. Its own type so a caller can tell
+    "name the demotion" apart from every other refusal; still the store's
+    refusal type underneath, so nothing that catches that stops catching this.
+    """
+
+
+__all__ = ["AffirmationStoreError", "DemotionNotRequestedError"]

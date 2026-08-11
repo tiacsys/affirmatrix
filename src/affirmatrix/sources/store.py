@@ -23,6 +23,14 @@ authority on the format. Three properties of the reading are the loader's:
   truncated stream builds a smaller graph that seals to a perfectly valid root
   over content nobody meant to omit.
 
+Each hash is anchored to where its content lives, and the anchor is a stated
+substitution rather than a fabrication: the would-be store is an unversioned
+directory of content files, so the ``content/`` directory plays the repository,
+the manifest's declared path is the path, and the locator is ``file`` — the
+whole file, which is literally what was hashed. The triple genuinely resolves
+to the hashed bytes on this machine, and claims nothing more; no revision
+exists here to anchor to. The real extractors supply true repositories.
+
 What it does not do is judge the records. A duplicate identifier, an undeclared
 kind, an edge to a node that is not there — each is somebody's error, but not
 this component's to report: the graph builder refuses the first two and the
@@ -40,7 +48,7 @@ from pathlib import Path
 from typing import Any
 
 from affirmatrix._hashing import content_hash
-from affirmatrix.records import EdgeRecord, LinkState, NodeRecord
+from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
 
 _NODES = "nodes"
 _EDGES = "edges"
@@ -91,7 +99,7 @@ class StoreLoader:
                 yield NodeRecord(
                     local_id=local_id,
                     kind=kind,
-                    content_hashes=self._content_hashes(local_id, declaration, manifest),
+                    content_anchors=self._content_anchors(local_id, declaration, manifest),
                 )
 
     def edges(self) -> Iterator[EdgeRecord]:
@@ -110,14 +118,18 @@ class StoreLoader:
                         state=LinkState.PENDING,
                     )
 
-    def _content_hashes(
+    def _content_anchors(
         self, local_id: str, declaration: Any, manifest: Path
-    ) -> Mapping[str, bytes]:
-        """Hash the content files one entry declares, keyed by field name.
+    ) -> Mapping[str, ContentAnchor]:
+        """Hash and locate the content files one entry declares, keyed by field name.
 
         The field names are not checked against the vocabulary here. The graph
         builder already refuses a node carrying names its kind does not declare,
         and stating the same rule twice invites two spellings of it.
+
+        The location per hash is the module docstring's stated substitution:
+        the content directory as repository, the declared path, the whole file
+        as span.
         """
         if not isinstance(declaration, dict) or not declaration:
             raise StoreError(
@@ -125,7 +137,12 @@ class StoreLoader:
                 "no content hash has nothing for the graph to anchor to"
             )
         return {
-            field: content_hash(self._content_bytes(local_id, field, path, manifest))
+            field: ContentAnchor(
+                digest=content_hash(self._content_bytes(local_id, field, path, manifest)),
+                repository=str(self.root / _CONTENT),
+                path=str(path),
+                locator="file",
+            )
             for field, path in declaration.items()
         }
 

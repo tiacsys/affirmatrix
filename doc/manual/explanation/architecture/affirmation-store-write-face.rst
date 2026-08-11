@@ -118,6 +118,27 @@ An edge's state and the hash it was affirmed against change only when that edge
 is named in a write. Writing a different edge, or any node document, leaves an
 affirmed edge exactly as it was.
 
+Affirmed standing is never lost by omission (SEG-SREQ-051). A record that would
+replace an incumbent carrying its affirmed hash with one carrying none is a
+demotion, and the write is refused unless a demotion request names that edge:
+
+.. code-block:: python
+
+   from affirmatrix.records import EdgeReference
+
+   store.write_edges(
+       current_edges,
+       demote={EdgeReference(kind="Implements", from_id=..., to_id=...)},
+   )
+
+The record stream is never itself the request — a current stream, every edge
+pending, cannot reset what the case says was affirmed — and naming is per edge,
+never a flag over the write. A name that licenses nothing is refused too, and
+either disagreement refuses the whole batch with nothing written, as validation
+refusals already do. Replacing an affirmed hash with a different one, or moving
+an edge to an outdated state that keeps its hash, is not a demotion: the guard
+watches the loss of affirmed standing, not its movement.
+
 Validation, and what it is against
 ----------------------------------
 
@@ -128,11 +149,18 @@ because a batch is the usual size of a write and "something was invalid" is no
 help.
 
 The schemas are draft 2020-12, one per record kind. The node schemas pin the
-content-hash field names each kind carries; the edge schemas compose from shared
-definitions and state, as the record types do, that a pending edge has no hash
-it was affirmed against and an active one must have. Stating the rule in both
-places is deliberate: the record type guards the producer, the schema guards the
-document somebody reads without our code.
+content-hash field names each kind carries, and beside every digest they require
+its source location — repository, path and span locator, per hash
+(SEG-SREQ-050) — with the locator's format pinned per kind: a requirement is
+located by its need identifier, an implementation or test specification by
+symbol and span role, a test outcome by its identity within the run artifact,
+and any of them by ``file`` where the digest covers a whole file. A location is
+a reference for transient fetch, never integrity data — no part of it enters a
+hash preimage, so moving content is a reviewable diff, not a suspicion event.
+The edge schemas compose from shared definitions and state, as the record types
+do, that a pending edge has no hash it was affirmed against and an active one
+must have. Stating the rule in both places is deliberate: the record type guards
+the producer, the schema guards the document somebody reads without our code.
 
 Every schema forbids the properties it does not declare, and every digest field
 is pinned to sixty-four lowercase hexadecimal characters. That is the structural
@@ -150,10 +178,14 @@ Every path stays under the root
 
 Each path the store opens is assembled in one place and passes one check
 (SEG-SREQ-021): segment rules that refuse an empty name, a parent reference, an
-embedded separator, a null byte or a leading dot; then resolution of both the
-candidate and the root, requiring the first to lie under the second. The
-resolution is what catches the case no lexical rule can see, where a directory
-along the path is a symbolic link out of the case.
+embedded separator, a leading dot, and any character that is not valid in a
+file name on both POSIX and Windows filesystems — control characters included;
+then resolution of both the candidate and the root, requiring the first to lie
+under the second. The resolution is what catches the case no lexical rule can
+see, where a directory along the path is a symbolic link out of the case. The
+character rule is defense in depth for a published case being checkable out on
+either platform; the primary guard is the proof generator's own minting rule
+(SEG-SREQ-052).
 
 The only caller-supplied path segment the store ever takes is the snapshot
 identifier of an evidence package, which is why the rule is written for it.

@@ -43,6 +43,30 @@
     "seg:implHash": {
       "@id": "seg:implHash"
     },
+    "seg:contentHashSource": {
+      "@id": "seg:contentHashSource"
+    },
+    "seg:apiHashSource": {
+      "@id": "seg:apiHashSource"
+    },
+    "seg:bodyHashSource": {
+      "@id": "seg:bodyHashSource"
+    },
+    "seg:specHashSource": {
+      "@id": "seg:specHashSource"
+    },
+    "seg:implHashSource": {
+      "@id": "seg:implHashSource"
+    },
+    "seg:sourceRepo": {
+      "@id": "seg:sourceRepo"
+    },
+    "seg:sourcePath": {
+      "@id": "seg:sourcePath"
+    },
+    "seg:sourceLocator": {
+      "@id": "seg:sourceLocator"
+    },
     "seg:relation": {
       "@id": "seg:relation"
     },
@@ -60,6 +84,9 @@
     },
     "seg:toRevision": {
       "@id": "seg:toRevision"
+    },
+    "seg:affirmingRole": {
+      "@id": "seg:affirmingRole"
     },
     "seg:reason": {
       "@id": "seg:reason"

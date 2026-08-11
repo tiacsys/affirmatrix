@@ -13,6 +13,7 @@
     "seg:fromNodeHash",
     "seg:toNodeHash",
     "seg:affirmedAt",
+    "seg:affirmingRole",
     "seg:reason"
   ],
   "additionalProperties": false,
@@ -66,6 +67,11 @@
           "description": "The source revision an endpoint stood at when the judgement was made. Nothing else correlates a source revision to the moment someone accepted it, so it is captured here or lost (SEG-SREQ-025)."
         }
       }
+    },
+    "seg:affirmingRole": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The role in which the affirmation was made (SEG-SREQ-049). Required, and deliberately a free string with no enum: role validation is a process concern enforced by organisational policy, not by the schema. The CamelCase spellings (RequirementsEngineer, SoftwareEngineer, TestEngineer, FunctionalSafetyManager) are documented convention, not constraint. Empty alone is refused — an empty role would satisfy the field while recording nothing."
     },
     "seg:reason": {
       "type": "string",

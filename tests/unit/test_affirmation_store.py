@@ -47,9 +47,22 @@ def make_case(tmp_path: Path) -> case.AffirmationStore:
     return case.AffirmationStore(root=tmp_path / "case")
 
 
+def anchor(
+    content: str,
+    locator: str = "file",
+    path: str = "doc/spec/store.rst",
+    repository: str = "the-source-repo",
+) -> records.ContentAnchor:
+    return records.ContentAnchor(
+        digest=digest(content), repository=repository, path=path, locator=locator
+    )
+
+
 def requirement(local_id: str = "SEG-SREQ-018", content: str = "a statement") -> records.NodeRecord:
     return records.NodeRecord(
-        local_id=local_id, kind="Requirement", content_hashes={"contentHash": digest(content)}
+        local_id=local_id,
+        kind="Requirement",
+        content_anchors={"contentHash": anchor(content, locator=f"need:{local_id}")},
     )
 
 
@@ -65,7 +78,10 @@ def refines(
 
 
 def review_event(
-    from_id: str = "SEG-SREQ-018", to_id: str = "SEG-SYS-007", reason: str = "reviewed together"
+    from_id: str = "SEG-SREQ-018",
+    to_id: str = "SEG-SYS-007",
+    reason: str = "reviewed together",
+    role: str = "RequirementsEngineer",
 ) -> records.ReviewEvent:
     return records.ReviewEvent(
         from_id=from_id,
@@ -75,6 +91,7 @@ def review_event(
         to_node_hash=digest(to_id),
         from_source_revision=REVISION,
         to_source_revision=LATER_REVISION,
+        role=role,
         reason=reason,
     )
 
@@ -209,12 +226,56 @@ def test_a_node_is_written_to_the_document_of_its_kind(tmp_path: Path) -> None:
     assert entry["seg:localId"] == "SEG-SREQ-018"
 
 
-def test_a_node_document_carries_only_identifiers_kinds_and_digests(tmp_path: Path) -> None:
+def test_a_node_document_carries_identifiers_kinds_digests_and_their_locations(
+    tmp_path: Path,
+) -> None:
     store = make_case(tmp_path)
     store.write_nodes([requirement()])
     (entry,) = entries_of(store, "nodes", "requirements.jsonld")
-    assert set(entry) == {"id", "type", "seg:localId", "seg:contentHash"}
+    assert set(entry) == {"id", "type", "seg:localId", "seg:contentHash", "seg:contentHashSource"}
     assert entry["seg:contentHash"] == digest("a statement").hex()
+
+
+def test_a_node_document_locates_the_content_behind_each_digest(tmp_path: Path) -> None:
+    """SEG-SREQ-050: repository, path and span locator, beside every content hash."""
+    store = make_case(tmp_path)
+    store.write_nodes([requirement()])
+    (entry,) = entries_of(store, "nodes", "requirements.jsonld")
+    assert entry["seg:contentHashSource"] == {
+        "seg:sourceRepo": "the-source-repo",
+        "seg:sourcePath": "doc/spec/store.rst",
+        "seg:sourceLocator": "need:SEG-SREQ-018",
+    }
+
+
+def test_a_split_hash_node_locates_each_hash_separately(tmp_path: Path) -> None:
+    """Per hash, not per node: the two spans of one function differ by locator."""
+    store = make_case(tmp_path)
+    store.write_nodes(
+        [
+            records.NodeRecord(
+                local_id="affirmatrix.graph.build",
+                kind="Implementation",
+                content_anchors={
+                    "apiHash": anchor(
+                        "the api",
+                        locator="symbol:affirmatrix.graph.build#api",
+                        path="src/affirmatrix/graph/__init__.py",
+                    ),
+                    "bodyHash": anchor(
+                        "the body",
+                        locator="symbol:affirmatrix.graph.build#body",
+                        path="src/affirmatrix/graph/__init__.py",
+                    ),
+                },
+            )
+        ]
+    )
+    (entry,) = entries_of(store, "nodes", "implementations.jsonld")
+    assert entry["seg:apiHashSource"]["seg:sourceLocator"] == "symbol:affirmatrix.graph.build#api"
+    assert (
+        entry["seg:bodyHashSource"]["seg:sourceLocator"] == "symbol:affirmatrix.graph.build#body"
+    )
 
 
 def test_a_document_never_contains_the_content_a_hash_covers(tmp_path: Path) -> None:
@@ -297,16 +358,33 @@ def test_an_active_edge_carries_the_hash_it_was_affirmed_against(tmp_path: Path)
 def test_a_node_whose_hash_names_do_not_match_its_kind_is_refused(tmp_path: Path) -> None:
     store = make_case(tmp_path)
     misnamed = records.NodeRecord(
-        local_id="SEG-SREQ-018", kind="Requirement", content_hashes={"apiHash": digest("x")}
+        local_id="SEG-SREQ-018", kind="Requirement", content_anchors={"apiHash": anchor("x")}
     )
     with pytest.raises(case.AffirmationStoreError, match="SEG-SREQ-018"):
         store.write_nodes([misnamed])
 
 
+def test_a_locator_outside_the_kinds_pinned_formats_is_refused(tmp_path: Path) -> None:
+    """The locator's format is pinned per node kind, and the schema is the pin.
+
+    The record type checks non-empty only — vocabulary stays format-agnostic —
+    so a symbol locator on a Requirement must fall to the schema, exactly as it
+    would for an auditor validating the document with standard tooling.
+    """
+    store = make_case(tmp_path)
+    mislocated = records.NodeRecord(
+        local_id="SEG-SREQ-050",
+        kind="Requirement",
+        content_anchors={"contentHash": anchor("x", locator="symbol:some.function#api")},
+    )
+    with pytest.raises(case.AffirmationStoreError, match="seg:contentHashSource"):
+        store.write_nodes([mislocated])
+
+
 def test_a_node_of_an_undeclared_kind_is_refused(tmp_path: Path) -> None:
     store = make_case(tmp_path)
     unknown = records.NodeRecord(
-        local_id="thing", kind="Gizmo", content_hashes={"contentHash": digest("x")}
+        local_id="thing", kind="Gizmo", content_anchors={"contentHash": anchor("x")}
     )
     with pytest.raises(case.AffirmationStoreError, match="Gizmo"):
         store.write_nodes([unknown])
@@ -385,7 +463,7 @@ def test_nothing_is_written_when_one_record_in_the_batch_is_refused(tmp_path: Pa
     """A batch validates before a document is opened, not record by record."""
     store = make_case(tmp_path)
     invalid = records.NodeRecord(
-        local_id="SEG-SREQ-023", kind="Requirement", content_hashes={"specHash": digest("x")}
+        local_id="SEG-SREQ-023", kind="Requirement", content_anchors={"specHash": anchor("x")}
     )
     with pytest.raises(case.AffirmationStoreError):
         store.write_nodes([requirement(), invalid])
@@ -396,7 +474,7 @@ def test_a_refusal_names_the_record_and_what_was_wrong_with_it(tmp_path: Path) -
     """A batch is the usual size of a write, so "something was invalid" is no help."""
     store = make_case(tmp_path)
     invalid = records.NodeRecord(
-        local_id="SEG-SREQ-023", kind="Requirement", content_hashes={"specHash": digest("x")}
+        local_id="SEG-SREQ-023", kind="Requirement", content_anchors={"specHash": anchor("x")}
     )
     with pytest.raises(case.AffirmationStoreError) as caught:
         store.write_nodes([invalid])
@@ -436,6 +514,21 @@ def test_a_snapshot_identifier_with_a_path_separator_is_refused(tmp_path: Path) 
     store = make_case(tmp_path)
     with pytest.raises(case.AffirmationStoreError, match="separator"):
         store.write_proof_document("2026-08-10/nested", "coverage_report", {})
+
+
+@pytest.mark.parametrize("character", sorted('<>:"|?*') + ["\\", "\x1f"])
+def test_a_segment_with_a_character_invalid_on_some_filesystem_is_refused(
+    tmp_path: Path, character: str
+) -> None:
+    """A published case must be checkable out on every supported platform.
+
+    The generator's minting rule (SEG-SREQ-052) is the primary guard; this is
+    the store's defense in depth at its one path choke point, so no
+    caller-supplied name can put an uncheckoutable file in a case.
+    """
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="file name|separator"):
+        store.write_proof_document(f"2026{character}08", "coverage_report", {})
 
 
 def test_a_target_resolving_outside_the_write_root_through_a_symlink_is_refused(
@@ -683,6 +776,167 @@ def test_a_review_event_with_an_empty_reason_is_persisted_as_given(tmp_path: Pat
     store.append_review_events([review_event(reason="")])
     (entry,) = entries_of(store, "events", "review_events.jsonld")
     assert entry["seg:reason"] == ""
+
+
+def test_a_review_event_records_the_role_it_was_made_in(tmp_path: Path) -> None:
+    """SEG-SREQ-049, as persistence sees it: the role travels with the judgement."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event(role="TestEngineer")])
+    (entry,) = entries_of(store, "events", "review_events.jsonld")
+    assert entry["seg:affirmingRole"] == "TestEngineer"
+
+
+def test_a_role_outside_the_documented_convention_is_still_writable(tmp_path: Path) -> None:
+    """No enum, no closed vocabulary: role validation is a process concern."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event(role="acting deputy reviewer (annex F)")])
+    (entry,) = entries_of(store, "events", "review_events.jsonld")
+    assert entry["seg:affirmingRole"] == "acting deputy reviewer (annex F)"
+
+
+def test_an_event_without_a_role_is_refused_by_the_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The schema guard has to hold on its own, for the auditor with only the case."""
+    original = _documents.event_entry
+
+    def without_the_role(event: records.ReviewEvent, ordinal: int) -> dict:
+        entry = original(event, ordinal)
+        entry.pop("seg:affirmingRole", None)
+        return entry
+
+    monkeypatch.setattr(_documents, "event_entry", without_the_role)
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="seg:affirmingRole"):
+        store.append_review_events([review_event()])
+
+
+# ── Affirmed standing is never lost by omission (SEG-SREQ-051) ──────────────
+
+
+def demotion(
+    from_id: str = "SEG-SREQ-018", to_id: str = "SEG-SYS-007", kind: str = "Refines"
+) -> records.EdgeReference:
+    return records.EdgeReference(kind=kind, from_id=from_id, to_id=to_id)
+
+
+def test_replacing_an_affirmed_edge_with_an_unaffirmed_record_is_refused(
+    tmp_path: Path,
+) -> None:
+    """The record stream is never itself the request — a current stream, every
+    edge pending, must not be able to reset what the case says was affirmed."""
+    store = make_case(tmp_path)
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("affirmed"))])
+    with pytest.raises(case.DemotionNotRequestedError, match="SEG-SREQ-018"):
+        store.write_edges([refines()])
+
+
+def test_a_refused_demotion_writes_nothing(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("affirmed"))])
+    before = (store.root / "edges" / "refines.jsonld").read_bytes()
+    with pytest.raises(case.DemotionNotRequestedError):
+        store.write_edges([refines()])
+    assert (store.root / "edges" / "refines.jsonld").read_bytes() == before
+
+
+def test_a_demotion_named_per_edge_is_allowed(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("affirmed"))])
+    store.write_edges([refines()], demote={demotion()})
+    (entry,) = entries_of(store, "edges", "refines.jsonld")
+    assert entry["seg:linkState"] == "pending"
+    assert "seg:edgeHash" not in entry
+
+
+def test_only_the_named_edge_may_be_demoted(tmp_path: Path) -> None:
+    """Naming is per-edge, not per-write: one name does not license a batch."""
+    store = make_case(tmp_path)
+    store.write_edges(
+        [
+            refines(state=records.LinkState.ACTIVE, edge_hash=digest("first")),
+            refines(
+                from_id="SEG-SREQ-023",
+                state=records.LinkState.ACTIVE,
+                edge_hash=digest("second"),
+            ),
+        ]
+    )
+    before = (store.root / "edges" / "refines.jsonld").read_bytes()
+    with pytest.raises(case.DemotionNotRequestedError, match="SEG-SREQ-023"):
+        store.write_edges(
+            [refines(), refines(from_id="SEG-SREQ-023")],
+            demote={demotion()},
+        )
+    assert (store.root / "edges" / "refines.jsonld").read_bytes() == before
+
+
+def test_a_demotion_refusal_names_every_edge_it_refuses(tmp_path: Path) -> None:
+    """One refusal is one complete diagnosis, as removal and validation already do."""
+    store = make_case(tmp_path)
+    store.write_edges(
+        [
+            refines(state=records.LinkState.ACTIVE, edge_hash=digest("first")),
+            refines(
+                from_id="SEG-SREQ-023",
+                state=records.LinkState.ACTIVE,
+                edge_hash=digest("second"),
+            ),
+        ]
+    )
+    with pytest.raises(case.DemotionNotRequestedError) as caught:
+        store.write_edges([refines(), refines(from_id="SEG-SREQ-023")])
+    message = str(caught.value)
+    assert "SEG-SREQ-018" in message
+    assert "SEG-SREQ-023" in message
+
+
+def test_a_demotion_request_that_demotes_nothing_is_refused(tmp_path: Path) -> None:
+    """An unused name is a request that did nothing, silently — refused on the
+    same grounds removal refuses a record the case never held."""
+    store = make_case(tmp_path)
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("affirmed"))])
+    with pytest.raises(case.DemotionNotRequestedError, match="does not demote"):
+        store.write_edges(
+            [refines(state=records.LinkState.ACTIVE, edge_hash=digest("affirmed"))],
+            demote={demotion()},
+        )
+
+
+def test_replacing_an_affirmed_hash_with_a_different_hash_is_not_a_demotion(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-051 guards the loss of affirmed standing, not its movement."""
+    store = make_case(tmp_path)
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("first"))])
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("second"))])
+    (entry,) = entries_of(store, "edges", "refines.jsonld")
+    assert entry["seg:edgeHash"] == digest("second").hex()
+
+
+def test_a_state_change_that_keeps_the_hash_is_not_a_demotion(tmp_path: Path) -> None:
+    """Drift detection marks an edge outdated while keeping what it was affirmed
+    against; the guard must not stand in the detector's way."""
+    store = make_case(tmp_path)
+    store.write_edges([refines(state=records.LinkState.ACTIVE, edge_hash=digest("affirmed"))])
+    store.write_edges(
+        [refines(state=records.LinkState.DIRECTLY_OUTDATED, edge_hash=digest("affirmed"))]
+    )
+    (entry,) = entries_of(store, "edges", "refines.jsonld")
+    assert entry["seg:linkState"] == "directlyOutdated"
+
+
+def test_a_first_write_of_a_pending_edge_needs_no_demotion(tmp_path: Path) -> None:
+    """No incumbent, no affirmed standing to lose."""
+    store = make_case(tmp_path)
+    store.write_edges([refines()])
+    (entry,) = entries_of(store, "edges", "refines.jsonld")
+    assert entry["seg:linkState"] == "pending"
+
+
+def test_the_demotion_error_is_an_affirmation_store_error(tmp_path: Path) -> None:
+    """Callers that catch the store's one refusal type keep catching it."""
+    assert issubclass(case.DemotionNotRequestedError, case.AffirmationStoreError)
 
 
 # ── The proofs path ─────────────────────────────────────────────────────────

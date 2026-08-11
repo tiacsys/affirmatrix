@@ -41,33 +41,53 @@ def make_case(tmp_path: Path) -> case.AffirmationStore:
     return case.AffirmationStore(root=tmp_path / "case")
 
 
+def anchor(content: str, locator: str = "file", path: str = "a/file.txt") -> records.ContentAnchor:
+    return records.ContentAnchor(
+        digest=digest(content), repository="the-source-repo", path=path, locator=locator
+    )
+
+
 def requirement(local_id: str = "SEG-SREQ-020", content: str = "a statement") -> records.NodeRecord:
     return records.NodeRecord(
-        local_id=local_id, kind="Requirement", content_hashes={"contentHash": digest(content)}
+        local_id=local_id,
+        kind="Requirement",
+        content_anchors={"contentHash": anchor(content, locator=f"need:{local_id}")},
     )
 
 
 def one_node_of_every_kind() -> list[records.NodeRecord]:
-    """One node per declared kind, including both split-hash kinds."""
+    """One node per declared kind, split-hash kinds and every locator scheme included."""
     return [
         requirement(),
         records.NodeRecord(
             local_id="affirmatrix.case._atomic.replace_file",
             kind="Implementation",
-            content_hashes={"apiHash": digest("the api"), "bodyHash": digest("the body")},
+            content_anchors={
+                "apiHash": anchor(
+                    "the api", locator="symbol:affirmatrix.case._atomic.replace_file#api"
+                ),
+                "bodyHash": anchor(
+                    "the body", locator="symbol:affirmatrix.case._atomic.replace_file#body"
+                ),
+            },
         ),
         records.NodeRecord(
             local_id="SEG-TS-001",
             kind="TestSpecification",
-            content_hashes={"specHash": digest("the spec"), "implHash": digest("the test body")},
+            content_anchors={
+                "specHash": anchor("the spec", locator="symbol:tests.test_store#spec"),
+                "implHash": anchor("the test body", locator="symbol:tests.test_store#impl"),
+            },
         ),
         records.NodeRecord(
             local_id="run-0001/SEG-TS-001",
             kind="TestOutcome",
-            content_hashes={"contentHash": digest("passed")},
+            content_anchors={
+                "contentHash": anchor("passed", locator="nodeid:tests/test_store.py::test_it")
+            },
         ),
         records.NodeRecord(
-            local_id="WVR-001", kind="Waiver", content_hashes={"contentHash": digest("waived")}
+            local_id="WVR-001", kind="Waiver", content_anchors={"contentHash": anchor("waived")}
         ),
     ]
 
@@ -99,7 +119,9 @@ def refines(
     )
 
 
-def review_event(reason: str = "reviewed together") -> records.ReviewEvent:
+def review_event(
+    reason: str = "reviewed together", role: str = "RequirementsEngineer"
+) -> records.ReviewEvent:
     return records.ReviewEvent(
         from_id="SEG-SREQ-020",
         to_id="SEG-SYS-007",
@@ -108,6 +130,7 @@ def review_event(reason: str = "reviewed together") -> records.ReviewEvent:
         to_node_hash=digest("SEG-SYS-007"),
         from_source_revision=REVISION,
         to_source_revision=LATER_REVISION,
+        role=role,
         reason=reason,
     )
 
@@ -158,7 +181,10 @@ def test_a_multi_hash_node_reads_back_with_every_named_digest(tmp_path: Path) ->
             records.NodeRecord(
                 local_id="affirmatrix.graph.build",
                 kind="Implementation",
-                content_hashes={"apiHash": digest("the api"), "bodyHash": digest("the body")},
+                content_anchors={
+                    "apiHash": anchor("the api", locator="symbol:affirmatrix.graph.build#api"),
+                    "bodyHash": anchor("the body", locator="symbol:affirmatrix.graph.build#body"),
+                },
             )
         ]
     )
@@ -167,6 +193,24 @@ def test_a_multi_hash_node_reads_back_with_every_named_digest(tmp_path: Path) ->
         "apiHash": digest("the api"),
         "bodyHash": digest("the body"),
     }
+
+
+def test_a_node_reads_back_with_the_location_of_every_hash(tmp_path: Path) -> None:
+    """SEG-SREQ-050 composed with SEG-SREQ-020: the location survives the trip."""
+    store = make_case(tmp_path)
+    store.write_nodes([requirement()])
+    (read,) = store.nodes()
+    assert read.content_anchors["contentHash"] == anchor(
+        "a statement", locator="need:SEG-SREQ-020"
+    )
+
+
+def test_a_review_event_reads_back_with_its_role(tmp_path: Path) -> None:
+    """SEG-SREQ-049's record half: the role is data, reproduced as written."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event(role="acting deputy reviewer (annex F)")])
+    (read,) = store.review_events()
+    assert read.role == "acting deputy reviewer (annex F)"
 
 
 def test_a_pending_edge_reads_back_with_no_edge_hash(tmp_path: Path) -> None:
@@ -348,6 +392,87 @@ def test_an_entry_carrying_an_undeclared_field_is_refused_on_read_back(tmp_path:
     edit_entry(store, "nodes", "requirements.jsonld", **{"seg:description": "the text itself"})
     with pytest.raises(case.AffirmationStoreError, match="seg:description"):
         list(store.nodes())
+
+
+def test_a_hash_without_its_source_location_is_refused_on_read_back(tmp_path: Path) -> None:
+    """A digest that no longer says where its content lives has lost half its record."""
+    store = make_case(tmp_path)
+    store.write_nodes([requirement()])
+    edit_entry(store, "nodes", "requirements.jsonld", **{"seg:contentHashSource": None})
+    with pytest.raises(case.AffirmationStoreError, match="seg:contentHashSource"):
+        list(store.nodes())
+
+
+def test_a_source_location_missing_a_member_is_refused_on_read_back(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.write_nodes([requirement()])
+    edit_entry(
+        store,
+        "nodes",
+        "requirements.jsonld",
+        **{
+            "seg:contentHashSource": {
+                "seg:sourceRepo": "the-source-repo",
+                "seg:sourcePath": "a/file.txt",
+            }
+        },
+    )
+    with pytest.raises(case.AffirmationStoreError, match="seg:sourceLocator"):
+        list(store.nodes())
+
+
+def test_a_source_location_with_an_undeclared_member_is_refused_on_read_back(
+    tmp_path: Path,
+) -> None:
+    """The nested object is as closed as the entry around it."""
+    store = make_case(tmp_path)
+    store.write_nodes([requirement()])
+    edit_entry(
+        store,
+        "nodes",
+        "requirements.jsonld",
+        **{
+            "seg:contentHashSource": {
+                "seg:sourceRepo": "the-source-repo",
+                "seg:sourcePath": "a/file.txt",
+                "seg:sourceLocator": "need:SEG-SREQ-020",
+                "seg:sourceBranch": "main",
+            }
+        },
+    )
+    with pytest.raises(case.AffirmationStoreError, match="seg:sourceBranch"):
+        list(store.nodes())
+
+
+def test_a_locator_of_a_scheme_the_kind_does_not_pin_is_refused_on_read_back(
+    tmp_path: Path,
+) -> None:
+    """The pin holds for the auditor's tooling and for ours alike."""
+    store = make_case(tmp_path)
+    store.write_nodes([requirement()])
+    edit_entry(
+        store,
+        "nodes",
+        "requirements.jsonld",
+        **{
+            "seg:contentHashSource": {
+                "seg:sourceRepo": "the-source-repo",
+                "seg:sourcePath": "a/file.txt",
+                "seg:sourceLocator": "symbol:some.function#api",
+            }
+        },
+    )
+    with pytest.raises(case.AffirmationStoreError, match="seg:sourceLocator"):
+        list(store.nodes())
+
+
+def test_an_empty_role_is_refused_on_read_back(tmp_path: Path) -> None:
+    """An empty role satisfies the field while recording nothing; the schema refuses it."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event()])
+    edit_entry(store, "events", "review_events.jsonld", **{"seg:affirmingRole": ""})
+    with pytest.raises(case.AffirmationStoreError, match="seg:affirmingRole"):
+        list(store.review_events())
 
 
 def test_a_pending_edge_carrying_a_hash_is_refused_on_read_back(tmp_path: Path) -> None:

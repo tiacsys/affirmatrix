@@ -19,9 +19,11 @@ exchanges, and the protocol that yields them.
   join them when the generator lands.
 
 Records carry hashes and references, never the content those hashes cover
-(SEG-SREQ-018), and they are frozen: a record that could be edited in flight
-would let a hash and the thing it describes drift apart between the producer
-that made it and the store that keeps it.
+(SEG-SREQ-018) — but every content hash travels with the source location of
+what it covers (SEG-SREQ-050), because a digest that cannot say where to look
+answers whether content changed and nothing else. Records are frozen: a record
+that could be edited in flight would let a hash and the thing it describes
+drift apart between the producer that made it and the store that keeps it.
 
 Identifiers here are case-local and stable — the same strings that enter a hash
 preimage. Absolute IRIs are minted at serialization time (ADR-0007), so a
@@ -78,28 +80,70 @@ def _require(value: str, what: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
+class ContentAnchor:
+    """One named content hash's digest, bound to where its content lives.
+
+    The location — repository, path, and span locator, per content hash
+    (SEG-SREQ-050) — is what before-content recovery fetches by: without it a
+    persisted digest answers *whether* content changed but not *what* to look
+    at. One value rather than a digest here and a location there, so no write
+    path can serialize a digest under one name and its location under another.
+
+    The location is a reference, never integrity data: no part of it enters a
+    hash preimage, so moving a file changes the anchor — a reviewable diff —
+    without sending a single edge suspect. The locator's *format* is pinned per
+    node kind by the case's schemas; the vocabulary asks only that it be there.
+    """
+
+    digest: bytes
+    repository: str
+    path: str
+    locator: str
+
+    def __post_init__(self) -> None:
+        checked_digest(self.digest, "anchored digest")
+        _require(self.repository, "repository")
+        _require(self.path, "path")
+        _require(self.locator, "locator")
+
+
+@dataclass(frozen=True, slots=True)
 class NodeRecord:
-    """A node as the graph knows it: an identity, a kind, and its hashes.
+    """A node as the graph knows it: an identity, a kind, and anchored hashes.
 
     The content those hashes cover lives in the source that produced them and
-    is fetched transiently when a human needs to look at it. It is never
-    carried here.
+    is fetched transiently when a human needs to look at it — which is what
+    each anchor's location exists to make possible. The content itself is
+    never carried here.
     """
 
     local_id: str
     kind: str
-    content_hashes: Mapping[str, bytes]
+    content_anchors: Mapping[str, ContentAnchor]
 
     def __post_init__(self) -> None:
         _require(self.local_id, "local identifier")
         _require(self.kind, "kind")
-        if not self.content_hashes:
+        if not self.content_anchors:
             raise ValueError(f"node {self.local_id!r} needs at least one content hash")
-        frozen = {
-            name: checked_digest(digest, f"{self.local_id}.{name}")
-            for name, digest in self.content_hashes.items()
-        }
-        object.__setattr__(self, "content_hashes", MappingProxyType(frozen))
+        for name, anchor in self.content_anchors.items():
+            if not isinstance(anchor, ContentAnchor):
+                raise ValueError(
+                    f"node {self.local_id!r} gives {anchor!r} for {name!r}, which is not a "
+                    "ContentAnchor; a content hash travels with its source location"
+                )
+        object.__setattr__(self, "content_anchors", MappingProxyType(dict(self.content_anchors)))
+
+    @property
+    def content_hashes(self) -> Mapping[str, bytes]:
+        """The name→digest view the hashing layer consumes.
+
+        A reading of the anchors, not a second store: it cannot disagree with
+        them about which digest a name carries.
+        """
+        return MappingProxyType(
+            {name: anchor.digest for name, anchor in self.content_anchors.items()}
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,6 +191,14 @@ class ReviewEvent:
     be reconstructed later — nothing else correlates a source revision to the
     moment someone accepted it — so it is captured here or lost.
 
+    The role is the capacity the judgement was made in (SEG-SREQ-049): who and
+    when come from the commit that introduces the record, but in-what-role is
+    the record's own to state. It is required and free — any non-empty string —
+    because role validation is a process concern, not a tool rule; the design
+    record's CamelCase spellings are documented convention, not constraint. An
+    empty role would satisfy the field while recording nothing, so that alone
+    is refused.
+
     The reason is stored exactly as supplied (SEG-SREQ-028). An empty one is
     allowed: a thin justification is the operator's to give and a reader's to
     judge, and silently substituting text would make the record a paraphrase of
@@ -160,6 +212,7 @@ class ReviewEvent:
     to_node_hash: bytes
     from_source_revision: str
     to_source_revision: str
+    role: str
     reason: str
 
     def __post_init__(self) -> None:
@@ -168,8 +221,30 @@ class ReviewEvent:
         _require(self.kind, "kind")
         _require(self.from_source_revision, "source revision for the source endpoint")
         _require(self.to_source_revision, "source revision for the target endpoint")
+        _require(self.role, "role")
         checked_digest(self.from_node_hash, f"{self.from_id} node hash")
         checked_digest(self.to_node_hash, f"{self.to_id} node hash")
+
+
+@dataclass(frozen=True, slots=True)
+class EdgeReference:
+    """A name for one edge: its kind and its two endpoints, as separate values.
+
+    The currency of per-edge requests — a demotion request names the edges it
+    licenses with these (SEG-SREQ-051). A triple rather than an identifier,
+    because an identifier is an opaque key whose parts may contain the
+    separator (ADR-0007); and a value type, so membership in a request is
+    equality, not object identity.
+    """
+
+    kind: str
+    from_id: str
+    to_id: str
+
+    def __post_init__(self) -> None:
+        _require(self.kind, "kind")
+        _require(self.from_id, "source identifier")
+        _require(self.to_id, "target identifier")
 
 
 def hex_digest(digest: bytes) -> str:
@@ -216,7 +291,9 @@ class RecordSource(Protocol):
 
 
 __all__ = [
+    "ContentAnchor",
     "EdgeRecord",
+    "EdgeReference",
     "LinkState",
     "NodeRecord",
     "RecordSource",

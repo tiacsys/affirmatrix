@@ -94,9 +94,14 @@ EVENT_SCHEMA = "review_event.schema.json"
 PROOF_DOCUMENT_SCHEMAS: MappingProxyType[str, str] = MappingProxyType({})
 
 #: The separators a single path segment may not contain. The forward slash is
-#: listed whatever the platform: a case is written on one machine and read on
-#: another, so a name that is one segment here must be one segment there too.
-_SEPARATORS = frozenset({"/", os.sep} | ({os.altsep} if os.altsep else set()))
+#: listed whatever the platform, and so is the backslash: a case is written on
+#: one machine and read on another, so a name that is one segment here must be
+#: one segment there too.
+_SEPARATORS = frozenset({"/", "\\", os.sep} | ({os.altsep} if os.altsep else set()))
+
+#: Characters invalid in a file name on Windows though legal on POSIX. Control
+#: characters are refused with them (see :func:`resolved_under`).
+_WINDOWS_INVALID = frozenset('<>:"|?*')
 
 
 def resolved_under(root: Path, *parts: str) -> Path:
@@ -110,6 +115,14 @@ def resolved_under(root: Path, *parts: str) -> Path:
     no lexical rule can see, where a directory in the path is a symlink out of
     the root.
 
+    A character invalid in a file name on Windows is refused on every platform,
+    control characters with it. A published case must be checkable out on
+    either filesystem; the proof generator's minting rule (SEG-SREQ-052) is the
+    primary guard, and this is the store's defense in depth at its one path
+    choke point, so no caller-supplied name can put an uncheckoutable file in a
+    case. Windows's reserved device names and trailing dots or spaces remain
+    the minting rule's concern — this rule is about characters only.
+
     A leading dot is refused as well. It is not an escape, but it would let a
     caller-supplied name hide a document from an ordinary listing of the case,
     and the review surface for the whole store is somebody reading that listing.
@@ -119,9 +132,14 @@ def resolved_under(root: Path, *parts: str) -> Path:
             raise AffirmationStoreError(
                 f"{part!r} is not a name a path under the write root can be built from"
             )
-        if "\x00" in part or any(separator in part for separator in _SEPARATORS):
+        if any(separator in part for separator in _SEPARATORS):
             raise AffirmationStoreError(
                 f"{part!r} contains a path separator, so it names more than one place"
+            )
+        if any(character in _WINDOWS_INVALID or ord(character) < 0x20 for character in part):
+            raise AffirmationStoreError(
+                f"{part!r} contains a character that is not valid in a file name on every "
+                "filesystem a case must be checkable out on"
             )
         if part.startswith("."):
             raise AffirmationStoreError(f"{part!r} starts with a dot, which would hide it")

@@ -16,10 +16,12 @@ came from disk or from a producer. Its write face is exclusive.
 
 Write policy (ADR-0008): writes land in place in the working ``case/`` by
 default, each record appearing only once it is complete (SEG-SREQ-022), never
-removing a record unless removal was requested (SEG-SREQ-023), and never
-outside the write root it was given (SEG-SREQ-021). An output directory can
-relocate that root. The tool performs no version-control operations of its
-own — the review surface is the working tree, and a maintainer records it.
+removing a record unless removal was requested (SEG-SREQ-023), never letting a
+write strip an edge record of the hash it was affirmed against unless demotion
+of that edge was requested (SEG-SREQ-051), and never outside the write root it
+was given (SEG-SREQ-021). An output directory can relocate that root. The tool
+performs no version-control operations of its own — the review surface is the
+working tree, and a maintainer records it.
 
 **The write face, as built.** One class over one write root. The root is always
 a parameter and never a default, so relocating the whole store is passing a
@@ -66,9 +68,9 @@ from importlib.resources.abc import Traversable
 from pathlib import Path
 
 from affirmatrix.case import _atomic, _documents, _layout, _validation
-from affirmatrix.case._errors import AffirmationStoreError
+from affirmatrix.case._errors import AffirmationStoreError, DemotionNotRequestedError
 from affirmatrix.identity import edge_iri, node_iri
-from affirmatrix.records import EdgeRecord, NodeRecord, ReviewEvent
+from affirmatrix.records import EdgeRecord, EdgeReference, NodeRecord, ReviewEvent
 
 _PACKAGE_DATA = resources.files(__package__)
 
@@ -175,10 +177,25 @@ class AffirmationStore:
         for kind, entries in batch.items():
             self._rewrite(_layout.node_document(self.root, kind), entries)
 
-    def write_edges(self, records: Iterable[EdgeRecord]) -> None:
-        """Persist edge records, one document rewritten per kind touched."""
+    def write_edges(
+        self, records: Iterable[EdgeRecord], *, demote: Iterable[EdgeReference] = ()
+    ) -> None:
+        """Persist edge records, one document rewritten per kind touched.
+
+        :implements: SEG-SREQ-051
+
+        A record that would replace an incumbent carrying the hash it was
+        affirmed against with one carrying none is a demotion, and a demotion
+        happens only when ``demote`` names that edge. The stream itself is
+        never the request — a current stream, every edge pending, must not be
+        able to reset what the case says was affirmed — and naming is per
+        edge, never a flag over the write. A name that licenses nothing is
+        refused too: a request that silently did nothing would be
+        indistinguishable from one that worked. Either disagreement refuses
+        the whole batch before a byte lands, as validation already does.
+        """
         schemas = self._prepared()
-        batch: dict[str, list[_documents.Entry]] = {}
+        batch: dict[str, list[tuple[EdgeRecord, _documents.Entry]]] = {}
         for record in records:
             entry = _documents.edge_entry(record)
             _validation.validate_entry(
@@ -187,9 +204,50 @@ class AffirmationStore:
                 _layout.edge_schema(record.kind),
                 f"edge {record.from_id!r} -> {record.to_id!r}",
             )
-            batch.setdefault(record.kind, []).append(entry)
-        for kind, entries in batch.items():
-            self._rewrite(_layout.edge_document(self.root, kind), entries)
+            batch.setdefault(record.kind, []).append((record, entry))
+        self._check_demotions(batch, frozenset(demote))
+        for kind, pairs in batch.items():
+            self._rewrite(
+                _layout.edge_document(self.root, kind), [entry for _, entry in pairs]
+            )
+
+    def _check_demotions(
+        self,
+        batch: Mapping[str, list[tuple[EdgeRecord, _documents.Entry]]],
+        requested: frozenset[EdgeReference],
+    ) -> None:
+        """Refuse a write whose demotions and demotion request disagree.
+
+        Both directions are collected across the whole batch before either
+        raises, so one refusal is one complete diagnosis — the shape removal
+        and validation refusals already have.
+        """
+        demoted: set[EdgeReference] = set()
+        unrequested: list[str] = []
+        for kind, pairs in batch.items():
+            document = _layout.edge_document(self.root, kind)
+            incumbents = {entry["id"]: entry for entry in _documents.read_entries(document)}
+            for record, entry in pairs:
+                incumbent = incumbents.get(entry["id"])
+                if incumbent is None or "seg:edgeHash" not in incumbent:
+                    continue
+                if "seg:edgeHash" in entry:
+                    continue
+                reference = EdgeReference(kind=kind, from_id=record.from_id, to_id=record.to_id)
+                demoted.add(reference)
+                if reference not in requested:
+                    unrequested.append(_edge_label(reference))
+        unused = sorted(_edge_label(reference) for reference in requested - demoted)
+        problems = []
+        if unrequested:
+            problems.append(
+                f"would strip the affirmed hash from {', '.join(sorted(unrequested))}, "
+                "and demotion of those edges was not requested"
+            )
+        if unused:
+            problems.append(f"does not demote {', '.join(unused)}, whose demotion was requested")
+        if problems:
+            raise DemotionNotRequestedError(f"this write {'; and it '.join(problems)}")
 
     def append_review_events(self, events: Iterable[ReviewEvent]) -> None:
         """Add review events to the case, after the ones already recorded.
@@ -376,4 +434,9 @@ def _seed(target: Path, source: Traversable) -> None:
         _atomic.replace_file(target, source.read_bytes())
 
 
-__all__ = ["AffirmationStore", "AffirmationStoreError"]
+def _edge_label(reference: EdgeReference) -> str:
+    """One edge, named for a refusal message."""
+    return f"{reference.from_id!r} -> {reference.to_id!r} ({reference.kind})"
+
+
+__all__ = ["AffirmationStore", "AffirmationStoreError", "DemotionNotRequestedError"]
