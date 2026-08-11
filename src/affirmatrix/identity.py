@@ -14,7 +14,7 @@ to the commitment layer.
 
 from __future__ import annotations
 
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 #: The one place the identifier base is known.
 #:
@@ -48,6 +48,34 @@ def node_iri(local_id: str) -> str:
     return f"{BASE}/node/{_segment(local_id)}"
 
 
+def node_local_id(iri: str) -> str:
+    """The case-local identifier a node IRI was minted from.
+
+    The inverse of :func:`node_iri`, and deliberately of nothing else: a node
+    IRI carries exactly one fully percent-encoded segment, so undoing the
+    minting is well defined. This is not the identifier-splitting ADR-0007
+    forbids — that rule is about recovering an edge's parts from its ``id``,
+    whose segments may contain the separator. Read-back reads endpoints from
+    ``seg:from``/``seg:to`` exactly as the record states them; those values are
+    node IRIs, and this is the one place that can undo them, because it is the
+    one place that knows the base.
+
+    An IRI outside the node space is refused. Callers verify a recovered
+    identifier by re-minting it and comparing against the stored one, so a
+    non-canonical spelling cannot slip through as a parse this function never
+    made.
+    """
+    prefix = f"{BASE}/node/"
+    if not iri.startswith(prefix):
+        raise ValueError(f"{iri!r} is not a node identifier: it does not start with {prefix!r}")
+    segment = iri.removeprefix(prefix)
+    if not segment or "/" in segment:
+        raise ValueError(
+            f"{iri!r} is not a node identifier: a node IRI carries exactly one segment"
+        )
+    return unquote(segment)
+
+
 def edge_iri(kind: str, from_id: str, to_id: str) -> str:
     """The absolute IRI an edge record is serialized under.
 
@@ -78,4 +106,4 @@ def review_event_iri(ordinal: int) -> str:
     return f"{BASE}/event/{ordinal:06d}"
 
 
-__all__ = ["BASE", "edge_iri", "node_iri", "review_event_iri"]
+__all__ = ["BASE", "edge_iri", "node_iri", "node_local_id", "review_event_iri"]

@@ -17,4 +17,5 @@ currently in scope to build.
    guarantee-boundary
    case-store
    affirmation-store-write-face
+   affirmation-store-read-face
    iteration-0-backlog

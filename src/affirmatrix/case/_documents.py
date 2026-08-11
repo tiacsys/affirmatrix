@@ -5,6 +5,14 @@ entry carries exactly the fields of the record it serializes — no more, becaus
 a field that could carry covered content must not exist (SEG-SREQ-018), and no
 less, because a field the store drops is a field read-back cannot reproduce.
 
+Each entry builder has its inverse beside it, so the pair can be read as one
+statement of what a record's persisted form is. An inverse only ever sees an
+entry the store has already validated against the case's schemas, but it does
+not lean on that: it re-establishes every record invariant itself and refuses
+an entry it cannot turn back into the record that would have produced it —
+never repairing, never skipping, because a recorded record that quietly went
+missing reads downstream as an affirmation that never happened.
+
 The envelope is the store's, not the record's. ``@context`` and ``@graph`` are
 how a case describes itself; the schemas describe the entries inside.
 """
@@ -12,19 +20,28 @@ how a case describes itself; the schemas describe the entries inside.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from operator import itemgetter
 from pathlib import Path
 
 from affirmatrix import identity
 from affirmatrix.case._errors import AffirmationStoreError
-from affirmatrix.records import EdgeRecord, NodeRecord, ReviewEvent, hex_digest
+from affirmatrix.records import (
+    EdgeRecord,
+    LinkState,
+    NodeRecord,
+    ReviewEvent,
+    digest_from_hex,
+    hex_digest,
+)
 
 Entry = dict[str, object]
 
 _GRAPH = "@graph"
 _CONTEXT = "@context"
 _ID = "id"
+_PREFIX = "seg:"
+_NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId"})
 
 
 def node_entry(record: NodeRecord) -> Entry:
@@ -44,6 +61,40 @@ def node_entry(record: NodeRecord) -> Entry:
     for name, digest in sorted(record.content_hashes.items()):
         entry[f"seg:{name}"] = hex_digest(digest)
     return entry
+
+
+def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
+    """One persisted entry back as the node record it serializes.
+
+    :implements: SEG-SREQ-020
+
+    The kind comes from the document being read, never from the entry: the
+    schema has already pinned the entry's ``type`` to the document's kind, so
+    reading it out again would be stating one fact twice. The identifier is
+    read from ``seg:localId`` and then verified by re-minting: an entry whose
+    ``id`` and local identifier disagree carries two identities, and reading
+    back either one silently would let the record move on its next rewrite.
+    """
+    local_id = str(entry["seg:localId"])
+    minted = identity.node_iri(local_id)
+    if entry[_ID] != minted:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, but its local identifier {local_id!r} mints "
+            f"{minted}; two spellings of one identity must agree"
+        )
+    hashes: dict[str, bytes] = {}
+    for name in entry:
+        if name in _NODE_FIXED_FIELDS:
+            continue
+        if not name.startswith(_PREFIX):
+            raise AffirmationStoreError(
+                f"{document} holds {entry[_ID]}, whose field {name!r} is not in the "
+                "case's vocabulary"
+            )
+        hashes[name.removeprefix(_PREFIX)] = _read_digest(entry, name, document)
+    return _reconstructed(
+        lambda: NodeRecord(local_id=local_id, kind=kind, content_hashes=hashes), entry, document
+    )
 
 
 def edge_entry(record: EdgeRecord) -> Entry:
@@ -66,6 +117,43 @@ def edge_entry(record: EdgeRecord) -> Entry:
     if record.edge_hash is not None:
         entry["seg:edgeHash"] = hex_digest(record.edge_hash)
     return entry
+
+
+def edge_record(entry: Entry, kind: str, document: Path) -> EdgeRecord:
+    """One persisted entry back as the edge record it serializes.
+
+    :implements: SEG-SREQ-020
+
+    The endpoints are read from ``seg:from`` and ``seg:to`` — the record's own
+    fields, exactly as ADR-0007 instructs — and those values are node IRIs, so
+    each is undone by the one inverse that exists. The recovery is then
+    verified by re-minting the edge's identifier from the recovered parts: a
+    parse this module cannot reproduce is a parse it refuses to trust.
+
+    The record type re-establishes its own invariants on construction, so an
+    entry hand-edited into a pending edge that carries a hash, or an active one
+    that lacks it, fails here even before the schema is consulted.
+    """
+    from_id = _read_endpoint(entry, "seg:from", document)
+    to_id = _read_endpoint(entry, "seg:to", document)
+    edge_hash = _read_digest(entry, "seg:edgeHash", document) if "seg:edgeHash" in entry else None
+    minted = identity.edge_iri(kind, from_id, to_id)
+    if entry[_ID] != minted:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, but its endpoints mint {minted}; "
+            "two spellings of one identity must agree"
+        )
+    return _reconstructed(
+        lambda: EdgeRecord(
+            from_id=from_id,
+            to_id=to_id,
+            kind=kind,
+            state=LinkState(str(entry["seg:linkState"])),
+            edge_hash=edge_hash,
+        ),
+        entry,
+        document,
+    )
 
 
 def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
@@ -99,6 +187,79 @@ def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
         },
         "seg:reason": event.reason,
     }
+
+
+def review_event_record(entry: Entry, document: Path) -> ReviewEvent:
+    """One persisted entry back as the review event it serializes.
+
+    :implements: SEG-SREQ-020
+
+    The event's position is not read back into the record: identity-by-position
+    is the events document's rule, and the record type deliberately has no
+    field for it. The edge kind is recovered from ``seg:relation`` by the
+    prefix-only mapping of ADR-0007 — one rule, no translation table.
+    """
+    relation = str(entry["seg:relation"])
+    if not relation.startswith(_PREFIX):
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose relation {relation!r} is not in the "
+            "case's vocabulary"
+        )
+    revisions = entry["seg:affirmedAt"]
+    if not isinstance(revisions, Mapping):
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose seg:affirmedAt is not the pair of "
+            "revisions the judgement was made at"
+        )
+    return _reconstructed(
+        lambda: ReviewEvent(
+            from_id=_read_endpoint(entry, "seg:from", document),
+            to_id=_read_endpoint(entry, "seg:to", document),
+            kind=relation.removeprefix(_PREFIX),
+            from_node_hash=_read_digest(entry, "seg:fromNodeHash", document),
+            to_node_hash=_read_digest(entry, "seg:toNodeHash", document),
+            from_source_revision=str(revisions["seg:fromRevision"]),
+            to_source_revision=str(revisions["seg:toRevision"]),
+            reason=str(entry["seg:reason"]),
+        ),
+        entry,
+        document,
+    )
+
+
+def _read_endpoint(entry: Entry, field: str, document: Path) -> str:
+    """One endpoint field back as a case-local identifier."""
+    try:
+        return identity.node_local_id(str(entry[field]))
+    except ValueError as error:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose {field} cannot be read back: {error}"
+        ) from error
+
+
+def _read_digest(entry: Entry, field: str, document: Path) -> bytes:
+    """One digest field back as raw bytes; uppercase is refused, not folded."""
+    try:
+        return digest_from_hex(str(entry[field]))
+    except ValueError as error:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose {field} cannot be read back: {error}"
+        ) from error
+
+
+def _reconstructed[RecordT](build: Callable[[], RecordT], entry: Entry, document: Path) -> RecordT:
+    """Run one record constructor, turning its refusal into the store's.
+
+    The record types validate themselves on construction; what they raise is a
+    producer-facing ``ValueError`` that does not know where the offending entry
+    lives. Read-back knows, and the document is the reader's next stop.
+    """
+    try:
+        return build()
+    except ValueError as error:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, which cannot be read back: {error}"
+        ) from error
 
 
 def merged(existing: Iterable[Entry], incoming: Iterable[Entry]) -> list[Entry]:
@@ -172,9 +333,12 @@ __all__ = [
     "Entry",
     "collection",
     "edge_entry",
+    "edge_record",
     "event_entry",
     "merged",
     "node_entry",
+    "node_record",
     "read_entries",
+    "review_event_record",
     "serialized",
 ]

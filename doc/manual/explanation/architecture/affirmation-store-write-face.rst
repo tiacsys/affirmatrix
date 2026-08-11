@@ -4,7 +4,8 @@ The affirmation store's write face
 The affirmation store is the only component that writes into a case. This page
 describes the writing half of it — what a case looks like on disk, what one
 write does, and which of its behaviours are guarantees rather than conveniences.
-The reading half, which presents a case as a record source, lands separately.
+The reading half, which presents a case as a record source, has its own page:
+:doc:`affirmation-store-read-face`.
 
 One store, one root
 -------------------
@@ -172,10 +173,6 @@ fields of their own, and nothing reads them back out of an identifier.
 
 What is not here yet
 --------------------
-
-*Reading.* The store's read face presents a case as a record source; it arrives
-separately, and with it the guarantee that a record reads back as it was written
-(SEG-SREQ-020).
 
 *The evidence package's document types.* The write path under
 ``proofs/{snapshotId}/`` is complete — validated, atomic, root-confined — but
