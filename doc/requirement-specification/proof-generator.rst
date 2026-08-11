@@ -59,6 +59,14 @@ the refusal arrives with the gate's report attached.
    The proof generator shall leave node, edge and affirmation state unchanged
    when it generates an evidence package.
 
+.. sreq:: Snapshot identifiers are portable path names
+   :id: SEG-SREQ-052
+   :refines: SEG-SYS-005
+
+   The proof generator shall mint every snapshot identifier using only
+   characters that are valid in a file name on both POSIX and Windows
+   filesystems.
+
 .. sreq:: A blocked scope yields no package at all
    :id: SEG-SREQ-046
    :refines: SEG-SYS-008

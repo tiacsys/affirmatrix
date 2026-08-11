@@ -50,9 +50,24 @@ silently removed, and never changed unless a change was asked for.
    The affirmation store shall remove a persisted record only when removal of
    that record is requested.
 
+.. sreq:: Every persisted content hash locates its content
+   :id: SEG-SREQ-050
+   :refines: SEG-SYS-007
+
+   The affirmation store shall persist, for each content hash a node record
+   carries, the source location of the content that hash covers.
+
 .. sreq:: Persisted affirmations change only on request
    :id: SEG-SREQ-033
    :refines: SEG-SYS-011
 
    The affirmation store shall change a persisted affirmation record only when
    that change is requested.
+
+.. sreq:: Affirmed standing is never lost by omission
+   :id: SEG-SREQ-051
+   :refines: SEG-SYS-011
+
+   If a write would replace an edge record carrying the hash it was affirmed
+   against with a record carrying no such hash, and demotion of that edge was
+   not requested, then the affirmation store shall refuse the write.

@@ -21,6 +21,13 @@ affirmation only for an edge where one can mean something.
    The affirmation recorder shall record in every review event the source
    commit of each endpoint at the moment of affirmation.
 
+.. sreq:: Affirmations carry the role they were made in
+   :id: SEG-SREQ-049
+   :refines: SEG-SYS-004
+
+   The affirmation recorder shall record in every review event the role in
+   which the affirmation was made.
+
 .. sreq:: The recorder originates nothing
    :id: SEG-SREQ-026
    :refines: SEG-SYS-004
