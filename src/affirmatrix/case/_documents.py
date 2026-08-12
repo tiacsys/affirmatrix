@@ -32,6 +32,7 @@ from affirmatrix.records import (
     LinkState,
     NodeRecord,
     ReviewEvent,
+    TestResult,
     digest_from_hex,
     hex_digest,
 )
@@ -42,7 +43,8 @@ _GRAPH = "@graph"
 _CONTEXT = "@context"
 _ID = "id"
 _PREFIX = "seg:"
-_NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId"})
+_RESULT = "seg:result"
+_NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId", _RESULT})
 _SOURCE_SUFFIX = "Source"
 _SOURCE_MEMBERS = ("seg:sourceRepo", "seg:sourcePath", "seg:sourceLocator")
 
@@ -53,18 +55,21 @@ def node_entry(record: NodeRecord) -> Entry:
     :implements: SEG-SREQ-018
     :implements: SEG-SREQ-050
 
-    Every value is an identifier, a kind token, a digest, or the source
-    location of what a digest covers. The content itself has no field to travel
-    in, which is the structural half of the guarantee; the schema's refusal of
-    any undeclared property is the other. Each digest's location is written
-    beside it under the digest's own name plus ``Source``, so the pairing is a
-    spelling rule a reader can apply without a table.
+    Every value is an identifier, a kind token, a digest, the source location
+    of what a digest covers, or a test outcome's recorded result. The content
+    itself has no field to travel in, which is the structural half of the
+    guarantee; the schema's refusal of any undeclared property is the other.
+    Each digest's location is written beside it under the digest's own name
+    plus ``Source``, so the pairing is a spelling rule a reader can apply
+    without a table.
     """
     entry: Entry = {
         _ID: identity.node_iri(record.local_id),
         "type": f"seg:{record.kind}",
         "seg:localId": record.local_id,
     }
+    if record.result is not None:
+        entry[_RESULT] = record.result.value
     for name, anchor in sorted(record.content_anchors.items()):
         entry[f"seg:{name}"] = hex_digest(anchor.digest)
         entry[f"seg:{name}{_SOURCE_SUFFIX}"] = {
@@ -79,6 +84,12 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
     """One persisted entry back as the node record it serializes.
 
     :implements: SEG-SREQ-020
+    :implements: SEG-SREQ-055
+
+    A test outcome's result is read back through the closed vocabulary, so a
+    hand-edited spelling the vocabulary does not contain is refused here even
+    before the schema is consulted — the recorded stream supplies a result in
+    every test outcome record or refuses to be a stream at all.
 
     The kind comes from the document being read, never from the entry: the
     schema has already pinned the entry's ``type`` to the document's kind, so
@@ -120,10 +131,19 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             f"{document} holds {entry[_ID]}, whose content hashes and source locations do "
             f"not pair up: {', '.join(repr(name) for name in unpaired)}"
         )
+    result: TestResult | None = None
+    if _RESULT in entry:
+        try:
+            result = TestResult(str(entry[_RESULT]))
+        except ValueError as error:
+            raise AffirmationStoreError(
+                f"{document} holds {entry[_ID]}, whose {_RESULT} cannot be read back: {error}"
+            ) from error
     return _reconstructed(
         lambda: NodeRecord(
             local_id=local_id,
             kind=kind,
+            result=result,
             content_anchors={
                 name: ContentAnchor(
                     digest=digest,

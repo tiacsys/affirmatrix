@@ -48,12 +48,15 @@ from pathlib import Path
 from typing import Any
 
 from affirmatrix._hashing import content_hash
-from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
+from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord, TestResult
 
 _NODES = "nodes"
 _EDGES = "edges"
 _CONTENT = "content"
 _MANIFEST_GLOB = "*.toml"
+#: The one manifest entry key that is not a content-hash field name: the
+#: recorded result of a test execution, passed through to the record.
+_RESULT_KEY = "result"
 
 
 class StoreError(Exception):
@@ -96,11 +99,7 @@ class StoreLoader:
             document = _read_manifest(manifest)
             kind = _declared_kind(document, manifest)
             for local_id, declaration in _table(document, _NODES, manifest).items():
-                yield NodeRecord(
-                    local_id=local_id,
-                    kind=kind,
-                    content_anchors=self._content_anchors(local_id, declaration, manifest),
-                )
+                yield self._node_record(local_id, kind, declaration, manifest)
 
     def edges(self) -> Iterator[EdgeRecord]:
         """The edge records the store declares, grouped by kind in each manifest.
@@ -117,6 +116,42 @@ class StoreLoader:
                         kind=kind,
                         state=LinkState.PENDING,
                     )
+
+    def _node_record(
+        self, local_id: str, kind: str, declaration: Any, manifest: Path
+    ) -> NodeRecord:
+        """One manifest entry as the node record it declares.
+
+        The ``result`` key is the entry's one non-content field — the recorded
+        result of the execution a test outcome stands for — separated here so
+        everything that remains is a content-hash declaration. The record type
+        itself decides which kinds must, and which must not, carry one; a
+        refusal it raises is re-said naming the manifest and the entry, because
+        the fix is an edit to exactly there.
+        """
+        result: TestResult | None = None
+        if isinstance(declaration, dict) and _RESULT_KEY in declaration:
+            declaration = dict(declaration)
+            result = self._parsed_result(local_id, declaration.pop(_RESULT_KEY), manifest)
+        anchors = self._content_anchors(local_id, declaration, manifest)
+        try:
+            return NodeRecord(
+                local_id=local_id, kind=kind, content_anchors=anchors, result=result
+            )
+        except ValueError as error:
+            raise StoreError(
+                f"{manifest}: entry {local_id!r} cannot be a record: {error}"
+            ) from error
+
+    def _parsed_result(self, local_id: str, declared: Any, manifest: Path) -> TestResult:
+        """One declared result through the closed vocabulary, or a refusal."""
+        try:
+            return TestResult(str(declared))
+        except ValueError as error:
+            raise StoreError(
+                f"{manifest}: entry {local_id!r} declares the result {declared!r}, "
+                f"which the vocabulary does not contain"
+            ) from error
 
     def _content_anchors(
         self, local_id: str, declaration: Any, manifest: Path

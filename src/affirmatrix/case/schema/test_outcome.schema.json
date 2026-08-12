@@ -9,7 +9,8 @@
     "type",
     "seg:localId",
     "seg:contentHash",
-    "seg:contentHashSource"
+    "seg:contentHashSource",
+    "seg:result"
   ],
   "additionalProperties": false,
   "properties": {
@@ -28,6 +29,15 @@
     },
     "seg:contentHash": {
       "$ref": "#/$defs/sha256"
+    },
+    "seg:result": {
+      "enum": [
+        "passed",
+        "failed",
+        "error",
+        "skipped"
+      ],
+      "description": "The result of the test execution this outcome records (SEG-SREQ-055). A closed set. A recorded claim, like an edge's linkState: the content hash covers the artifact that is the authority on it, and the claim never enters a hash preimage."
     },
     "seg:contentHashSource": {
       "type": "object",

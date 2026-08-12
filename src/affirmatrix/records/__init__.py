@@ -44,6 +44,11 @@ from affirmatrix._hashing import DIGEST_BYTES, checked_digest
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
 
+#: The one node kind whose records carry an execution result. The taxonomy
+#: declares that the kind exists; what a record of it must carry is the
+#: vocabulary's own rule, so the spelling lives here beside it.
+_TEST_OUTCOME = "TestOutcome"
+
 
 class LinkState(StrEnum):
     """The states a strong edge can be in.
@@ -59,6 +64,26 @@ class LinkState(StrEnum):
     TRANSITIVELY_SUSPECT = "transitivelySuspect"
     DOUBLY_OUTDATED = "doublyOutdated"
     BROKEN = "broken"
+
+
+class TestResult(StrEnum):
+    """The recorded result of one test execution — a closed set.
+
+    Four ways a run can end, spelled the way the run artifacts spell them. The
+    result is a producer-recorded claim, like an edge's state: the outcome's
+    content hash still covers the artifact that is the authority on it, and
+    the claim never enters a hash preimage — the same invariant anchors and
+    the affirming role keep (a re-spelled result is a reviewable diff, never a
+    suspicion event).
+    """
+
+    # Not a test class, whatever the name says to a test collector.
+    __test__ = False
+
+    PASSED = "passed"
+    FAILED = "failed"
+    ERROR = "error"
+    SKIPPED = "skipped"
 
 
 class SourceRole(StrEnum):
@@ -115,15 +140,35 @@ class NodeRecord:
     is fetched transiently when a human needs to look at it — which is what
     each anchor's location exists to make possible. The content itself is
     never carried here.
+
+    A test outcome additionally carries the result of the execution it records
+    (SEG-SREQ-055) — required there and refused everywhere else, because a
+    result on a kind that records no execution would be a claim the kind
+    cannot make. Requiredness lives here, on the vocabulary, so no supplier
+    can omit it: the record source's obligation is discharged by there being
+    no such record without one.
     """
 
     local_id: str
     kind: str
     content_anchors: Mapping[str, ContentAnchor]
+    result: TestResult | None = field(default=None)
 
     def __post_init__(self) -> None:
         _require(self.local_id, "local identifier")
         _require(self.kind, "kind")
+        if self.kind == _TEST_OUTCOME:
+            if self.result is None:
+                raise ValueError(
+                    f"test outcome {self.local_id!r} records an execution and must carry "
+                    "its result"
+                )
+            object.__setattr__(self, "result", TestResult(self.result))
+        elif self.result is not None:
+            raise ValueError(
+                f"node {self.local_id!r} of kind {self.kind!r} records no test execution "
+                "and cannot carry a result"
+            )
         if not self.content_anchors:
             raise ValueError(f"node {self.local_id!r} needs at least one content hash")
         for name, anchor in self.content_anchors.items():
@@ -299,6 +344,7 @@ __all__ = [
     "RecordSource",
     "ReviewEvent",
     "SourceRole",
+    "TestResult",
     "digest_from_hex",
     "hex_digest",
 ]

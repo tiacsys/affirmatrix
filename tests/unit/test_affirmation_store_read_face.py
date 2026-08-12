@@ -85,6 +85,7 @@ def one_node_of_every_kind() -> list[records.NodeRecord]:
             content_anchors={
                 "contentHash": anchor("passed", locator="nodeid:tests/test_store.py::test_it")
             },
+            result=records.TestResult.PASSED,
         ),
         records.NodeRecord(
             local_id="WVR-001", kind="Waiver", content_anchors={"contentHash": anchor("waived")}
@@ -203,6 +204,59 @@ def test_a_node_reads_back_with_the_location_of_every_hash(tmp_path: Path) -> No
     assert read.content_anchors["contentHash"] == anchor(
         "a statement", locator="need:SEG-SREQ-020"
     )
+
+
+def test_an_outcome_reads_back_with_its_result(tmp_path: Path) -> None:
+    """SEG-SREQ-055 composed with SEG-SREQ-020: the recorded stream supplies
+    the result in every test outcome record, exactly as it was written."""
+    store = make_case(tmp_path)
+    store.write_nodes(
+        [
+            records.NodeRecord(
+                local_id="run-0002/SEG-TS-001",
+                kind="TestOutcome",
+                content_anchors={"contentHash": anchor("failed", locator="nodeid:t.py::test_it")},
+                result=records.TestResult.FAILED,
+            )
+        ]
+    )
+    (read,) = store.nodes()
+    assert read.result is records.TestResult.FAILED
+
+
+def test_a_result_outside_the_vocabulary_is_refused_on_read(tmp_path: Path) -> None:
+    """A hand-edited result is nobody's pass; the stream refuses, never guesses."""
+    store = make_case(tmp_path)
+    store.write_nodes(
+        [
+            records.NodeRecord(
+                local_id="run-0002/SEG-TS-001",
+                kind="TestOutcome",
+                content_anchors={"contentHash": anchor("passed", locator="nodeid:t.py::test_it")},
+                result=records.TestResult.PASSED,
+            )
+        ]
+    )
+    edit_entry(store, "nodes", "test_outcomes.jsonld", **{"seg:result": "green"})
+    with pytest.raises(case.AffirmationStoreError):
+        list(store.nodes())
+
+
+def test_an_outcome_stripped_of_its_result_is_refused_on_read(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.write_nodes(
+        [
+            records.NodeRecord(
+                local_id="run-0002/SEG-TS-001",
+                kind="TestOutcome",
+                content_anchors={"contentHash": anchor("passed", locator="nodeid:t.py::test_it")},
+                result=records.TestResult.PASSED,
+            )
+        ]
+    )
+    edit_entry(store, "nodes", "test_outcomes.jsonld", **{"seg:result": None})
+    with pytest.raises(case.AffirmationStoreError):
+        list(store.nodes())
 
 
 def test_a_review_event_reads_back_with_its_role(tmp_path: Path) -> None:

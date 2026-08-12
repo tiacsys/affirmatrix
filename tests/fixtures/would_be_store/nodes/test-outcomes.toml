@@ -7,15 +7,19 @@
 # The result record holds only fields that repeat: no duration, no timestamp,
 # no environment. A form carrying either would make the content hash a function
 # of when the run happened rather than of what it observed.
+#
+# `result` is the entry's one non-content key: the recorded result of the
+# execution, stated beside the content whose hash covers the record of it. A
+# test asserts the two agree, because nothing else makes them.
 
 kind = "TestOutcome"
 
 [nodes]
-"run-0001/SEG-TS-001" = { contentHash = "test-outcome/run-0001.SEG-TS-001.txt" }
-"run-0001/SEG-TS-002" = { contentHash = "test-outcome/run-0001.SEG-TS-002.txt" }
-"run-0001/SEG-TS-004" = { contentHash = "test-outcome/run-0001.SEG-TS-004.txt" }
-"run-0001/SEG-TS-005" = { contentHash = "test-outcome/run-0001.SEG-TS-005.txt" }
-"run-0001/SEG-TS-006" = { contentHash = "test-outcome/run-0001.SEG-TS-006.txt" }
-"run-0001/SEG-TS-007" = { contentHash = "test-outcome/run-0001.SEG-TS-007.txt" }
-"run-0001/SEG-TS-008" = { contentHash = "test-outcome/run-0001.SEG-TS-008.txt" }
-"run-0001/SEG-TS-009" = { contentHash = "test-outcome/run-0001.SEG-TS-009.txt" }
+"run-0001/SEG-TS-001" = { contentHash = "test-outcome/run-0001.SEG-TS-001.txt", result = "passed" }
+"run-0001/SEG-TS-002" = { contentHash = "test-outcome/run-0001.SEG-TS-002.txt", result = "passed" }
+"run-0001/SEG-TS-004" = { contentHash = "test-outcome/run-0001.SEG-TS-004.txt", result = "passed" }
+"run-0001/SEG-TS-005" = { contentHash = "test-outcome/run-0001.SEG-TS-005.txt", result = "passed" }
+"run-0001/SEG-TS-006" = { contentHash = "test-outcome/run-0001.SEG-TS-006.txt", result = "passed" }
+"run-0001/SEG-TS-007" = { contentHash = "test-outcome/run-0001.SEG-TS-007.txt", result = "passed" }
+"run-0001/SEG-TS-008" = { contentHash = "test-outcome/run-0001.SEG-TS-008.txt", result = "passed" }
+"run-0001/SEG-TS-009" = { contentHash = "test-outcome/run-0001.SEG-TS-009.txt", result = "passed" }

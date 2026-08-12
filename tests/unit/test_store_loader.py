@@ -294,6 +294,56 @@ def test_an_entry_declaring_no_content_is_refused(tmp_path: Path) -> None:
         list(store.StoreLoader(root).nodes())
 
 
+# ── Test results (SEG-SREQ-055) ─────────────────────────────────────────────
+
+
+ONE_OUTCOME = """
+kind = "TestOutcome"
+
+[nodes]
+"run-1/TS-1" = { contentHash = "o.txt", result = "failed" }
+"""
+
+
+def test_a_declared_result_reaches_the_record(tmp_path: Path) -> None:
+    """The manifest's one non-content key, passed through the closed vocabulary."""
+    root = make_store(tmp_path, nodes=ONE_OUTCOME, content={"o.txt": "result: failed\n"})
+    (node,) = store.StoreLoader(root).nodes()
+    assert node.result is records.TestResult.FAILED
+
+
+def test_a_result_the_vocabulary_does_not_contain_is_refused(tmp_path: Path) -> None:
+    root = make_store(
+        tmp_path,
+        nodes='kind = "TestOutcome"\n[nodes]\n"run-1/TS-1" = '
+        '{ contentHash = "o.txt", result = "green" }\n',
+        content={"o.txt": "result: green\n"},
+    )
+    with pytest.raises(store.StoreError, match="green"):
+        list(store.StoreLoader(root).nodes())
+
+
+def test_a_test_outcome_without_a_result_is_refused(tmp_path: Path) -> None:
+    """The refusal names the manifest and the entry, where the fix is."""
+    root = make_store(
+        tmp_path,
+        nodes='kind = "TestOutcome"\n[nodes]\n"run-1/TS-1" = { contentHash = "o.txt" }\n',
+        content={"o.txt": "result: passed\n"},
+    )
+    with pytest.raises(store.StoreError, match="run-1/TS-1"):
+        list(store.StoreLoader(root).nodes())
+
+
+def test_a_result_on_a_kind_that_records_no_execution_is_refused(tmp_path: Path) -> None:
+    root = make_store(
+        tmp_path,
+        nodes='kind = "Requirement"\n[nodes]\n"a" = { contentHash = "r.txt", result = "passed" }\n',
+        content={"r.txt": "a statement\n"},
+    )
+    with pytest.raises(store.StoreError, match="result"):
+        list(store.StoreLoader(root).nodes())
+
+
 # ── The loader is a record source ───────────────────────────────────────────
 
 
@@ -428,6 +478,25 @@ def test_every_realization_marks_the_requirement_its_specification_verifies(
         assert fields["test-id"] == realization.name.removesuffix(".impl.txt")
         marked[fields["test-id"]] = fields["verifies"]
     assert marked == declared
+
+
+def test_every_outcome_result_agrees_with_the_content_it_hashes(
+    would_be_store: store.StoreLoader,
+) -> None:
+    """The manifest's result and the hashed result record must say one thing.
+
+    The record field is the claim the graph carries; the content file is the
+    authority it summarizes. They are edited in different files and nothing
+    else forces them to agree, so the check is here.
+    """
+    outcomes = [node for node in would_be_store.nodes() if node.kind == "TestOutcome"]
+    assert outcomes
+    for node in outcomes:
+        text = (
+            WOULD_BE_STORE / "content" / node.content_anchors["contentHash"].path
+        ).read_text(encoding="utf-8")
+        assert node.result is not None, node.local_id
+        assert f"result: {node.result.value}" in text, node.local_id
 
 
 def test_the_store_is_reproducible_across_loads(would_be_store: store.StoreLoader) -> None:

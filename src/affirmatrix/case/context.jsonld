@@ -25,6 +25,9 @@
     "seg:linkState": {
       "@id": "seg:linkState"
     },
+    "seg:result": {
+      "@id": "seg:result"
+    },
     "seg:edgeHash": {
       "@id": "seg:edgeHash"
     },

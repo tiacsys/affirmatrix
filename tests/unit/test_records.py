@@ -126,6 +126,57 @@ def test_a_node_record_needs_a_local_identifier_and_a_kind() -> None:
         records.NodeRecord("SEG-SREQ-001", "", {"contentHash": anchor()})
 
 
+# ── Test results (SEG-SREQ-055) ─────────────────────────────────────────────
+
+
+def test_a_test_outcome_record_must_carry_its_result() -> None:
+    """The record source's obligation, discharged where no supplier can skip it."""
+    with pytest.raises(ValueError, match="result"):
+        records.NodeRecord("run-1/TS-1", "TestOutcome", {"contentHash": anchor()})
+
+
+def test_a_test_outcome_record_carries_the_result_it_was_given() -> None:
+    record = records.NodeRecord(
+        "run-1/TS-1",
+        "TestOutcome",
+        {"contentHash": anchor()},
+        result=records.TestResult.FAILED,
+    )
+    assert record.result is records.TestResult.FAILED
+
+
+def test_a_result_spelling_is_read_as_the_closed_vocabulary() -> None:
+    record = records.NodeRecord(
+        "run-1/TS-1", "TestOutcome", {"contentHash": anchor()}, result="skipped"
+    )
+    assert record.result is records.TestResult.SKIPPED
+
+
+def test_a_result_outside_the_vocabulary_is_refused() -> None:
+    """Closed set: a spelling the vocabulary does not contain is nobody's pass."""
+    with pytest.raises(ValueError):
+        records.NodeRecord("run-1/TS-1", "TestOutcome", {"contentHash": anchor()}, result="green")
+
+
+def test_a_result_on_a_kind_that_records_no_execution_is_refused() -> None:
+    with pytest.raises(ValueError, match="cannot carry a result"):
+        records.NodeRecord(
+            "SEG-SREQ-055",
+            "Requirement",
+            {"contentHash": anchor()},
+            result=records.TestResult.PASSED,
+        )
+
+
+def test_the_result_vocabulary_is_the_four_ways_a_run_can_end() -> None:
+    assert {member.value for member in records.TestResult} == {
+        "passed",
+        "failed",
+        "error",
+        "skipped",
+    }
+
+
 # ── Edge records ────────────────────────────────────────────────────────────
 
 
@@ -272,7 +323,7 @@ def test_no_record_type_offers_a_field_for_content() -> None:
     """
     allowed = {
         records.ContentAnchor: {"digest", "repository", "path", "locator"},
-        records.NodeRecord: {"local_id", "kind", "content_anchors"},
+        records.NodeRecord: {"local_id", "kind", "content_anchors", "result"},
         records.EdgeRecord: {"from_id", "to_id", "kind", "state", "edge_hash"},
         records.EdgeReference: {"kind", "from_id", "to_id"},
         records.ReviewEvent: {
