@@ -4,10 +4,11 @@ Suspect Detector
 The suspect detector compares what was recorded against what is current and
 derives each edge's state from the difference. Its requirements enumerate the
 four states that comparison yields, fix the two record sources it may derive
-them from, and cover the case where an endpoint has disappeared from source
-entirely. Because the states are derived on every run rather than stored,
-suspicion raised by a descendant clears itself once that descendant is
-affirmed again — no separate act is needed, and none is offered.
+them from — binding the recorded one to the affirmation store — and cover the
+case where an endpoint has disappeared from source entirely. Because the
+states are derived on every run rather than stored, suspicion raised by a
+descendant clears itself once that descendant is affirmed again — no separate
+act is needed, and none is offered.
 
 .. sreq:: Direct outdatedness
    :id: SEG-SREQ-011
@@ -47,6 +48,13 @@ affirmed again — no separate act is needed, and none is offered.
 
    The suspect detector shall derive each edge's state from a recorded record
    source and a current record source alone.
+
+.. sreq:: The recorded source is the affirmation store
+   :id: SEG-SREQ-054
+   :refines: SEG-SYS-003
+
+   The suspect detector shall take its recorded record source from the
+   affirmation store.
 
 .. sreq:: Edges to absent nodes are broken
    :id: SEG-SREQ-017

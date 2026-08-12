@@ -5,8 +5,9 @@ The affirmation store is the only component that persists graph data and
 the only one that reads it back. Its requirements govern what may be persisted
 — hashes and references, never the content those hashes cover — and the
 qualities that make persistence trustworthy: validated on write, faithful on
-read-back, confined to one write root, never visible half-written, never
-silently removed, and never changed unless a change was asked for.
+read-back — and refused outright when faithful read-back is impossible —
+confined to one write root, never visible half-written, never silently
+removed, and never changed unless a change was asked for.
 
 .. sreq:: Covered content is never persisted
    :id: SEG-SREQ-018
@@ -56,6 +57,14 @@ silently removed, and never changed unless a change was asked for.
 
    The affirmation store shall persist, for each content hash a node record
    carries, the source location of the content that hash covers.
+
+.. sreq:: Unreadable records are never skipped
+   :id: SEG-SREQ-053
+   :refines: SEG-SYS-007
+
+   If a persisted record cannot be read back as written, then the affirmation
+   store shall refuse the read instead of supplying a record stream without
+   that record.
 
 .. sreq:: Persisted affirmations change only on request
    :id: SEG-SREQ-033
