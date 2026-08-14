@@ -18,4 +18,5 @@ currently in scope to build.
    case-store
    affirmation-store-write-face
    affirmation-store-read-face
+   drift-derivation
    iteration-0-backlog
