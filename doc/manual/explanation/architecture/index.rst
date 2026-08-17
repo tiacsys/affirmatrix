@@ -19,4 +19,5 @@ currently in scope to build.
    affirmation-store-write-face
    affirmation-store-read-face
    drift-derivation
+   affirmation-recorder
    iteration-0-backlog
