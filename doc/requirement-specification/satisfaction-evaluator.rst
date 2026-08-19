@@ -14,8 +14,10 @@ nothing.
 
    The satisfaction evaluator shall report a leaf requirement as satisfied
    when, and only when, it carries at least one active verifies edge, at least
-   one active implements edge, and every test specification verifying it has a
-   passing outcome.
+   one active implements edge, and every test specification named by a
+   verifies edge — whatever that edge's own state — has at least one
+   confirming outcome, and every confirming outcome either passed or is
+   excused by a waiver.
 
 .. sreq:: Non-leaf satisfaction rule
    :id: SEG-SREQ-007
@@ -23,7 +25,8 @@ nothing.
 
    The satisfaction evaluator shall report a non-leaf requirement as satisfied
    when, and only when, every requirement refining it is satisfied and every
-   verifies or implements edge it carries is active.
+   verifies or implements edge it carries is active, regardless of whether the
+   outcomes of the specifications those edges name have passed.
 
 .. sreq:: Satisfaction is evaluated over the whole graph
    :id: SEG-SREQ-008

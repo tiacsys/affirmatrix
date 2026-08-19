@@ -35,3 +35,24 @@ that would otherwise pass in silence — a scope with nothing in it to seal.
 
    If a scope's design set is empty, then the gate evaluator shall report that
    scope as blocked.
+
+.. sreq:: A waiver is valid only when unexpired and its approver is authorised
+   :id: SEG-SREQ-059
+   :refines: SEG-SYS-006
+
+   The gate evaluator shall treat an excusing waiver as valid only when it has
+   not expired and its recorded approver is authorised to grant it.
+
+.. sreq:: An unexcused or invalidly waived failure blocks
+   :id: SEG-SREQ-060
+   :refines: SEG-SYS-006
+
+   If a non-passing outcome is not excused by a valid waiver, then the gate
+   evaluator shall report that outcome as blocking.
+
+.. sreq:: A validly excused failure only informs
+   :id: SEG-SREQ-061
+   :refines: SEG-SYS-006
+
+   If a non-passing outcome is excused by a valid waiver, then the gate
+   evaluator shall report that outcome as informational.

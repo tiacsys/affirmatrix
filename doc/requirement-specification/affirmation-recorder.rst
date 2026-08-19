@@ -41,6 +41,13 @@ affirmation only for an edge where one can mean something.
    The affirmation recorder shall accept an affirmation only for an edge that
    is pending, directly outdated, or doubly outdated.
 
+.. sreq:: Only strong edges are affirmable
+   :id: SEG-SREQ-056
+   :refines: SEG-SYS-004
+
+   The affirmation recorder shall accept an affirmation only for a strong
+   edge.
+
 .. sreq:: Supplied reasons are preserved
    :id: SEG-SREQ-028
    :refines: SEG-SYS-004

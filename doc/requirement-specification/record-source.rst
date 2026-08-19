@@ -13,3 +13,17 @@ cannot be present in one stream and missing from another.
 
    The record source shall supply, in every test outcome record, the result of
    the test execution that outcome records.
+
+.. sreq:: Waivers carry their expiry
+   :id: SEG-SREQ-057
+   :refines: SEG-SYS-006
+
+   The record source shall supply, in every waiver record, the date on which
+   the waiver expires.
+
+.. sreq:: Waivers carry their approver
+   :id: SEG-SREQ-058
+   :refines: SEG-SYS-006
+
+   The record source shall supply, in every waiver record, the name of the
+   approver who granted it.
