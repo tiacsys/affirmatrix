@@ -14,6 +14,8 @@ One function, one report
 
 .. code-block:: python
 
+   from datetime import date
+
    from affirmatrix import drift, gates, graph
    from affirmatrix.case import AffirmationStore
    from affirmatrix.sources.store import StoreLoader
@@ -24,11 +26,19 @@ One function, one report
            current=StoreLoader(root="tests/fixtures/would_be_store"),
        )
    )
-   report = gates.package_gate(built)
+   report = gates.package_gate(built, evaluation_date=date.today())
 
    if report.blocked:
        for diagnostic in report.diagnostics:
            print(diagnostic.severity.value, diagnostic.condition, diagnostic.subject)
+
+``evaluation_date`` is the caller's, not the gate's: ``package_gate`` never
+reads the system clock itself, so a waiver's expiry is judged against
+whatever "today" the caller supplies. That is what keeps the function pure —
+the same caller-supplied-metadata shape the commitment layer already uses for
+its snapshot metadata — and it is why the parameter is required and never
+defaulted: a default of "now" would make two calls over an unchanged graph
+disagree the moment a day turned over.
 
 ``package_gate`` takes the graph the caller already built and does no scope
 collection of its own: it neither walks strong edges to decide what is
@@ -38,13 +48,14 @@ is the proof generator's item; iteration 0 has no proof generator yet, so the
 gate is simply handed the whole graph. The same function will serve a
 reachability subset once that lands, unchanged.
 
-Four findings, two derived views
+Six findings, two derived views
 ---------------------------------
 
-:class:`~affirmatrix.gates.CoverageReport` stores exactly four things it
+:class:`~affirmatrix.gates.CoverageReport` stores exactly six things it
 found — the non-active worklist, the coverage gaps, the discarded outcomes,
-and whether the design set is empty — and computes two views from them:
-``diagnostics``, every finding turned into a
+the non-passing outcomes not excused by a valid waiver, the non-passing
+outcomes that are, and whether the design set is empty — and computes two
+views from them: ``diagnostics``, every finding turned into a
 :class:`~affirmatrix.diagnostics.Diagnostic`, and ``blocked``, whether any of
 them has a severity that blocks a package. Both are properties, not stored
 fields, so there is exactly one place severity is decided and the report
@@ -54,14 +65,20 @@ is asserting something the types make true by construction, not a
 coincidence to protect.
 
 Every gate condition here — an unready edge, a coverage gap, an empty design
-set — is a :attr:`~affirmatrix.diagnostics.Severity.WARNING`: it blocks
-generating a package, never a commit. A commit-blocking
+set, a non-passing outcome not validly excused — is a
+:attr:`~affirmatrix.diagnostics.Severity.WARNING`: it blocks generating a
+package, never a commit. A commit-blocking
 :attr:`~affirmatrix.diagnostics.Severity.ERROR` arrives only with the
 extractors, which is where the conditions that are actually about content
 production live; this gate produces none in iteration 0. A discarded outcome
-is :attr:`~affirmatrix.diagnostics.Severity.INFO` — named in the report,
-never blocking anything by itself: discards are visible so a gap never
-appears unexplained.
+and a validly excused non-passing outcome are both
+:attr:`~affirmatrix.diagnostics.Severity.INFO` — named in the report, never
+blocking anything by themselves: both are visible so a reader is never left
+inferring why an outcome went unmentioned. The two can coincide on one
+outcome — an incomplete outcome that is also non-passing and unwaived earns
+both a discard finding and a blocking one — which is intended, not
+double-counting: each finding states a different fact that happens to be
+true of the same subject.
 
 The worklist: every non-active strong edge
 --------------------------------------------
@@ -107,27 +124,66 @@ flat-sealed root could refuse on its own (the root is deliberately total: it
 hashes whatever canonical set it is given). ``design_set_empty`` is this
 report's own field for exactly that judgement.
 
-The honesty gap
------------------
+The seam: two questions, not three
+------------------------------------
 
-Coverage, throughout this component, means only what
-:func:`affirmatrix.satisfaction.leaf_satisfied` already means: an active
-verifies edge, an active implements edge, and a passing outcome for every
-specification the verifies edge names. A **failed**-but-unwaived outcome
-behind edges that are otherwise active does not block this gate. That is not
-an oversight this page is smoothing over — it is a real gap, named so it does
-not read as a guarantee the gate does not make.
+:mod:`affirmatrix.satisfaction` is built to stay swappable for a
+configurable rule engine: the leaf and non-leaf rules are small named
+predicates rather than logic woven into this gate, so a replacement
+evaluator is a substitution, not a rewrite. What makes that swap mechanical
+is a contract on how few questions this gate is allowed to ask across the
+seam. There are exactly **two**:
 
-The design record's wider Gate-2 condition list (in-scope outcomes
-PASS-or-validly-waived, a waiver carrying a named authorised approver,
-per-specification outcome freshness) has no requirement anchor yet. Nothing
-in the ratified requirement set — SEG-SREQ-042 through SEG-SREQ-045 — says
-what a waiver must carry or who may grant one, and the record vocabulary
-carries no ``Waiver`` consumption anywhere in the graph the gate reads. Per-
-specification freshness fares no better: staleness is anchored only on the
-proof generator (SEG-SREQ-040), on a document this gate does not build, and
-the record vocabulary does not yet carry the timestamps or revisions staleness
-would be computed from. Inventing either mechanism here, ahead of a ratified
-requirement, would be design freelancing dressed up as thoroughness — so
-until that requirement set grows, a scope whose only defect is a failed,
-unwaived test is one this gate calls ready.
+1. *The whole-graph verdict* — :func:`affirmatrix.satisfaction.evaluate`,
+   consumed above for ``discarded_outcomes`` and nothing else.
+2. *A requirement's own-direct-coverage question* — re-asking
+   :func:`~affirmatrix.satisfaction.leaf_satisfied` or
+   :func:`~affirmatrix.satisfaction.non_leaf_satisfied` with a requirement's
+   own refiners forced satisfied, which is how "Gaps land at the leaf" above
+   isolates one requirement's direct edges from its descendants'.
+
+Every rule-content change belongs inside satisfaction's own named
+predicates, never restated imperatively here. That includes excusal: whether
+a waiver excuses an outcome is presence of a Waiver record reached through an
+incoming ``Excuses`` edge, and satisfaction already answers exactly that
+question for its own universal (SEG-SREQ-006). This gate does **not** call
+into that private answer as a third borrowed predicate — doing so would grow
+the seam to three questions and make a future Datalog swap-in responsible for
+exposing internals it has no reason to expose. Instead, the waiver seam below
+is the gate's *own* declarative predicate over graph facts (an edge kind, a
+node's presence and kind, an explicit date), independently arriving at the
+same reading satisfaction already commits to. A replacement satisfaction
+engine only ever has to answer the two questions above; everything the gate
+computes about waiver validity is this component's own, and stays so when
+that engine changes.
+
+The waiver seam: non-passing outcomes (SEG-SREQ-060, SEG-SREQ-061)
+----------------------------------------------------------------------
+
+Every ``TestOutcome`` node whose recorded result is not ``PASSED`` — failed,
+error, or skipped alike, uniformly, whatever the outcome's own evidentiary
+completeness — is judged for an excusing waiver. Excusal is resolved by
+walking the outcome's incoming ``Excuses`` edges (Waiver to TestOutcome, per
+``case/schema/edge-excuses.schema.json``) to the Waiver record each names:
+presence of that record is what counts, never the edge's own state, which an
+excusal edge — evidence, like ``Confirms`` and ``Witnesses`` — can never
+carry as anything but pending. An excusing edge whose Waiver record is
+absent from the graph excuses nothing.
+
+A non-passing outcome with no valid excusing waiver is
+:attr:`~affirmatrix.diagnostics.Severity.WARNING` (SEG-SREQ-060); one validly
+excused is :attr:`~affirmatrix.diagnostics.Severity.INFO` (SEG-SREQ-061).
+"Valid" is where this pass stops short of the full requirement: SEG-SREQ-059
+asks for a waiver that has **not expired and whose approver is authorised**.
+This gate checks only the first half — an explicit, caller-supplied
+``evaluation_date`` against the waiver's own recorded ``expiry``
+(SEG-SREQ-057) — because the second half needs a roster of authorised
+approvers that no ratified requirement yet names. Realizing the expiry half
+now, rather than deferring the whole of SEG-SREQ-059, was the deliberate
+choice: it catches the common failure (a stale waiver excusing forever) and
+leaves the residual risk stated here rather than hidden — **an unexpired
+waiver from an approver nobody has authorised reads as validly excused
+today.** SEG-SREQ-059 itself carries no ``:implements:`` marker anywhere in
+this codebase for exactly that reason: marking it would claim a check this
+gate does not perform. When an authorisation roster exists, the approver
+half joins this predicate and the marker follows.

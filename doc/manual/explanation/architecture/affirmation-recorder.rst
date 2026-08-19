@@ -66,6 +66,34 @@ operator supplies each endpoint's revision, and their format is judged where
 the record is persisted — against the case's own schema — not by the
 recorder.
 
+Only a strong edge can be affirmed
+-----------------------------------
+
+The state gate above is a companion, not the whole test: ``affirmable`` and
+``compose`` also gate on the edge's *kind*, via
+:func:`~affirmatrix.taxonomy.propagating_edge_kinds` (SEG-SREQ-056).
+``Confirms``, ``Witnesses``, ``Excuses`` and ``Calls`` are refused whatever
+their state, because they are machine-derived evidence, not something a
+human judgement is about. A ``Confirms`` or ``Witnesses`` edge is resolved by
+re-running the test that produced it; an ``Excuses`` edge (Waiver to
+TestOutcome, per ``case/schema/edge-excuses.schema.json``) records a
+producer's excusal claim, not a reviewer's — and the state gate alone would
+not have caught this, since an evidence edge sits pending exactly like a
+strong edge genuinely awaiting its first affirmation. The refusal names the
+distinction directly: an evidence edge cannot be affirmed because
+re-execution, not judgement, is what would resolve it.
+
+``affirmable`` therefore takes both the state and the kind::
+
+   affirmation.affirmable(edge.state, edge.kind)
+
+and ``compose`` checks the kind before it ever asks about state, so the
+message an operator sees for an evidence edge names the actual reason
+(machine-derived, re-execution resolves it) rather than borrowing the
+state gate's language. This is a companion to SEG-SREQ-027, not an amendment
+of it: every strong kind — ``Refines``, ``Verifies``, ``Implements`` — is
+governed by state exactly as before.
+
 Composing is not affirming
 --------------------------
 

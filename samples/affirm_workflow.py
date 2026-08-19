@@ -96,7 +96,9 @@ def main() -> None:
     # 1. The suspect detector derives every current edge's state from the two
     #    streams; the recorder's gate names which of those are owed a judgement.
     derivation = drift.derive(recorded=store, current=current)
-    worklist = [edge for edge in derivation.edges() if affirmation.affirmable(edge.state)]
+    worklist = [
+        edge for edge in derivation.edges() if affirmation.affirmable(edge.state, edge.kind)
+    ]
     for edge in worklist:
         print(f"owed a judgement: {edge.kind} {edge.from_id} -> {edge.to_id} ({edge.state})")
 

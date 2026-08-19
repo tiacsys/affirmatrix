@@ -14,6 +14,7 @@ a real store.
 from __future__ import annotations
 
 import hashlib
+from datetime import date
 
 import pytest
 
@@ -77,6 +78,14 @@ def outcome(local_id: str, result: TestResult = TestResult.PASSED) -> records.No
     return records.NodeRecord(local_id, "TestOutcome", anchors(("contentHash",)), result=result)
 
 
+def waiver(
+    local_id: str, expiry: date = date(2099, 1, 1), approver: str = "A. Reviewer"
+) -> records.NodeRecord:
+    return records.NodeRecord(
+        local_id, "Waiver", anchors(("contentHash",)), expiry=expiry, approver=approver
+    )
+
+
 def edge(
     kind: str, from_id: str, to_id: str, state: LinkState = LinkState.ACTIVE
 ) -> records.EdgeRecord:
@@ -102,6 +111,17 @@ def confirms(outcome_id: str, spec: str) -> records.EdgeRecord:
 
 def witnesses(outcome_id: str, impl: str) -> records.EdgeRecord:
     return edge("Witnesses", outcome_id, impl, LinkState.PENDING)
+
+
+def excuses(
+    waiver_id: str, outcome_id: str, state: LinkState = LinkState.PENDING
+) -> records.EdgeRecord:
+    """An excusing edge: Waiver to TestOutcome (``edge-excuses.schema.json``).
+
+    Evidence, like ``Confirms`` and ``Witnesses``: presence is what counts,
+    never the state, which the ``state`` parameter exists to let a test vary.
+    """
+    return edge("Excuses", waiver_id, outcome_id, state)
 
 
 def covered_leaf(
@@ -201,6 +221,70 @@ def test_an_orphan_requirement_is_unsatisfied_not_vacuously_satisfied() -> None:
     """No children and no coverage is a structural gap, not an empty obligation."""
     verdict = satisfaction.evaluate(build([requirement("R")]))
     assert not verdict.is_satisfied("R")
+
+
+# ── Excusal by waiver — the universal that closed the existential hole ─────
+
+
+def test_one_passing_outcome_beside_an_unwaived_failing_one_no_longer_satisfies() -> None:
+    """The hole SEG-SREQ-006's amendment closes: the old existential wording
+    ("at least one confirming outcome passed") let this pass; the universal
+    does not."""
+    nodes, edges = covered_leaf("R")
+    nodes.append(outcome("R/outcome2", result=TestResult.FAILED))
+    edges.append(confirms("R/outcome2", "R/spec"))
+    edges.append(witnesses("R/outcome2", "R/impl"))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert not verdict.is_satisfied("R")
+
+
+def test_a_failing_outcome_excused_by_a_present_waiver_satisfies() -> None:
+    nodes, edges = covered_leaf("R", result=TestResult.FAILED)
+    nodes.append(waiver("WVR-1"))
+    edges.append(excuses("WVR-1", "R/outcome"))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert verdict.is_satisfied("R")
+
+
+def test_excusal_is_counted_whatever_the_excusing_edges_own_state() -> None:
+    """Excusal is presence of the waiver, never the excusal edge's state — an
+    Excuses edge is evidence and can never be affirmed active, but nothing
+    here should care either way."""
+    nodes, edges = covered_leaf("R", result=TestResult.FAILED)
+    nodes.append(waiver("WVR-1"))
+    edges.append(excuses("WVR-1", "R/outcome", state=LinkState.ACTIVE))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert verdict.is_satisfied("R")
+
+
+def test_an_excusal_edge_whose_waiver_record_is_absent_excuses_nothing() -> None:
+    """A dangling excusal: the edge exists, but no Waiver node backs it. The
+    waiver itself must be present, reached through the edge, not the edge
+    alone."""
+    nodes, edges = covered_leaf("R", result=TestResult.FAILED)
+    edges.append(excuses("WVR-MISSING", "R/outcome"))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert not verdict.is_satisfied("R")
+
+
+def test_a_direct_edges_outcome_never_governs_the_non_leaf_rule() -> None:
+    """SEG-SREQ-007's amendment states what the code already did: verified
+    here rather than assumed. A parent's own direct verifies edge names a
+    specification whose only outcome failed unwaived — the non-leaf rule
+    still only asks whether the edge is active, never whether that outcome
+    passed. Calling the predicate directly, as
+    ``test_the_non_leaf_rule_judges_against_the_verdicts_it_is_given`` already
+    does, isolates the rule from ``evaluate``'s leaf/non-leaf dispatch."""
+    sreq = requirement("P")
+    spec = specification("P/spec")
+    run = outcome("P/outcome", result=TestResult.FAILED)
+    nodes = [sreq, spec, run]
+    edges = [
+        verifies("P/spec", "P"),
+        confirms("P/outcome", "P/spec"),
+    ]
+    built = build(nodes, edges)
+    assert satisfaction.non_leaf_satisfied(built, "P", {})
 
 
 # ── The discard rule: incomplete outcomes ───────────────────────────────────

@@ -1,15 +1,18 @@
-"""The gate evaluator (SEG-SREQ-042…045) and the severity vocabulary it reads.
+"""The gate evaluator (SEG-SREQ-042…045, SEG-SREQ-060, SEG-SREQ-061) and the
+severity vocabulary it reads.
 
 The package gate is a pure function over a built graph: no store access, no
 refusal, no enforcement — it judges and reports. The report's two derived
-views, ``diagnostics`` and ``blocked``, are computed from the same four typed
+views, ``diagnostics`` and ``blocked``, are computed from the same six typed
 findings, so the tests that matter most are the ones proving the views cannot
 disagree: an info-only report never blocks, any warning does, and the
 worklist and the gap attribution each land on exactly the node the
 requirement names — the worklist at the edge (SEG-SREQ-043), the gap at the
 leaf where coverage is actually missing, never an ancestor (SEG-SREQ-044). An
 empty design set is blocked outright (SEG-SREQ-045), and a scope with nothing
-wrong in it is not.
+wrong in it is not. A non-passing outcome is a finding whether or not a
+waiver excuses it, judged against an explicit, caller-supplied
+``evaluation_date`` (SEG-SREQ-059's expiry half) rather than the system clock.
 
 Fixture graphs are built in memory from literal records, like
 ``test_drift.py`` and ``test_affirmation.py``; the one end-to-end test builds
@@ -21,12 +24,28 @@ act.
 from __future__ import annotations
 
 import hashlib
+from datetime import date
 from pathlib import Path
 
 import pytest
 
-from affirmatrix import affirmation, case, diagnostics, drift, gates, graph, records, satisfaction
+from affirmatrix import (
+    affirmation,
+    case,
+    commitment,
+    diagnostics,
+    drift,
+    gates,
+    graph,
+    records,
+    satisfaction,
+)
 from affirmatrix.records import LinkState
+
+#: A fixed "today" for every gate evaluation in this file — repeatability
+#: (SEG-SREQ-009's ethos, applied to the gate) would otherwise depend on which
+#: day the suite happened to run.
+EVALUATION_DATE = date(2026, 6, 1)
 
 #: A digest that satisfies the vocabulary's shape check without needing to
 #: recompute to anything real — these tests build graphs directly and never
@@ -89,6 +108,45 @@ def outcome(
     return records.NodeRecord(
         local_id, "TestOutcome", anchors(("contentHash",), seed), result=result
     )
+
+
+def waiver(
+    local_id: str, seed: str = "v1", expiry: date = date(2099, 1, 1), approver: str = "A. Reviewer"
+) -> records.NodeRecord:
+    return records.NodeRecord(
+        local_id, "Waiver", anchors(("contentHash",), seed), expiry=expiry, approver=approver
+    )
+
+
+def _affirmed(
+    kind: str, from_node: records.NodeRecord, to_node: records.NodeRecord
+) -> records.EdgeRecord:
+    """A recorded edge affirmed against exactly these two nodes' content.
+
+    Real commitment hashes, unlike ``edge``'s ``STALE`` placeholder: needed
+    wherever a graph goes through ``drift.derive`` rather than being built
+    directly, since drift recomputes and compares.
+    """
+    from_hash = commitment.node_hash(from_node.kind, from_node.content_hashes)
+    to_hash = commitment.node_hash(to_node.kind, to_node.content_hashes)
+    return records.EdgeRecord(
+        from_id=from_node.local_id,
+        to_id=to_node.local_id,
+        kind=kind,
+        state=LinkState.ACTIVE,
+        edge_hash=commitment.edge_hash(
+            from_node.local_id, to_node.local_id, kind, from_hash, to_hash
+        ),
+    )
+
+
+def excuses(waiver_id: str, outcome_id: str) -> records.EdgeRecord:
+    """An excusing edge: Waiver to TestOutcome (``edge-excuses.schema.json``).
+
+    Evidence, like ``Confirms`` and ``Witnesses``: always pending, never
+    affirmed.
+    """
+    return edge("Excuses", waiver_id, outcome_id, LinkState.PENDING)
 
 
 def edge(
@@ -161,6 +219,8 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
         unready_edges=(),
         coverage_gaps=frozenset(),
         discarded_outcomes=frozenset({"run-1/TS-1"}),
+        unwaived_outcomes=frozenset(),
+        excused_outcomes=frozenset({"run-2/TS-1"}),
         design_set_empty=False,
     )
     assert report.diagnostics
@@ -175,38 +235,63 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
             unready_edges=(edge("Implements", "pkg.fn", "SREQ-1", LinkState.PENDING),),
             coverage_gaps=frozenset(),
             discarded_outcomes=frozenset(),
+            unwaived_outcomes=frozenset(),
+            excused_outcomes=frozenset(),
             design_set_empty=False,
         ),
         gates.CoverageReport(
             unready_edges=(),
             coverage_gaps=frozenset({"SREQ-1"}),
             discarded_outcomes=frozenset(),
+            unwaived_outcomes=frozenset(),
+            excused_outcomes=frozenset(),
             design_set_empty=False,
         ),
         gates.CoverageReport(
             unready_edges=(),
             coverage_gaps=frozenset(),
             discarded_outcomes=frozenset(),
+            unwaived_outcomes=frozenset(),
+            excused_outcomes=frozenset(),
             design_set_empty=True,
         ),
+        gates.CoverageReport(
+            unready_edges=(),
+            coverage_gaps=frozenset(),
+            discarded_outcomes=frozenset(),
+            unwaived_outcomes=frozenset({"run-1/TS-1"}),
+            excused_outcomes=frozenset(),
+            design_set_empty=False,
+        ),
     ],
-    ids=["unready-edge", "coverage-gap", "empty-design-set"],
+    ids=["unready-edge", "coverage-gap", "empty-design-set", "unwaived-outcome"],
 )
 def test_any_warning_finding_blocks(report: gates.CoverageReport) -> None:
-    """SEG-SREQ-042: each of the three gate conditions is a warning, and a
+    """SEG-SREQ-042: each of the four gate conditions is a warning, and a
     warning blocks the package on its own."""
     assert any(d.severity is diagnostics.Severity.WARNING for d in report.diagnostics)
     assert report.blocked
 
 
 def test_diagnostics_and_blocked_never_disagree() -> None:
-    """The two views are computed from the same four fields; ``blocked`` is
+    """The two views are computed from the same six fields; ``blocked`` is
     exactly "some diagnostic blocks the package", never a second opinion."""
+    empty = frozenset()
     reports = [
-        gates.CoverageReport((), frozenset(), frozenset(), design_set_empty=False),
-        gates.CoverageReport((), frozenset(), frozenset({"run-1/TS-1"}), design_set_empty=False),
-        gates.CoverageReport((), frozenset({"SREQ-1"}), frozenset(), design_set_empty=False),
-        gates.CoverageReport((), frozenset(), frozenset(), design_set_empty=True),
+        gates.CoverageReport((), empty, empty, empty, empty, design_set_empty=False),
+        gates.CoverageReport(
+            (), empty, frozenset({"run-1/TS-1"}), empty, empty, design_set_empty=False
+        ),
+        gates.CoverageReport(
+            (), frozenset({"SREQ-1"}), empty, empty, empty, design_set_empty=False
+        ),
+        gates.CoverageReport((), empty, empty, empty, empty, design_set_empty=True),
+        gates.CoverageReport(
+            (), empty, empty, frozenset({"run-1/TS-1"}), empty, design_set_empty=False
+        ),
+        gates.CoverageReport(
+            (), empty, empty, empty, frozenset({"run-1/TS-1"}), design_set_empty=False
+        ),
     ]
     for report in reports:
         assert report.blocked == any(d.severity.blocks_package for d in report.diagnostics)
@@ -228,7 +313,7 @@ def test_worklist_lists_every_non_active_state_and_omits_active_and_evidence() -
     nodes = [sreq, spec, run, *impls.values()]
     built = graph.build(Source(nodes, [*strong_edges, evidence_edge]))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     non_active_states = {state for state in LinkState if state is not LinkState.ACTIVE}
     assert {e.state for e in report.unready_edges} == non_active_states
@@ -246,7 +331,7 @@ def test_worklist_is_sorted_by_kind_then_endpoints() -> None:
     ]
     built = graph.build(Source([top, sys_req, sreq, impl_a, impl_b], edges))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert [(e.kind, e.from_id, e.to_id) for e in report.unready_edges] == [
         ("Implements", "pkg.a", "SREQ-1"),
@@ -274,7 +359,7 @@ def test_gap_lands_at_the_leaf_never_at_an_unsatisfied_ancestor() -> None:
     assert not verdict.is_satisfied("SYS-1")
     assert not verdict.is_satisfied("TOP-1")
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
     assert report.coverage_gaps == {"SREQ-1"}
 
 
@@ -307,7 +392,7 @@ def test_non_leaf_gap_from_its_own_edge_is_not_shielded_by_satisfied_children() 
     verdict = satisfaction.evaluate(built)
     assert verdict.is_satisfied("LEAF-1")
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
     assert report.coverage_gaps == {"PARENT-1"}
 
 
@@ -315,7 +400,7 @@ def test_orphan_requirement_is_its_own_gap() -> None:
     orphan = requirement("ORPHAN-1")
     built = graph.build(Source([orphan], []))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert report.coverage_gaps == {"ORPHAN-1"}
 
@@ -329,7 +414,7 @@ def test_no_requirement_nodes_means_the_design_set_is_empty_and_blocked() -> Non
     impl = implementation("pkg.fn")
     built = graph.build(Source([impl], []))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert report.design_set_empty
     assert report.blocked
@@ -339,7 +424,7 @@ def test_no_requirement_nodes_means_the_design_set_is_empty_and_blocked() -> Non
 def test_an_entirely_empty_graph_is_blocked() -> None:
     built = graph.build(Source([], []))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert report.design_set_empty
     assert report.blocked
@@ -352,7 +437,7 @@ def test_fully_covered_fully_affirmed_scope_is_ready() -> None:
     nodes, edges = leaf_fixture()
     built = graph.build(Source(nodes, edges))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert not report.blocked
     assert report.diagnostics == ()
@@ -371,12 +456,114 @@ def test_a_discarded_outcome_that_opens_no_gap_is_info_only() -> None:
     incomplete = edge("Confirms", "run-2/TS-2", "TS-2", LinkState.PENDING)
     built = graph.build(Source([*nodes, stray_spec, stray_run], [*edges, incomplete]))
 
-    report = gates.package_gate(built)
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert report.discarded_outcomes == {"run-2/TS-2"}
     assert report.coverage_gaps == frozenset()
     assert not report.blocked
     assert {d.severity for d in report.diagnostics} == {diagnostics.Severity.INFO}
+
+
+# --- the waiver seam (SEG-SREQ-060, SEG-SREQ-061) -------------------------------
+
+
+def failing_leaf_fixture() -> tuple[list[records.NodeRecord], list[records.EdgeRecord]]:
+    """A leaf fixture like :func:`leaf_fixture`, but its one outcome failed."""
+    nodes, edges = leaf_fixture()
+    failed_outcome = outcome("run-1/TS-1", result=records.TestResult.FAILED)
+    failed = [failed_outcome if n.local_id == "run-1/TS-1" else n for n in nodes]
+    return failed, edges
+
+
+def test_a_non_passing_outcome_with_no_excusing_waiver_is_a_blocking_warning() -> None:
+    nodes, edges = failing_leaf_fixture()
+    built = graph.build(Source(nodes, edges))
+
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+
+    assert report.unwaived_outcomes == {"run-1/TS-1"}
+    assert report.excused_outcomes == frozenset()
+    assert report.blocked
+    assert any(
+        d.severity is diagnostics.Severity.WARNING and d.subject == "run-1/TS-1"
+        for d in report.diagnostics
+    )
+
+
+def test_a_non_passing_outcome_excused_by_a_valid_waiver_is_informational_only() -> None:
+    nodes, edges = failing_leaf_fixture()
+    excuse = waiver("WVR-1", expiry=date(2099, 1, 1))
+    built = graph.build(
+        Source([*nodes, excuse], [*edges, excuses("WVR-1", "run-1/TS-1")])
+    )
+
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+
+    assert report.excused_outcomes == {"run-1/TS-1"}
+    assert report.unwaived_outcomes == frozenset()
+    assert not report.blocked
+    assert any(
+        d.severity is diagnostics.Severity.INFO and d.subject == "run-1/TS-1"
+        for d in report.diagnostics
+    )
+
+
+def test_a_non_passing_outcome_excused_by_an_expired_waiver_still_blocks() -> None:
+    """SEG-SREQ-059's expiry half: an excusing waiver past its date is invalid."""
+    nodes, edges = failing_leaf_fixture()
+    expired = waiver("WVR-1", expiry=date(2020, 1, 1))
+    built = graph.build(
+        Source([*nodes, expired], [*edges, excuses("WVR-1", "run-1/TS-1")])
+    )
+
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+
+    assert report.unwaived_outcomes == {"run-1/TS-1"}
+    assert report.excused_outcomes == frozenset()
+    assert report.blocked
+
+
+def test_a_non_passing_outcome_with_a_dangling_excusal_still_blocks() -> None:
+    """An Excuses edge whose Waiver record is absent excuses nothing — the
+    waiver itself must be present, not merely declared, exactly as at
+    satisfaction's own excusal reading."""
+    nodes, edges = failing_leaf_fixture()
+    built = graph.build(Source(nodes, [*edges, excuses("WVR-MISSING", "run-1/TS-1")]))
+
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+
+    assert report.unwaived_outcomes == {"run-1/TS-1"}
+    assert report.excused_outcomes == frozenset()
+    assert report.blocked
+
+
+def test_a_passing_outcome_is_never_a_waiver_finding_even_with_an_excusal_edge() -> None:
+    nodes, edges = leaf_fixture()
+    excuse = waiver("WVR-1")
+    built = graph.build(
+        Source([*nodes, excuse], [*edges, excuses("WVR-1", "run-1/TS-1")])
+    )
+
+    report = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+
+    assert report.unwaived_outcomes == frozenset()
+    assert report.excused_outcomes == frozenset()
+
+
+def test_evaluation_date_is_not_inert() -> None:
+    """The same graph, judged before and after a waiver's expiry, disagrees —
+    proof the parameter is load-bearing rather than decorative."""
+    nodes, edges = failing_leaf_fixture()
+    excuse = waiver("WVR-1", expiry=date(2026, 6, 1))
+    built = graph.build(
+        Source([*nodes, excuse], [*edges, excuses("WVR-1", "run-1/TS-1")])
+    )
+
+    before_expiry = gates.package_gate(built, evaluation_date=date(2026, 5, 1))
+    after_expiry = gates.package_gate(built, evaluation_date=date(2026, 6, 2))
+
+    assert not before_expiry.blocked
+    assert after_expiry.blocked
 
 
 # --- purity and repeatability ---------------------------------------------------
@@ -386,8 +573,8 @@ def test_evaluation_is_pure_and_repeatable() -> None:
     nodes, edges = leaf_fixture()
     built = graph.build(Source(nodes, edges))
 
-    first = gates.package_gate(built)
-    second = gates.package_gate(built)
+    first = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+    second = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
 
     assert first == second
     assert first.diagnostics == second.diagnostics
@@ -424,7 +611,7 @@ def test_operators_path_from_bootstrap_blocked_to_ready(tmp_path: Path) -> None:
     node_by_id = {node.local_id: node for node in nodes}
 
     bootstrapped = graph.build(drift.derive(recorded=store, current=current))
-    blocked_report = gates.package_gate(bootstrapped)
+    blocked_report = gates.package_gate(bootstrapped, evaluation_date=EVALUATION_DATE)
     assert blocked_report.blocked
     assert {(e.kind, e.from_id, e.to_id) for e in blocked_report.unready_edges} == {
         (e.kind, e.from_id, e.to_id) for e in strong_edges
@@ -445,7 +632,53 @@ def test_operators_path_from_bootstrap_blocked_to_ready(tmp_path: Path) -> None:
     store.write_edges(composed_edges)
 
     settled = graph.build(drift.derive(recorded=store, current=current))
-    ready_report = gates.package_gate(settled)
+    ready_report = gates.package_gate(settled, evaluation_date=EVALUATION_DATE)
     assert not ready_report.blocked
     assert ready_report.unready_edges == ()
     assert ready_report.coverage_gaps == frozenset()
+
+
+def test_operators_path_from_unwaived_failure_to_excused_via_waiver(tmp_path: Path) -> None:
+    """The join the waiver seam adds: an unwaived failing outcome blocks the
+    gate; recording a Waiver node and its excusing edge in the same store and
+    re-deriving turns the finding informational, never blocking, without
+    touching anything about the strong edges above it.
+
+    The strong edges are properly affirmed (real commitment hashes, via
+    ``_affirmed``) rather than built with ``edge``'s ``STALE`` placeholder,
+    because this graph goes through ``drift.derive`` — which recomputes and
+    compares — and not straight through ``graph.build``.
+    """
+    sreq, spec = requirement("SREQ-1"), specification("TS-1")
+    impl, run = implementation("pkg.fn"), outcome("run-1/TS-1", result=records.TestResult.FAILED)
+    nodes = [sreq, spec, impl, run]
+    strong_edges = [_affirmed("Verifies", spec, sreq), _affirmed("Implements", impl, sreq)]
+    evidence_edges = [
+        edge("Confirms", "run-1/TS-1", "TS-1", LinkState.PENDING),
+        edge("Witnesses", "run-1/TS-1", "pkg.fn", LinkState.PENDING),
+    ]
+    all_edges = [*strong_edges, *evidence_edges]
+
+    store = case.AffirmationStore(root=tmp_path / "case")
+    store.write_nodes(nodes)
+    store.write_edges(all_edges)
+
+    current = Source(nodes, all_edges)
+    blocked = graph.build(drift.derive(recorded=store, current=current))
+    blocked_report = gates.package_gate(blocked, evaluation_date=EVALUATION_DATE)
+    assert blocked_report.blocked
+    assert blocked_report.unready_edges == ()
+    assert blocked_report.unwaived_outcomes == {"run-1/TS-1"}
+
+    excuse = waiver("WVR-1", expiry=date(2099, 1, 1))
+    excusal_edge = excuses("WVR-1", "run-1/TS-1")
+    store.write_nodes([excuse])
+    store.write_edges([excusal_edge])
+
+    current_with_waiver = Source([*nodes, excuse], [*all_edges, excusal_edge])
+    settled = graph.build(drift.derive(recorded=store, current=current_with_waiver))
+    settled_report = gates.package_gate(settled, evaluation_date=EVALUATION_DATE)
+    assert not settled_report.blocked
+    assert settled_report.unready_edges == ()
+    assert settled_report.excused_outcomes == {"run-1/TS-1"}
+    assert settled_report.unwaived_outcomes == frozenset()

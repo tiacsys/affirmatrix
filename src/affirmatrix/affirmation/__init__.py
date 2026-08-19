@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from affirmatrix import commitment
+from affirmatrix import commitment, taxonomy
 from affirmatrix.records import EdgeRecord, LinkState, NodeRecord, ReviewEvent
 
 __all__ = [
@@ -93,17 +93,20 @@ class Affirmation:
     edge: EdgeRecord
 
 
-def affirmable(state: LinkState) -> bool:
-    """Whether an edge in this state can be affirmed.
+def affirmable(state: LinkState, kind: str) -> bool:
+    """Whether an edge of this kind, in this state, can be affirmed.
 
     :implements: SEG-SREQ-027
+    :implements: SEG-SREQ-056
 
-    True exactly for pending, directly outdated, and doubly outdated — the
-    states where a human judgement about the edge's own content is what is
-    missing. Active has nothing to affirm; transitive suspicion clears by
-    recomputation, never by signature; broken needs its endpoint back first.
+    True exactly for a strong edge (one of :func:`taxonomy.propagating_edge_kinds`)
+    in one of the three states where a human judgement about the edge's own
+    content is what is missing. Active has nothing to affirm; transitive
+    suspicion clears by recomputation, never by signature; broken needs its
+    endpoint back first. An evidence edge is refused whatever its state:
+    machine-derived, and resolved by re-execution rather than by a signature.
     """
-    return state in _AFFIRMABLE
+    return kind in taxonomy.propagating_edge_kinds() and state in _AFFIRMABLE
 
 
 def compose(
@@ -123,6 +126,7 @@ def compose(
     :implements: SEG-SREQ-026
     :implements: SEG-SREQ-028
     :implements: SEG-SREQ-049
+    :implements: SEG-SREQ-056
 
     ``edge`` is a derived record naming the state the affirmation resolves;
     anything :func:`affirmable` refuses is refused whole. ``from_node`` and
@@ -135,7 +139,13 @@ def compose(
     carried into the event exactly as supplied. Composing is pure; the one
     affirmation act is the operator committing what the store then persisted.
     """
-    if not affirmable(edge.state):
+    if edge.kind not in taxonomy.propagating_edge_kinds():
+        raise AffirmationError(
+            f"edge {edge.from_id!r} -> {edge.to_id!r} ({edge.kind}) cannot be affirmed: "
+            f"{edge.kind} is an evidence edge, not a strong one — re-execution resolves "
+            "it, not a judgement"
+        )
+    if not affirmable(edge.state, edge.kind):
         raise AffirmationError(
             f"edge {edge.from_id!r} -> {edge.to_id!r} ({edge.kind}) cannot be "
             f"affirmed: {_REFUSALS[edge.state]}"

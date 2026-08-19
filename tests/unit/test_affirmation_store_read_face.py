@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -88,7 +89,11 @@ def one_node_of_every_kind() -> list[records.NodeRecord]:
             result=records.TestResult.PASSED,
         ),
         records.NodeRecord(
-            local_id="WVR-001", kind="Waiver", content_anchors={"contentHash": anchor("waived")}
+            local_id="WVR-001",
+            kind="Waiver",
+            content_anchors={"contentHash": anchor("waived")},
+            expiry=date(2099, 1, 1),
+            approver="A. Reviewer",
         ),
     ]
 
@@ -255,6 +260,43 @@ def test_an_outcome_stripped_of_its_result_is_refused_on_read(tmp_path: Path) ->
         ]
     )
     edit_entry(store, "nodes", "test_outcomes.jsonld", **{"seg:result": None})
+    with pytest.raises(case.AffirmationStoreError):
+        list(store.nodes())
+
+
+def test_a_waiver_reads_back_with_its_expiry_and_approver(tmp_path: Path) -> None:
+    """SEG-SREQ-057, SEG-SREQ-058 composed with SEG-SREQ-020."""
+    store = make_case(tmp_path)
+    store.write_nodes(
+        [
+            records.NodeRecord(
+                local_id="WVR-002",
+                kind="Waiver",
+                content_anchors={"contentHash": anchor("waived", locator="file")},
+                expiry=date(2030, 6, 15),
+                approver="B. Approver",
+            )
+        ]
+    )
+    (read,) = store.nodes()
+    assert read.expiry == date(2030, 6, 15)
+    assert read.approver == "B. Approver"
+
+
+def test_a_waiver_missing_its_expiry_is_refused_on_read(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.write_nodes(
+        [
+            records.NodeRecord(
+                local_id="WVR-002",
+                kind="Waiver",
+                content_anchors={"contentHash": anchor("waived", locator="file")},
+                expiry=date(2030, 6, 15),
+                approver="B. Approver",
+            )
+        ]
+    )
+    edit_entry(store, "nodes", "waivers.jsonld", **{"seg:expiry": None})
     with pytest.raises(case.AffirmationStoreError):
         list(store.nodes())
 

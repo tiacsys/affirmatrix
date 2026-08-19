@@ -2,14 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://affirmatrix.dev/case/schema/waiver.schema.json",
   "title": "A Waiver node record",
-  "description": "A Waiver node record. The digest covers the waiver document — its justification and expiry live in that document, not here — and carries the document's source location (SEG-SREQ-050).",
+  "description": "A Waiver node record. The digest covers the waiver document — its justification lives in that document, not here — and carries the document's source location (SEG-SREQ-050).",
   "type": "object",
   "required": [
     "id",
     "type",
     "seg:localId",
     "seg:contentHash",
-    "seg:contentHashSource"
+    "seg:contentHashSource",
+    "seg:expiry",
+    "seg:approver"
   ],
   "additionalProperties": false,
   "properties": {
@@ -28,6 +30,16 @@
     },
     "seg:contentHash": {
       "$ref": "#/$defs/sha256"
+    },
+    "seg:expiry": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "The date on which the waiver expires (SEG-SREQ-057), an ISO 8601 calendar date. A producer-recorded claim, like a test outcome's result: the content hash covers the waiver document that is the authority on it, and the claim never enters a hash preimage."
+    },
+    "seg:approver": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The name of the approver who granted the waiver (SEG-SREQ-058). A producer-recorded claim, never a hash preimage member."
     },
     "seg:contentHashSource": {
       "type": "object",

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+from datetime import date
 
 import pytest
 
@@ -177,6 +178,93 @@ def test_the_result_vocabulary_is_the_four_ways_a_run_can_end() -> None:
     }
 
 
+# ── Waiver expiry and approver (SEG-SREQ-057, SEG-SREQ-058) ────────────────
+
+
+def test_a_waiver_record_must_carry_its_expiry() -> None:
+    with pytest.raises(ValueError, match="expiry"):
+        records.NodeRecord(
+            "WVR-001", "Waiver", {"contentHash": anchor()}, approver="A. Reviewer"
+        )
+
+
+def test_a_waiver_record_must_carry_its_approver() -> None:
+    with pytest.raises(ValueError, match="approver"):
+        records.NodeRecord(
+            "WVR-001", "Waiver", {"contentHash": anchor()}, expiry=date(2027, 1, 1)
+        )
+
+
+def test_a_waiver_record_carries_the_expiry_and_approver_it_was_given() -> None:
+    record = records.NodeRecord(
+        "WVR-001",
+        "Waiver",
+        {"contentHash": anchor()},
+        expiry=date(2027, 1, 1),
+        approver="A. Reviewer",
+    )
+    assert record.expiry == date(2027, 1, 1)
+    assert record.approver == "A. Reviewer"
+
+
+def test_a_waiver_expiry_is_accepted_as_an_iso_date_string() -> None:
+    """The same producer convenience :class:`TestResult` gives a bare string spelling."""
+    record = records.NodeRecord(
+        "WVR-001",
+        "Waiver",
+        {"contentHash": anchor()},
+        expiry="2027-01-01",
+        approver="A. Reviewer",
+    )
+    assert record.expiry == date(2027, 1, 1)
+
+
+def test_a_waiver_expiry_outside_the_date_format_is_refused() -> None:
+    with pytest.raises(ValueError, match="calendar date"):
+        records.NodeRecord(
+            "WVR-001",
+            "Waiver",
+            {"contentHash": anchor()},
+            expiry="01/01/2027",
+            approver="A. Reviewer",
+        )
+
+
+def test_a_waiver_approver_cannot_be_empty() -> None:
+    with pytest.raises(ValueError, match="approver"):
+        records.NodeRecord(
+            "WVR-001", "Waiver", {"contentHash": anchor()}, expiry=date(2027, 1, 1), approver=""
+        )
+
+
+def test_an_expiry_on_a_kind_that_grants_no_excusal_is_refused() -> None:
+    with pytest.raises(ValueError, match="cannot carry an expiry"):
+        records.NodeRecord(
+            "SEG-SREQ-057", "Requirement", {"contentHash": anchor()}, expiry=date(2027, 1, 1)
+        )
+
+
+def test_an_approver_on_a_kind_that_grants_no_excusal_is_refused() -> None:
+    with pytest.raises(ValueError, match="cannot carry an approver"):
+        records.NodeRecord(
+            "SEG-SREQ-058", "Requirement", {"contentHash": anchor()}, approver="A. Reviewer"
+        )
+
+
+def test_a_waivers_expiry_and_approver_never_enter_its_content_hashes() -> None:
+    """The same structural exclusion that already keeps a test outcome's
+    result out of the node-hash preimage: ``content_hashes`` only ever reads
+    ``content_anchors``, and neither new field is one."""
+    record = records.NodeRecord(
+        "WVR-001",
+        "Waiver",
+        {"contentHash": anchor()},
+        expiry=date(2027, 1, 1),
+        approver="A. Reviewer",
+    )
+    assert set(record.content_hashes) == {"contentHash"}
+
+
 # ── Edge records ────────────────────────────────────────────────────────────
 
 
@@ -323,7 +411,10 @@ def test_no_record_type_offers_a_field_for_content() -> None:
     """
     allowed = {
         records.ContentAnchor: {"digest", "repository", "path", "locator"},
-        records.NodeRecord: {"local_id", "kind", "content_anchors", "result"},
+        # SEG-SREQ-057/SEG-SREQ-058 added ``expiry`` and ``approver`` here,
+        # the same move SEG-SREQ-055 made for ``result``: a producer-recorded
+        # claim, kind-guarded, never a hash preimage member.
+        records.NodeRecord: {"local_id", "kind", "content_anchors", "result", "expiry", "approver"},
         records.EdgeRecord: {"from_id", "to_id", "kind", "state", "edge_hash"},
         records.EdgeReference: {"kind", "from_id", "to_id"},
         records.ReviewEvent: {

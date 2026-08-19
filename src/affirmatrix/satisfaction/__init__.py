@@ -41,11 +41,13 @@ from affirmatrix.records import EdgeRecord, LinkState, TestResult
 
 _REQUIREMENT = "Requirement"
 _TEST_OUTCOME = "TestOutcome"
+_WAIVER = "Waiver"
 _REFINES = "Refines"
 _VERIFIES = "Verifies"
 _IMPLEMENTS = "Implements"
 _CONFIRMS = "Confirms"
 _WITNESSES = "Witnesses"
+_EXCUSES = "Excuses"
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,8 +109,9 @@ def evaluate(graph: Graph) -> Verdict:
 def leaf_satisfied(graph: Graph, local_id: str) -> bool:
     """The leaf rule: a requirement nothing refines is satisfied when, and
     only when, it carries at least one active verifies edge, at least one
-    active implements edge, and every test specification verifying it has a
-    passing outcome.
+    active implements edge, and every test specification named by a verifies
+    edge has at least one confirming outcome, with every confirming outcome
+    either passed or excused by a waiver.
 
     :implements: SEG-SREQ-006
 
@@ -117,6 +120,16 @@ def leaf_satisfied(graph: Graph, local_id: str) -> bool:
     coverage, not whether the specification it names owes evidence. Releasing
     a specification because its edge went suspect would let suspicion quietly
     shrink what the leaf must show.
+
+    The outcome clause is a universal with an existence obligation, not the
+    existential it used to be: a specification with no confirming outcome at
+    all never satisfies vacuously, and one passing outcome sitting beside an
+    unwaived failing one no longer satisfies either — every confirming
+    outcome must clear the bar itself. "Confirming" still means what the
+    discard rule below already means by it: an outcome counts only once it
+    both confirms this specification and witnesses an implementation: an
+    incomplete outcome is discarded, not counted either way, so it neither
+    satisfies nor fails a specification it hangs off.
     """
     verifying = graph.incoming(local_id, _VERIFIES)
     if not _any_active(verifying):
@@ -124,7 +137,7 @@ def leaf_satisfied(graph: Graph, local_id: str) -> bool:
     if not _any_active(graph.incoming(local_id, _IMPLEMENTS)):
         return False
     specifications = {edge.from_id for edge in verifying}
-    return all(_has_passing_outcome(graph, spec_id) for spec_id in specifications)
+    return all(_specification_confirmed(graph, spec_id) for spec_id in specifications)
 
 
 def non_leaf_satisfied(
@@ -132,7 +145,8 @@ def non_leaf_satisfied(
 ) -> bool:
     """The non-leaf rule: a requirement something refines is satisfied when,
     and only when, every requirement refining it is satisfied and every
-    verifies or implements edge it carries is active.
+    verifies or implements edge it carries is active, regardless of whether
+    the outcomes of the specifications those edges name have passed.
 
     :implements: SEG-SREQ-007
 
@@ -195,12 +209,56 @@ def _active(edge: EdgeRecord) -> bool:
     return edge.state is LinkState.ACTIVE
 
 
-def _has_passing_outcome(graph: Graph, spec_id: str) -> bool:
-    """Whether some evidence-valid outcome confirming this spec passed."""
-    return any(
-        _is_evidence(graph, edge.from_id) and _passing(graph, edge.from_id)
+def _specification_confirmed(graph: Graph, spec_id: str) -> bool:
+    """Whether this specification's evidence satisfies the leaf rule.
+
+    :implements: SEG-SREQ-006
+
+    At least one evidence-valid outcome must confirm this specification, and
+    every one that does must either have passed or be excused by a waiver.
+    The universal closes the hole the old existential left open: one passing
+    outcome beside an unwaived failing one no longer satisfies, and a
+    specification with no confirming outcome at all never satisfies
+    vacuously — an empty ``all()`` would otherwise answer ``True``, so the
+    existence check comes first and stands on its own.
+    """
+    confirming = [
+        edge.from_id
         for edge in graph.incoming(spec_id, _CONFIRMS)
+        if _is_evidence(graph, edge.from_id)
+    ]
+    if not confirming:
+        return False
+    return all(
+        _passing(graph, outcome_id) or _excused(graph, outcome_id) for outcome_id in confirming
     )
+
+
+def _excused(graph: Graph, outcome_id: str) -> bool:
+    """Whether a waiver excuses this outcome.
+
+    :implements: SEG-SREQ-006
+
+    Presence, not state: the excusing edge (``Excuses``, Waiver to
+    TestOutcome, per ``case/schema/edge-excuses.schema.json``) is evidence,
+    like ``Confirms`` and ``Witnesses``, and can never be affirmed active — so
+    excusal reads as a Waiver record reached through an incoming excusing
+    edge, whatever that edge's own recorded state happens to be. An excusing
+    edge whose Waiver record is absent from the graph excuses nothing: the
+    waiver itself must be present, not merely declared.
+    """
+    return any(
+        _waiver_present(graph, edge.from_id) for edge in graph.incoming(outcome_id, _EXCUSES)
+    )
+
+
+def _waiver_present(graph: Graph, local_id: str) -> bool:
+    """Whether a Waiver record with this identifier is actually in the graph."""
+    try:
+        node = graph.node(local_id)
+    except KeyError:
+        return False
+    return node.kind == _WAIVER
 
 
 def _is_evidence(graph: Graph, outcome_id: str) -> bool:

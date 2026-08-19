@@ -194,7 +194,25 @@ def test_the_affirmed_edge_is_active_and_carries_the_recomputed_hash() -> None:
     ],
 )
 def test_affirmable_names_exactly_the_three_states(state: LinkState, verdict: bool) -> None:
-    assert affirmation.affirmable(state) is verdict
+    """SEG-SREQ-056 added the ``kind`` parameter; a strong kind here isolates
+    the state gate exactly as the un-amended test did."""
+    assert affirmation.affirmable(state, "Implements") is verdict
+
+
+@pytest.mark.parametrize("kind", ["Confirms", "Witnesses", "Excuses", "Calls"])
+@pytest.mark.parametrize("state", list(LinkState))
+def test_affirmable_refuses_every_evidence_kind_whatever_its_state(
+    kind: str, state: LinkState
+) -> None:
+    """SEG-SREQ-056: an evidence edge is never affirmable, regardless of state."""
+    assert affirmation.affirmable(state, kind) is False
+
+
+@pytest.mark.parametrize("kind", ["Refines", "Verifies", "Implements"])
+def test_affirmable_leaves_every_strong_kind_governed_by_state_alone(kind: str) -> None:
+    """SEG-SREQ-056 is a companion to SEG-SREQ-027, not an amendment of it."""
+    assert affirmation.affirmable(LinkState.PENDING, kind) is True
+    assert affirmation.affirmable(LinkState.ACTIVE, kind) is False
 
 
 @pytest.mark.parametrize(
@@ -233,6 +251,16 @@ def test_compose_refuses_every_non_affirmable_state(state: LinkState, why: str) 
         edge_hash=edge_hash if state is LinkState.ACTIVE else STALE,
     )
     with pytest.raises(affirmation.AffirmationError, match=why):
+        affirmation.compose(edge, from_node=impl, to_node=sreq, **JUDGEMENT)
+
+
+@pytest.mark.parametrize("kind", ["Confirms", "Witnesses", "Excuses", "Calls"])
+def test_compose_refuses_every_evidence_kind_with_a_re_execution_message(kind: str) -> None:
+    """SEG-SREQ-056: a kind refusal, distinct from a state refusal, and it
+    names the act that actually resolves an evidence edge."""
+    impl, sreq = implementation("pkg.fn"), requirement("SREQ-1")
+    edge = derived(kind, impl, sreq, LinkState.PENDING, edge_hash=None)
+    with pytest.raises(affirmation.AffirmationError, match="re-execution"):
         affirmation.compose(edge, from_node=impl, to_node=sreq, **JUDGEMENT)
 
 

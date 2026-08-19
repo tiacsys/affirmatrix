@@ -22,6 +22,7 @@ import hashlib
 import json
 import tempfile
 from collections.abc import Iterable
+from datetime import date
 from importlib import resources
 from pathlib import Path
 from types import MappingProxyType
@@ -63,6 +64,21 @@ def requirement(local_id: str = "SEG-SREQ-018", content: str = "a statement") ->
         local_id=local_id,
         kind="Requirement",
         content_anchors={"contentHash": anchor(content, locator=f"need:{local_id}")},
+    )
+
+
+def waiver(
+    local_id: str = "WVR-001",
+    content: str = "a waiver document",
+    expiry: date = date(2099, 1, 1),
+    approver: str = "A. Reviewer",
+) -> records.NodeRecord:
+    return records.NodeRecord(
+        local_id=local_id,
+        kind="Waiver",
+        content_anchors={"contentHash": anchor(content, locator="file")},
+        expiry=expiry,
+        approver=approver,
     )
 
 
@@ -234,6 +250,49 @@ def test_a_node_document_carries_identifiers_kinds_digests_and_their_locations(
     (entry,) = entries_of(store, "nodes", "requirements.jsonld")
     assert set(entry) == {"id", "type", "seg:localId", "seg:contentHash", "seg:contentHashSource"}
     assert entry["seg:contentHash"] == digest("a statement").hex()
+
+
+def test_a_waiver_document_carries_its_expiry_and_approver(tmp_path: Path) -> None:
+    """SEG-SREQ-057, SEG-SREQ-058: producer-recorded claims, written beside
+    the digest exactly as a test outcome's result is."""
+    store = make_case(tmp_path)
+    store.write_nodes([waiver(expiry=date(2030, 6, 15), approver="B. Approver")])
+    (entry,) = entries_of(store, "nodes", "waivers.jsonld")
+    assert entry["seg:expiry"] == "2030-06-15"
+    assert entry["seg:approver"] == "B. Approver"
+    assert "seg:contentHash" in entry
+
+
+def test_a_waiver_missing_its_expiry_is_refused_by_the_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = _documents.node_entry
+
+    def without_expiry(record: records.NodeRecord) -> dict:
+        entry = original(record)
+        entry.pop("seg:expiry", None)
+        return entry
+
+    monkeypatch.setattr(_documents, "node_entry", without_expiry)
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="seg:expiry"):
+        store.write_nodes([waiver()])
+
+
+def test_a_waiver_missing_its_approver_is_refused_by_the_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = _documents.node_entry
+
+    def without_approver(record: records.NodeRecord) -> dict:
+        entry = original(record)
+        entry.pop("seg:approver", None)
+        return entry
+
+    monkeypatch.setattr(_documents, "node_entry", without_approver)
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="seg:approver"):
+        store.write_nodes([waiver()])
 
 
 def test_a_node_document_locates_the_content_behind_each_digest(tmp_path: Path) -> None:

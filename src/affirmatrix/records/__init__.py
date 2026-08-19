@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Protocol, runtime_checkable
@@ -49,9 +50,22 @@ _HEX_DIGITS = frozenset("0123456789abcdef")
 #: vocabulary's own rule, so the spelling lives here beside it.
 _TEST_OUTCOME = "TestOutcome"
 
+#: The one node kind whose records carry an excusal's expiry and approver. Same
+#: rule as ``_TEST_OUTCOME`` above: the taxonomy declares the kind, the
+#: vocabulary declares what a record of it must carry.
+_WAIVER = "Waiver"
+
 
 class LinkState(StrEnum):
-    """The states a strong edge can be in.
+    """The states an edge can be in.
+
+    Every edge — strong or evidence — is assigned a derived state by the
+    suspect detector; only a strong edge is ever affirmable
+    (:func:`affirmatrix.affirmation.affirmable`), so an evidence edge's state
+    is carried on the suspect detector's derived stream for a reader — a
+    directly outdated ``Confirms`` edge tells a reader the outcome's own
+    content moved — but it never appears on the package gate's worklist and
+    is never a target for a human judgement.
 
     ``pending`` and ``broken`` are not resolvable by affirming: a pending edge
     needs a first affirmation, and a broken edge needs its missing endpoint
@@ -104,6 +118,25 @@ def _require(value: str, what: str) -> str:
     return value
 
 
+def _coerced_date(value: date | str, local_id: str) -> date:
+    """A waiver's expiry, accepted as a ``date`` or an ISO 8601 calendar-date string.
+
+    The same convenience :class:`TestResult` gives a producer that hands over
+    a plain string spelling of its closed vocabulary rather than the enum
+    member itself.
+    """
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            raise ValueError(
+                f"waiver {local_id!r}'s expiry {value!r} is not an ISO 8601 calendar date"
+            ) from None
+    raise ValueError(f"waiver {local_id!r}'s expiry must be a date, not {value!r}")
+
+
 @dataclass(frozen=True, slots=True)
 class ContentAnchor:
     """One named content hash's digest, bound to where its content lives.
@@ -147,12 +180,23 @@ class NodeRecord:
     cannot make. Requiredness lives here, on the vocabulary, so no supplier
     can omit it: the record source's obligation is discharged by there being
     no such record without one.
+
+    A waiver likewise carries the date it expires and the name of the
+    approver who granted it (SEG-SREQ-057, SEG-SREQ-058) — the same move,
+    required exactly for the ``Waiver`` kind and refused everywhere else. Both
+    are producer-recorded claims, like a test outcome's result: whether the
+    waiver is actually still in force and whether that approver may actually
+    grant it are judgements the gate makes from these claims, not something
+    this vocabulary decides — so neither claim enters a hash preimage, the
+    same invariant that keeps a test outcome's result out of one.
     """
 
     local_id: str
     kind: str
     content_anchors: Mapping[str, ContentAnchor]
     result: TestResult | None = field(default=None)
+    expiry: date | None = field(default=None)
+    approver: str | None = field(default=None)
 
     def __post_init__(self) -> None:
         _require(self.local_id, "local identifier")
@@ -169,6 +213,28 @@ class NodeRecord:
                 f"node {self.local_id!r} of kind {self.kind!r} records no test execution "
                 "and cannot carry a result"
             )
+        if self.kind == _WAIVER:
+            if self.expiry is None:
+                raise ValueError(
+                    f"waiver {self.local_id!r} grants an excusal and must carry its expiry"
+                )
+            object.__setattr__(self, "expiry", _coerced_date(self.expiry, self.local_id))
+            if self.approver is None:
+                raise ValueError(
+                    f"waiver {self.local_id!r} grants an excusal and must carry its approver"
+                )
+            _require(self.approver, "approver")
+        else:
+            if self.expiry is not None:
+                raise ValueError(
+                    f"node {self.local_id!r} of kind {self.kind!r} grants no excusal and "
+                    "cannot carry an expiry"
+                )
+            if self.approver is not None:
+                raise ValueError(
+                    f"node {self.local_id!r} of kind {self.kind!r} grants no excusal and "
+                    "cannot carry an approver"
+                )
         if not self.content_anchors:
             raise ValueError(f"node {self.local_id!r} needs at least one content hash")
         for name, anchor in self.content_anchors.items():
