@@ -76,6 +76,35 @@ class Graph:
         """Edges leaving this node, optionally narrowed to one kind."""
         return _filtered(self._outgoing.get(local_id, ()), kind)
 
+    def restricted_to(self, ids: frozenset[str]) -> Graph:
+        """The induced subgraph over ``ids``: every edge whose two endpoints are both in it.
+
+        Full induced, not merely the edges a membership walk used to reach
+        ``ids``: an edge kind that never decides membership — ``Witnesses``,
+        say — can still connect two ids a walk reached by different routes,
+        and a caller judging this subgraph must see that edge or a piece of
+        evidence that is actually complete would read as incomplete for a
+        reason that never happened. An edge with one endpoint outside ``ids``
+        is dropped without comment; this is a deliberate cut of an
+        already-built graph, not a second refusal surface, so nothing here
+        raises over what the cut leaves out.
+
+        An id in ``ids`` that names no node here is simply absent from the
+        result: :func:`build` already decided which edges to admit to a
+        missing node, and that decision is not repeated by cutting the graph
+        down afterwards.
+        """
+        kept_nodes = {local_id: node for local_id, node in self._nodes.items() if local_id in ids}
+        kept_edges = tuple(
+            edge for edge in self.edges if edge.from_id in ids and edge.to_id in ids
+        )
+        return Graph(
+            _nodes=MappingProxyType(kept_nodes),
+            edges=kept_edges,
+            _incoming=_index(kept_edges, lambda edge: edge.to_id),
+            _outgoing=_index(kept_edges, lambda edge: edge.from_id),
+        )
+
 
 def _filtered(edges: tuple[EdgeRecord, ...], kind: str | None) -> tuple[EdgeRecord, ...]:
     if kind is None:

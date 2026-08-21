@@ -21,4 +21,5 @@ currently in scope to build.
    drift-derivation
    affirmation-recorder
    package-gate
+   proof-scope
    iteration-0-backlog
