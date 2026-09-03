@@ -26,25 +26,31 @@ identifier a scope mints alongside it; see :mod:`affirmatrix.proof._scope`
 for the full account, including what an evidence edge crossing the scope's
 own cut reads as.
 
-:func:`~affirmatrix.proof.assemble` judges a collected scope and builds the
-four documents when it is not blocked; :func:`~affirmatrix.proof.persist`
-writes a ready :class:`~affirmatrix.proof.Package` through the affirmation
-store. See :mod:`affirmatrix.proof._package` for the full account, including
-the package's own sealed root — a second, distinct call to
+:func:`~affirmatrix.proof.check_readiness` collects a scope and judges it;
+:func:`~affirmatrix.proof.assemble` composes that and builds the four
+documents when the judgement is not blocked; :func:`~affirmatrix.proof.persist`
+writes a :class:`~affirmatrix.proof.Package` through the affirmation store.
+See :mod:`affirmatrix.proof._package` for the full account, including the
+package's own sealed root — a second, distinct call to
 :func:`affirmatrix.commitment.design_root`, never to be confused with the
 scope's own snapshot-identifier fingerprint.
 
 **Refusal precedes writing (SEG-SYS-008).** Because writes land in place
-(ADR-0008), the gate runs to completion first and no package file is opened for
-a blocked scope — kept today by :func:`assemble` never building a document
-body for one, ``persist`` refusing outright should it ever be asked to write
-one anyway.
+(ADR-0008), the gate runs to completion first: when it reports a scope
+blocked, ``assemble`` raises :class:`~affirmatrix.proof.GenerationRefused` —
+carrying the gate's own report as a typed attribute — before any document
+body is built, so no package file is ever opened for one. A ``Package`` is
+always complete; there is no partial one for ``persist`` to be asked to
+write. Refusal and error are kept apart deliberately: a blocked scope is
+refused, an input the generator cannot even judge (an absent requested
+requirement, an ambiguous outcome) raises its own distinct type, and
+neither is ever caught as the other.
 
 **Capability, not authority:** an operator runs generation; the engine does not
 generate on its own.
 
 Iteration-0 backlog items B16 (scope), B17 (the four documents), B18 (the
-operator-facing refusal).
+refusal).
 """
 
 from __future__ import annotations
@@ -54,8 +60,10 @@ from affirmatrix.proof._package import (
     DESIGN_CONSISTENCY_PROOF,
     EVIDENCE_MANIFEST,
     EXECUTION_COVERAGE_RECORD,
+    GenerationRefused,
     Package,
     assemble,
+    check_readiness,
     persist,
 )
 from affirmatrix.proof._scope import Scope, ScopeError, collect_scope
@@ -65,10 +73,12 @@ __all__ = [
     "DESIGN_CONSISTENCY_PROOF",
     "EVIDENCE_MANIFEST",
     "EXECUTION_COVERAGE_RECORD",
+    "GenerationRefused",
     "Package",
     "Scope",
     "ScopeError",
     "assemble",
+    "check_readiness",
     "collect_scope",
     "persist",
 ]

@@ -18,32 +18,32 @@ Two steps, kept apart
    from affirmatrix import proof
    from affirmatrix.case import AffirmationStore
 
-   package = proof.assemble(
-       built,
-       {"SEG-SREQ-014"},
-       snapshot_timestamp=datetime.now(UTC),
-       evaluation_date=date.today(),
-       current_revision=current_repository_revision,
-   )
-
-   if package.documents is not None:
+   try:
+       package = proof.assemble(
+           built,
+           {"SEG-SREQ-014"},
+           snapshot_timestamp=datetime.now(UTC),
+           evaluation_date=date.today(),
+           current_revision=current_repository_revision,
+       )
+   except proof.GenerationRefused as refusal:
+       for diagnostic in refusal.coverage_report.diagnostics:
+           print(diagnostic.severity.value, diagnostic.condition, diagnostic.subject)
+   else:
        written = proof.persist(package, AffirmationStore(root="case"))
 
-``assemble`` is pure and total: it collects the scope, hands it to the
-package gate, and — only when the gate's report is not blocked — builds the
-four document bodies in memory as a :class:`~affirmatrix.proof.Package`. It
-never writes a file, and it never raises for a blocked scope: a blocked
-scope's package simply carries ``documents=None``. That is what makes
-SEG-SREQ-046 ("no part of a package for a blocked scope") true by
-construction rather than by a check that could be forgotten — no
+``assemble`` collects the scope, hands it to the package gate through
+:func:`~affirmatrix.proof.check_readiness`, and — only when the gate's
+report is not blocked — builds the four document bodies in memory as a
+:class:`~affirmatrix.proof.Package`, always complete. When the report *is*
+blocked, ``assemble`` raises :class:`~affirmatrix.proof.GenerationRefused`
+at that one point, before any document body is built — no
 ``DesignConsistencyProof`` or ``EvidenceManifest`` body is ever built for a
-blocked scope, not merely built and then discarded.
+blocked scope, not merely built and then discarded. See "Refusal" below.
 
 ``persist`` is the one function that writes, through the affirmation store's
-proof-document face. Called on a blocked package it raises a plain error and
-writes nothing — a stated stopgap, not the operator-facing refusal a later
-slice adds; keeping the write from happening is this module's whole
-obligation, explaining it well is the next one's.
+proof-document face. It is a straight-line write: a ``Package`` is always
+complete, so there is nothing left for ``persist`` to check.
 
 Two hashes, two purposes
 ----------------------------
@@ -159,11 +159,36 @@ kind" path the write face already used while the four schemas did not
 exist yet — writing to such a case seeds them on the next call; reading
 never seeds anything.
 
-What still waits
----------------------
+Refusal
+-----------
 
-The refusal this page's ``persist`` performs for a blocked package is a
-plain error, not an operator-facing one: no attached report, no message
-shaped for a human to act on. SEG-SREQ-046 is kept; SEG-SREQ-047 (a
-refusal explained by the gate's own report) and SEG-SREQ-048 (only a
-blocked scope is ever refused) wait for the slice that builds that type.
+:class:`~affirmatrix.proof.GenerationRefused` is raised at exactly one
+place — inside ``assemble``, the moment :func:`~affirmatrix.proof.check_readiness`
+comes back with a blocked report — and nowhere else. It carries the
+judgement as two typed attributes rather than only in its message: ``scope``
+(the collected :class:`~affirmatrix.proof.Scope` — its snapshot id and the
+requested and member identifiers it was collected for) and
+``coverage_report`` (the gate's own report, unchanged), so a caller can
+render every diagnostic instead of parsing a string. Named without the
+``Error`` suffix every other refusal in this codebase carries: this is the
+gate's own verdict acted on (SEG-SYS-008), not an input the generator
+failed to make sense of.
+
+Both halves of SEG-SREQ-046 hold by construction. Nothing is built in
+memory: the raise happens before any document body exists, so a blocked
+scope never has a ``DesignConsistencyProof`` or an ``EvidenceManifest`` to
+discard. Nothing is written to disk: ``persist`` is the only function that
+touches the store, and it is never reached for a blocked scope — a
+``Package`` cannot represent one — so ``write_proof_document`` never runs
+and never creates even the snapshot directory a first write would
+otherwise seed.
+
+SEG-SREQ-048's boundary — only a blocked scope is ever refused — is a
+statement about *kind*, not only about when: an absent or non-Requirement
+requested identifier raises :class:`~affirmatrix.proof.ScopeError` from
+scope collection, and an outcome confirming more than one in-scope
+specification raises a plain ``ValueError`` from a document builder.
+Neither is a :class:`~affirmatrix.proof.GenerationRefused`, and
+``GenerationRefused`` is never one of them — a refusal is the gate's
+verdict acted on; an error is an input this generator cannot even judge,
+and the two never share a base beyond ``Exception``.

@@ -6,8 +6,9 @@ page is where that proposal is judged. The package gate answers one question
 over a scope — is there anything here that should stop an evidence package
 from being generated? — and answers it by producing a report, never by acting
 on it. It judges and reports; it does not enforce (SEG-SYS-006). Enforcement —
-refusing to generate for a blocked scope — is a later component's, and above
-that, the operator's.
+refusing to generate for a blocked scope — belongs to the proof generator's
+own ``assemble`` (see :doc:`proof-package`'s "Refusal"), and above that, the
+operator's.
 
 One function, one report
 -------------------------

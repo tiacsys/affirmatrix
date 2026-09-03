@@ -1,12 +1,19 @@
-"""Package assembly and persistence (SEG-SREQ-035, -037…041) and the store's
-proof-document read face (SEG-SREQ-019…022 over proofs).
+"""Package assembly and persistence (SEG-SREQ-035…041, -046…048) and the
+store's proof-document read face (SEG-SREQ-019…022 over proofs).
 
 Two tests are worth reading before the rest: one is the auditor's test —
 recomputing a design consistency proof's own root from that one persisted
 document alone, with no :class:`~affirmatrix.graph.Graph` anywhere in scope —
-because that is the whole point of SEG-SYS-005; the other pins that a
-blocked scope's package carries no document at all, so ``persist`` never has
-anything to write for one.
+because that is the whole point of SEG-SYS-005; the other is that a blocked
+scope's ``assemble`` call raises before any document body is built, so
+``persist`` is never reached and no case directory ever comes into being.
+
+A second thing worth reading before the rest: refusal and error are
+different kinds of stop, never one caught as the other.
+:class:`~affirmatrix.proof.GenerationRefused` is the gate's own verdict
+acted on; a :class:`~affirmatrix.proof.ScopeError` or the ``ValueError`` an
+ambiguous confirming outcome earns are inputs the generator cannot even
+judge. The tests near the bottom of the file pin both directions.
 
 Fixture graphs are built in memory from literal records, like
 ``test_proof_scope.py`` and ``test_gates.py``; every store is a fresh
@@ -22,7 +29,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from affirmatrix import case, commitment, graph, proof, records
+from affirmatrix import case, commitment, gates, graph, proof, records
 from affirmatrix.proof import _package
 from affirmatrix.records import LinkState, TestResult
 
@@ -157,7 +164,6 @@ def test_a_ready_scope_assembles_all_four_documents() -> None:
     nodes, edges = ready_fixture()
     package = assembled(nodes, edges, {"SREQ-1"})
     assert not package.coverage_report.blocked
-    assert package.documents is not None
     assert set(package.documents) == {
         proof.DESIGN_CONSISTENCY_PROOF,
         proof.EXECUTION_COVERAGE_RECORD,
@@ -166,24 +172,187 @@ def test_a_ready_scope_assembles_all_four_documents() -> None:
     }
 
 
-# ── A blocked scope assembles nothing, and persist refuses ──────────────────
+def test_a_ready_scope_with_informational_findings_is_not_refused() -> None:
+    """A stale outcome is informational, never blocking (SEG-SREQ-063,
+    SEG-SREQ-067): the scope still assembles, and the finding still shows up
+    in its coverage report document."""
+    sreq, spec = requirement("SREQ-1"), specification("TS-1")
+    impl = implementation("pkg.fn")
+    fresh_run = outcome("run-1/TS-1")
+    stale_run = outcome("run-2/TS-1", revision="a-different-revision")
+    nodes = [sreq, spec, impl, fresh_run, stale_run]
+    edges = [
+        edge("Verifies", "TS-1", "SREQ-1"),
+        edge("Implements", "pkg.fn", "SREQ-1"),
+        edge("Confirms", "run-1/TS-1", "TS-1"),
+        edge("Witnesses", "run-1/TS-1", "pkg.fn"),
+        edge("Confirms", "run-2/TS-1", "TS-1"),
+        edge("Witnesses", "run-2/TS-1", "pkg.fn"),
+    ]
+    package = assembled(nodes, edges, {"SREQ-1"})
+    assert not package.coverage_report.blocked
+    assert package.coverage_report.stale_outcomes == {"run-2/TS-1"}
+    assert package.documents[proof.COVERAGE_REPORT]["staleOutcomes"] == ["run-2/TS-1"]
 
 
-def test_a_blocked_scope_assembles_no_documents() -> None:
-    """SEG-SREQ-046: no part of a package for a blocked scope."""
+# ── Refusal (SEG-SREQ-046, SEG-SREQ-047, SEG-SREQ-048) ──────────────────────
+
+
+def test_a_blocked_scope_raises_generation_refused() -> None:
     orphan = requirement("ORPHAN-1")
-    package = assembled([orphan], [], {"ORPHAN-1"})
-    assert package.coverage_report.blocked
-    assert package.documents is None
+    built = graph.build(Source([orphan], []))
+    with pytest.raises(proof.GenerationRefused) as caught:
+        proof.assemble(
+            built,
+            {"ORPHAN-1"},
+            snapshot_timestamp=TIMESTAMP,
+            evaluation_date=EVALUATION_DATE,
+            current_revision=CURRENT_REVISION,
+        )
+    refusal = caught.value
+    assert refusal.scope.requested_ids == {"ORPHAN-1"}
+    expected_scope, expected_report = _package.check_readiness(
+        built,
+        {"ORPHAN-1"},
+        snapshot_timestamp=TIMESTAMP,
+        evaluation_date=EVALUATION_DATE,
+        current_revision=CURRENT_REVISION,
+    )
+    assert refusal.scope == expected_scope
+    assert refusal.coverage_report == expected_report
+    assert refusal.coverage_report.blocked
 
 
-def test_persisting_a_blocked_package_raises_and_writes_nothing(tmp_path) -> None:
+def test_a_refused_scope_creates_no_case_directory(tmp_path) -> None:
+    """SEG-SREQ-046's second half: refusal precedes writing, so a store the
+    caller holds but never gets to pass to ``persist`` never has its layout
+    created at all."""
     orphan = requirement("ORPHAN-1")
-    package = assembled([orphan], [], {"ORPHAN-1"})
+    built = graph.build(Source([orphan], []))
     store = case.AffirmationStore(root=tmp_path / "case")
-    with pytest.raises(ValueError, match="blocked"):
-        _package.persist(package, store)
-    assert not store.root.exists()  # not even the case layout was created
+    with pytest.raises(proof.GenerationRefused):
+        proof.assemble(
+            built,
+            {"ORPHAN-1"},
+            snapshot_timestamp=TIMESTAMP,
+            evaluation_date=EVALUATION_DATE,
+            current_revision=CURRENT_REVISION,
+        )
+    assert not store.root.exists()
+
+
+@pytest.mark.parametrize(
+    ("nodes_edges", "requested_ids", "expected_condition"),
+    [
+        pytest.param(
+            (
+                [requirement("SREQ-1"), implementation("pkg.fn")],
+                [edge("Implements", "pkg.fn", "SREQ-1", state=LinkState.PENDING)],
+            ),
+            {"SREQ-1"},
+            gates.Condition.UNREADY_EDGE,
+            id="unready-edge",
+        ),
+        pytest.param(
+            ([requirement("SREQ-1")], []),
+            {"SREQ-1"},
+            gates.Condition.COVERAGE_GAP,
+            id="coverage-gap",
+        ),
+        pytest.param(
+            ([requirement("SREQ-1")], []),
+            set(),
+            gates.Condition.EMPTY_DESIGN_SET,
+            id="empty-design-set",
+        ),
+    ],
+)
+def test_each_blocking_condition_is_refused(nodes_edges, requested_ids, expected_condition) -> None:
+    nodes, edges = nodes_edges
+    built = graph.build(Source(nodes, edges))
+    with pytest.raises(proof.GenerationRefused) as caught:
+        proof.assemble(
+            built,
+            requested_ids,
+            snapshot_timestamp=TIMESTAMP,
+            evaluation_date=EVALUATION_DATE,
+            current_revision=CURRENT_REVISION,
+        )
+    conditions = {d.condition for d in caught.value.coverage_report.diagnostics}
+    assert expected_condition in conditions
+
+
+def test_an_unwaived_non_passing_outcome_is_refused() -> None:
+    nodes, edges = ready_fixture()
+    failed = [
+        outcome("run-1/TS-1", result=TestResult.FAILED) if n.local_id == "run-1/TS-1" else n
+        for n in nodes
+    ]
+    built = graph.build(Source(failed, edges))
+    with pytest.raises(proof.GenerationRefused) as caught:
+        proof.assemble(
+            built,
+            {"SREQ-1"},
+            snapshot_timestamp=TIMESTAMP,
+            evaluation_date=EVALUATION_DATE,
+            current_revision=CURRENT_REVISION,
+        )
+    conditions = {d.condition for d in caught.value.coverage_report.diagnostics}
+    assert gates.Condition.UNWAIVED_NON_PASSING_OUTCOME in conditions
+
+
+def test_generation_refused_is_not_a_scope_error_value_error_or_store_error() -> None:
+    orphan = requirement("ORPHAN-1")
+    built = graph.build(Source([orphan], []))
+    try:
+        proof.assemble(
+            built,
+            {"ORPHAN-1"},
+            snapshot_timestamp=TIMESTAMP,
+            evaluation_date=EVALUATION_DATE,
+            current_revision=CURRENT_REVISION,
+        )
+    except proof.GenerationRefused as refusal:
+        assert not isinstance(refusal, proof.ScopeError)
+        assert not isinstance(refusal, ValueError)
+        assert not isinstance(refusal, case.AffirmationStoreError)
+    else:
+        pytest.fail("expected GenerationRefused")
+
+
+def test_a_scope_error_is_never_a_generation_refused() -> None:
+    built = graph.build(Source([requirement("SREQ-1")], []))
+    with pytest.raises(proof.ScopeError) as caught:
+        proof.assemble(
+            built,
+            {"MISSING"},
+            snapshot_timestamp=TIMESTAMP,
+            evaluation_date=EVALUATION_DATE,
+            current_revision=CURRENT_REVISION,
+        )
+    assert not isinstance(caught.value, proof.GenerationRefused)
+
+
+def test_check_readiness_agrees_with_collect_scope_and_package_gate() -> None:
+    nodes, edges = ready_fixture()
+    built = graph.build(Source(nodes, edges))
+
+    scope, report = _package.check_readiness(
+        built,
+        {"SREQ-1"},
+        snapshot_timestamp=TIMESTAMP,
+        evaluation_date=EVALUATION_DATE,
+        current_revision=CURRENT_REVISION,
+    )
+
+    independently_collected = proof.collect_scope(built, {"SREQ-1"}, snapshot_timestamp=TIMESTAMP)
+    independently_judged = gates.package_gate(
+        independently_collected.subgraph,
+        evaluation_date=EVALUATION_DATE,
+        current_revision=CURRENT_REVISION,
+    )
+    assert scope == independently_collected
+    assert report == independently_judged
 
 
 # ── Persisting a ready package ──────────────────────────────────────────────
@@ -325,7 +494,6 @@ def test_the_execution_coverage_record_excludes_stale_outcomes(tmp_path) -> None
         edge("Witnesses", "run-2/TS-1", "pkg.fn"),
     ]
     package = assembled(nodes, edges, {"SREQ-1"})
-    assert package.documents is not None
     record = package.documents[proof.EXECUTION_COVERAGE_RECORD]
     ids = {entry["id"] for entry in record["outcomes"]}
     assert ids == {"run-1/TS-1"}

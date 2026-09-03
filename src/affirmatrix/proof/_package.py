@@ -1,16 +1,31 @@
 """Package assembly and persistence — the four documents, and their seal.
 
-Two steps, deliberately kept apart. :func:`assemble` is pure and total: it
-collects a scope, judges it, and — only when the judgement is not blocked —
-builds the four document bodies in memory as a :class:`Package`. It never
-writes, and it never raises for a blocked scope; a blocked scope's
-``Package`` simply carries no documents, which is what makes SEG-SREQ-046
-("no part of a package for a blocked scope") true by construction rather
-than by a check someone could forget. :func:`persist` is the one place that
-writes, through the store's proof-document face; called on a blocked
-``Package`` it raises a plain error and writes nothing. That refusal is a
-stated stopgap, not the operator-facing refusal type the next slice builds:
-this module only has to keep the invariant, not explain it.
+Two steps, deliberately kept apart. :func:`check_readiness` collects a scope
+and judges it — a blocked judgement is returned, never raised, though a
+scope that cannot be collected at all still raises from collection —
+returning both to a caller who wants the judgement without committing to
+generate. :func:`assemble` composes
+``check_readiness`` and, when the judgement is not blocked, builds the four
+document bodies in memory as a :class:`Package` — always a complete package,
+never a partial one. When the judgement *is* blocked, ``assemble`` raises
+:class:`GenerationRefused` at that one point, before any document body is
+built: no part of a package comes into existence in memory (SEG-SREQ-046's
+first half), and because :func:`persist` is never reached, none comes into
+existence on disk either (its second half) — not even the snapshot
+directory a first write would otherwise create. :func:`persist` is the one
+place that writes, through the store's proof-document face; it never checks
+for a blocked judgement, because a ``Package`` cannot represent one.
+
+Refusal and error are different kinds of stop, and the distinction is
+structural, not a matter of message wording: :class:`GenerationRefused` is
+raised exactly once, exactly when the gate's own report says a scope is
+blocked (SEG-SREQ-048) — the gate's verdict, acted on. An absent or
+non-Requirement requested identifier, or an outcome confirming more than
+one in-scope specification, are inputs this generator cannot even judge;
+they raise their own distinct types, from :func:`~affirmatrix.proof.collect_scope`
+and this module's own document builders respectively, and neither is ever
+mistaken for the other — a caller catching one never catches the other by
+accident, because neither shares a base beyond ``Exception``.
 
 Two hashes, two purposes
 --------------------------
@@ -107,24 +122,73 @@ _DOCUMENT_NAMES = (
 )
 
 
+class GenerationRefused(Exception):
+    """The proof gate reported the requested scope blocked; there is no package for it.
+
+    :implements: SEG-SREQ-047
+
+    Carries the judgement as two typed attributes, not only in the message,
+    so a caller can render every diagnostic rather than parse a string:
+    ``scope`` (the collected :class:`~affirmatrix.proof.Scope` — its
+    snapshot id and the requested and member identifiers it was collected
+    for) and ``coverage_report`` (the gate's own
+    :class:`~affirmatrix.gates.CoverageReport`, unchanged). Named without
+    the ``Error`` suffix every other refusal in this codebase carries,
+    deliberately: this is the gate's own verdict acted on, not an input the
+    generator failed to make sense of, and the two are never to be confused
+    for one another (SEG-SREQ-048).
+    """
+
+    def __init__(self, scope: Scope, coverage_report: gates.CoverageReport) -> None:
+        blocking = sum(1 for d in coverage_report.diagnostics if d.severity.blocks_package)
+        super().__init__(
+            f"scope {sorted(scope.requested_ids)!r} (snapshot {scope.snapshot_id!r}) is "
+            f"blocked: {blocking} blocking finding(s)"
+        )
+        self.scope = scope
+        self.coverage_report = coverage_report
+
+
 @dataclass(frozen=True, slots=True)
 class Package:
     """One assembly's answer: the scope, its judgement, and its documents.
 
-    ``documents`` is ``None`` exactly when ``coverage_report.blocked`` is
-    true — a blocked scope's package carries no part of a package
-    (SEG-SREQ-046), never a partial one. When it is not ``None`` it maps each
-    of the four document names above to that document's body, ready to
-    persist unchanged.
+    Always complete — a ``Package`` only ever exists for a scope
+    :func:`assemble` did not refuse, so ``documents`` maps every one of the
+    four document names above to that document's body, ready to persist
+    unchanged. There is no partial ``Package``: a blocked scope never
+    produces one at all (see :class:`GenerationRefused`).
     """
 
     scope: Scope
     coverage_report: gates.CoverageReport
-    documents: Mapping[str, Mapping[str, object]] | None
+    documents: Mapping[str, Mapping[str, object]]
 
     def __post_init__(self) -> None:
-        if self.documents is not None:
-            object.__setattr__(self, "documents", MappingProxyType(dict(self.documents)))
+        object.__setattr__(self, "documents", MappingProxyType(dict(self.documents)))
+
+
+def check_readiness(
+    graph: Graph,
+    requested_ids: Iterable[str],
+    *,
+    snapshot_timestamp: datetime,
+    evaluation_date: date,
+    current_revision: str,
+) -> tuple[Scope, gates.CoverageReport]:
+    """Collect a scope and judge it — a blocked judgement is returned, never raised.
+
+    For a caller who wants the judgement without committing to generate:
+    :func:`assemble` composes exactly this call and then decides what to do
+    with the result. Raises whatever :func:`~affirmatrix.proof.collect_scope`
+    raises for a requested scope it cannot collect; otherwise always
+    returns, blocked or not.
+    """
+    scope = collect_scope(graph, requested_ids, snapshot_timestamp=snapshot_timestamp)
+    report = gates.package_gate(
+        scope.subgraph, evaluation_date=evaluation_date, current_revision=current_revision
+    )
+    return scope, report
 
 
 def assemble(
@@ -135,21 +199,27 @@ def assemble(
     evaluation_date: date,
     current_revision: str,
 ) -> Package:
-    """Collect a scope, judge it, and build its documents — pure, and total.
+    """Collect a scope, judge it, and build its documents — or refuse.
 
     :implements: SEG-SREQ-035
+    :implements: SEG-SREQ-046
+    :implements: SEG-SREQ-048
 
-    Never writes, and never raises for a blocked scope: a blocked scope's
-    ``Package.documents`` is ``None``, and no document body is ever
-    constructed for it — the invariant SEG-SREQ-046 asks for, kept by
-    never building the thing rather than by building and then discarding it.
+    Composes :func:`check_readiness`. When the judgement is blocked, raises
+    :class:`GenerationRefused` at this one point, before any document body
+    is built — the whole of SEG-SREQ-046's first half, and SEG-SREQ-048's
+    boundary: this is the only place a scope is ever refused, and it is
+    refused if and only if the gate's own report says it is blocked.
     """
-    scope = collect_scope(graph, requested_ids, snapshot_timestamp=snapshot_timestamp)
-    report = gates.package_gate(
-        scope.subgraph, evaluation_date=evaluation_date, current_revision=current_revision
+    scope, report = check_readiness(
+        graph,
+        requested_ids,
+        snapshot_timestamp=snapshot_timestamp,
+        evaluation_date=evaluation_date,
+        current_revision=current_revision,
     )
     if report.blocked:
-        return Package(scope=scope, coverage_report=report, documents=None)
+        raise GenerationRefused(scope, report)
     documents = {
         DESIGN_CONSISTENCY_PROOF: _design_consistency_proof_document(scope, current_revision),
         EXECUTION_COVERAGE_RECORD: _execution_coverage_record_document(scope, report),
@@ -160,27 +230,27 @@ def assemble(
 
 
 def persist(package: Package, store: AffirmationStore) -> Mapping[str, Path]:
-    """Write a ready package's four documents under its snapshot directory.
+    """Write a package's four documents under its snapshot directory.
 
     :implements: SEG-SREQ-041
 
-    Refuses outright, writing nothing, when ``package.documents`` is
-    ``None`` — a plain error, not the operator-facing refusal type a later
-    slice adds; this function's only obligation is that a blocked package
-    never reaches the store as a file. Generation itself changes nothing
-    about the graph or the store's node, edge and review-event streams:
-    every document here is written under ``proofs/{snapshot_id}/`` alone.
+    A straight-line write: a ``Package`` is always complete, so there is
+    nothing here to check before writing it. SEG-SREQ-046's second half —
+    nothing on disk for a blocked scope, not even the snapshot directory a
+    first write would otherwise create — holds because this function is
+    never reached for one: :func:`assemble` already refused before
+    returning. Generation itself changes nothing about the graph or the
+    store's node, edge and review-event streams: every document here is
+    written under ``proofs/{snapshot_id}/`` alone.
     """
-    if package.documents is None:
-        raise ValueError(
-            f"scope {sorted(package.scope.requested_ids)!r} is blocked; "
-            "no part of a package is written for a blocked scope"
-        )
-    written = {
-        name: store.write_proof_document(package.scope.snapshot_id, name, package.documents[name])
-        for name in _DOCUMENT_NAMES
-    }
-    return MappingProxyType(written)
+    return MappingProxyType(
+        {
+            name: store.write_proof_document(
+                package.scope.snapshot_id, name, package.documents[name]
+            )
+            for name in _DOCUMENT_NAMES
+        }
+    )
 
 
 def _canonical_metadata(*, snapshot_id: str, requested_ids: Iterable[str], revision: str) -> bytes:
@@ -399,7 +469,9 @@ __all__ = [
     "DESIGN_CONSISTENCY_PROOF",
     "EVIDENCE_MANIFEST",
     "EXECUTION_COVERAGE_RECORD",
+    "GenerationRefused",
     "Package",
     "assemble",
+    "check_readiness",
     "persist",
 ]

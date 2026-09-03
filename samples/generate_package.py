@@ -5,7 +5,10 @@ evidence package: collect a scope for one requirement, judge it, assemble the
 four documents, and write them into a case under a temporary directory. Then
 reads the package straight back and recomputes the design consistency
 proof's own root from that one document alone — the auditor's check, with no
-graph in hand.
+graph in hand. A second, unrelated scope — one requirement with no coverage
+at all — is blocked, and assembling it demonstrates the refusal: catching
+``GenerationRefused`` and rendering the diagnostics it carries, the shape a
+command-line surface would render for an operator.
 
 Everything here is capability, not authority: the case root is a temporary
 directory, and generating a package in a script is not the operator's act
@@ -109,8 +112,9 @@ def main() -> None:
     )
     built = graph.build(Producer(nodes, edges))
 
-    # 1. Assemble is pure: collect the scope, judge it, build the four
-    #    documents in memory. Nothing is written yet.
+    # 1. Assemble collects the scope, judges it, and builds the four
+    #    documents in memory — or raises if the judgement is blocked.
+    #    Nothing is written yet either way.
     package = proof.assemble(
         built,
         {"SREQ-1"},
@@ -120,10 +124,6 @@ def main() -> None:
     )
     print(f"scope total: {package.scope.total}")
     print(f"coverage report blocked: {package.coverage_report.blocked}")
-
-    if package.documents is None:
-        print("scope is blocked; nothing to persist")
-        return
 
     # 2. Persist writes the four documents through the store's proof-document
     #    face, under proofs/{snapshot_id}/ in a throwaway case.
@@ -152,6 +152,25 @@ def main() -> None:
     print(f"root as persisted:  {design_proof['root']}")
     print(f"root as recomputed: {recomputed}")
     print(f"the auditor's check: {'passes' if recomputed == design_proof['root'] else 'FAILS'}")
+
+    # 4. A second, unrelated scope: one requirement with no coverage at all.
+    #    Its own scope is blocked, so assemble refuses rather than building
+    #    anything — the refusal carries the gate's own report, which is what
+    #    a command-line surface would render for an operator.
+    uncovered = node("SREQ-2", "Requirement", ("contentHash",), seed="v1")
+    empty_scope_graph = graph.build(Producer((uncovered,), ()))
+    try:
+        proof.assemble(
+            empty_scope_graph,
+            {"SREQ-2"},
+            snapshot_timestamp=datetime.now(UTC),
+            evaluation_date=date.today(),
+            current_revision=current_revision,
+        )
+    except proof.GenerationRefused as refusal:
+        print(f"refused: {refusal}")
+        for diagnostic in refusal.coverage_report.diagnostics:
+            print(f"  {diagnostic.severity.value}: {diagnostic.condition} ({diagnostic.subject})")
 
 
 if __name__ == "__main__":
