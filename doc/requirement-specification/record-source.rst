@@ -27,3 +27,11 @@ cannot be present in one stream and missing from another.
 
    The record source shall supply, in every waiver record, the name of the
    approver who granted it.
+
+.. sreq:: Test outcomes carry the revision they ran against
+   :id: SEG-SREQ-062
+   :refines: SEG-SYS-006
+
+   The record source shall supply, in every test outcome record, the
+   revision of the implementation repository the test execution ran
+   against.

@@ -23,6 +23,14 @@ the refusal arrives with the gate's report attached.
    The proof generator shall include in a package's scope every node reachable
    from the requested requirements through strong edges.
 
+.. sreq:: Scope carries the evidence for what it covers
+   :id: SEG-SREQ-066
+   :refines: SEG-SYS-005
+
+   The proof generator shall include in a package's scope every test
+   outcome confirming an in-scope test specification and every waiver
+   excusing an in-scope test outcome.
+
 .. sreq:: Packages carry what their root recomputes from
    :id: SEG-SREQ-037
    :refines: SEG-SYS-005
@@ -45,12 +53,17 @@ the refusal arrives with the gate's report attached.
    package's scope includes every requirement that refines no other
    requirement.
 
+.. note::
+
+   A requirement that refines no other requirement is *top-level* — it is
+   never the source of a ``refines`` edge.
+
 .. sreq:: Stale outcomes are excluded
    :id: SEG-SREQ-040
    :refines: SEG-SYS-005
 
    The proof generator shall exclude from an evidence package every outcome
-   that was not produced against the current implementation content.
+   the gate evaluator reports as stale.
 
 .. sreq:: Generation changes nothing
    :id: SEG-SREQ-041

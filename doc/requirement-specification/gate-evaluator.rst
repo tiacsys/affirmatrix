@@ -56,3 +56,33 @@ that would otherwise pass in silence — a scope with nothing in it to seal.
 
    If a non-passing outcome is excused by a valid waiver, then the gate
    evaluator shall report that outcome as informational.
+
+.. sreq:: A stale outcome is not evidence
+   :id: SEG-SREQ-063
+   :refines: SEG-SYS-006
+
+   The gate evaluator shall treat an outcome whose recorded revision differs
+   from the current revision it is given as absent when it judges the
+   specification that outcome confirms.
+
+.. sreq:: Diagnostic conditions are a closed vocabulary
+   :id: SEG-SREQ-064
+   :refines: SEG-SYS-006
+
+   The gate evaluator shall report the condition of every diagnostic as one
+   member of a fixed set of named conditions.
+
+.. sreq:: A diagnostic's condition carries no occurrence-specific detail
+   :id: SEG-SREQ-065
+   :refines: SEG-SYS-006
+
+   The gate evaluator shall keep every diagnostic's condition free of detail
+   that varies by occurrence, such as which state an edge is in.
+
+.. sreq:: A stale outcome is reported
+   :id: SEG-SREQ-067
+   :refines: SEG-SYS-006
+
+   The gate evaluator shall report an outcome whose recorded revision
+   differs from the current revision it is given as an informational
+   finding in its report.
