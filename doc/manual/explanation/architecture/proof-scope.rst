@@ -143,14 +143,8 @@ is that this module never has to.
 What still waits
 --------------------
 
-Two things this page cannot yet claim:
+One thing this page cannot yet claim:
 
-* **Stale outcomes.** An outcome produced against implementation content that
-  has since moved is not excluded from a scope here. The record vocabulary
-  does not yet carry anything a staleness comparison could be computed
-  against — no revision anchor on an outcome to compare against current
-  content — so there is nothing this module could check today. The gap is
-  named here rather than patched around with an invented field.
 * **Recording a scope into a package, and the purity of doing so.** A
   package's obligation to state the scope it was built for, and to leave
   every node, edge and affirmation untouched while it does, are both
@@ -159,3 +153,16 @@ Two things this page cannot yet claim:
   purity a test already enforces on the collection step alone; the act of
   recording that value, and generating a package around it without side
   effects, is a later page's to describe.
+
+Stale outcomes are no longer unrealizable, but they are also not this
+module's to exclude. :func:`~affirmatrix.gates.package_gate` now judges
+staleness — given the current revision of the implementation repository as
+an explicit input, exactly as it is given ``evaluation_date`` — and cuts a
+stale outcome out of the graph it judges before computing anything else (see
+the package gate's page). This module's own collection hands the gate an
+unfiltered subgraph: hop 3 above still collects every outcome confirming an
+in-scope specification, fresh or stale alike, because the comparison needs a
+current revision this module is never given, and because a scope's
+membership and a gate's judgement over that scope are different questions. A
+*package's* exclusion of what the gate reports stale (SEG-SREQ-040) is the
+next slice's, once a package exists to exclude anything from.

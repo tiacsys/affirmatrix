@@ -96,7 +96,11 @@ def specification(local_id: str, seed: str = "v1") -> records.NodeRecord:
 
 def outcome(local_id: str, seed: str = "v1") -> records.NodeRecord:
     return records.NodeRecord(
-        local_id, "TestOutcome", anchors(("contentHash",), seed), result=records.TestResult.PASSED
+        local_id,
+        "TestOutcome",
+        anchors(("contentHash",), seed),
+        result=records.TestResult.PASSED,
+        revision="r1",
     )
 
 
@@ -477,9 +481,7 @@ def test_satisfaction_over_the_derived_graph_sees_the_suspicion() -> None:
         declared("Confirms", "run-1/TS-1", "TS-1"),
         declared("Witnesses", "run-1/TS-1", "pkg.fn"),
     )
-    current_edges = tuple(
-        declared(edge.kind, edge.from_id, edge.to_id) for edge in recorded_edges
-    )
+    current_edges = tuple(declared(edge.kind, edge.from_id, edge.to_id) for edge in recorded_edges)
 
     covered = drift.derive(
         recorded=Source((sreq, spec, run, impl_v1), recorded_edges),
@@ -606,12 +608,10 @@ def test_store_backed_round_trip_derives_drift_and_leaves_the_case_unchanged(
     )
 
     unchanged = drift.derive(recorded=store, current=current)
-    assert {
-        edge.state for edge in unchanged.edges() if edge.kind in strong
-    } == {LinkState.ACTIVE}
-    assert {
-        edge.state for edge in unchanged.edges() if edge.kind not in strong
-    } == {LinkState.PENDING}
+    assert {edge.state for edge in unchanged.edges() if edge.kind in strong} == {LinkState.ACTIVE}
+    assert {edge.state for edge in unchanged.edges() if edge.kind not in strong} == {
+        LinkState.PENDING
+    }
 
     drifted_body = (
         content_root / "content" / "implementation" / "affirmatrix.commitment.node_hash.body.txt"
@@ -634,9 +634,7 @@ def test_store_backed_round_trip_derives_drift_and_leaves_the_case_unchanged(
         state_of(derivation, "Implements", "affirmatrix.commitment.edge_hash", "SEG-SREQ-002")
         is LinkState.ACTIVE
     )
-    assert (
-        state_of(derivation, "Refines", "SEG-SREQ-002", "SEG-SYS-001") is LinkState.ACTIVE
-    )
+    assert state_of(derivation, "Refines", "SEG-SREQ-002", "SEG-SYS-001") is LinkState.ACTIVE
     assert derivation.vanished == ()
 
     case_after = {

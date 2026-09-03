@@ -11,9 +11,21 @@ the vocabulary they share.
 ``blocks_commit`` and ``blocks_package``, so that meaning lives in exactly one
 place: no gate re-derives the blocking table from the three names, and no two
 gates can read it two different ways. :class:`Diagnostic` is the record one
-finding travels in — a severity, the condition that was found, and the
-subject it was found on — both required and non-empty, because a diagnostic
-naming nothing is not a finding.
+finding travels in — a severity, the condition that was found, the subject it
+was found on, and an optional occurrence detail. ``condition`` and ``subject``
+are required and non-empty, because a diagnostic naming nothing is not a
+finding; ``detail`` is neither, because not every condition varies by
+occurrence and a component with nothing to add should not have to invent
+something to say.
+
+Keeping which conditions exist out of this module is deliberate, not an
+oversight. A closed condition vocabulary is a claim about *what one
+component's gate can find* — its own requirement, its own set — and this
+module would stop being a leaf the moment it declared one. So ``condition``
+stays a plain string here: whichever component owns a gate's conditions
+declares its own closed set (an enum of its own) and only ever constructs a
+``Diagnostic`` from a member of it; this module's part is the record shape
+and the severity table both share, nothing about what a condition may say.
 """
 
 from __future__ import annotations
@@ -62,16 +74,23 @@ def _require(value: str, what: str) -> str:
 
 @dataclass(frozen=True, slots=True)
 class Diagnostic:
-    """One finding: a severity, the condition found, and the subject it names.
+    """One finding: a severity, the condition found, the subject it names, and
+    an optional occurrence detail.
 
     ``condition`` and ``subject`` are both required non-empty strings — a
     diagnostic that names no condition or no subject would be a severity with
-    nothing to report, which is not a finding at all.
+    nothing to report, which is not a finding at all. ``detail`` carries
+    whatever varies from one occurrence of the same condition to the next —
+    which state an edge is in, say — kept apart from ``condition`` so the
+    condition itself stays one of a closed, occurrence-independent set;
+    empty is allowed, because not every condition has anything occurrence-
+    specific to add.
     """
 
     severity: Severity
     condition: str
     subject: str
+    detail: str = ""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "severity", Severity(self.severity))

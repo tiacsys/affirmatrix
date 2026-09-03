@@ -50,11 +50,13 @@ ones the vocabulary declares for that kind — `contentHash` for a Requirement,
 manifest says which file covers which field, because identifiers such as
 `run-0001/SEG-TS-001` do not survive being turned into paths.
 
-One key is not a content path: a TestOutcome entry also carries
+Two keys are not content paths: a TestOutcome entry also carries
 `result = "passed"` — the recorded result of the execution, one of
-`passed`/`failed`/`error`/`skipped`. It is a record field, not content: the
-content file remains the authority on what the run observed, and a test
-asserts the two spellings agree.
+`passed`/`failed`/`error`/`skipped` — and `revision = "r1"` — the revision of
+the implementation repository the execution ran against. Both are record
+fields, not content: the content file remains the authority on what the run
+observed, a test asserts the two result spellings agree, and the revision's
+spelling is open (no format this store's fixture pins).
 
 **An edge manifest** groups pairs by edge kind, source first:
 

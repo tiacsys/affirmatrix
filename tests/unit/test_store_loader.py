@@ -81,9 +81,7 @@ def test_content_is_hashed_verbatim(tmp_path: Path) -> None:
     in, which would make the hash a function of the loader rather than of what
     the store holds.
     """
-    first = make_store(
-        tmp_path / "a", nodes=ONE_REQUIREMENT, content={"r.txt": "a statement\n"}
-    )
+    first = make_store(tmp_path / "a", nodes=ONE_REQUIREMENT, content={"r.txt": "a statement\n"})
     second = make_store(
         tmp_path / "b", nodes=ONE_REQUIREMENT, content={"r.txt": "a statement  \n\n"}
     )
@@ -242,12 +240,12 @@ def test_a_missing_content_file_names_the_node_and_the_path(tmp_path: Path) -> N
 def test_a_content_path_leaving_the_store_is_refused(tmp_path: Path) -> None:
     """The store is a fixture, and a fixture must not become a file reader."""
     (tmp_path / "secret.txt").write_text("not content\n", encoding="utf-8")
-    manifest = '''
+    manifest = """
     kind = "Requirement"
 
     [nodes]
     "SEG-SYS-001" = { contentHash = "../../secret.txt" }
-    '''
+    """
     root = make_store(tmp_path / "store", nodes=manifest, content={})
     with pytest.raises(store.StoreError, match="outside"):
         list(store.StoreLoader(root).nodes())
@@ -301,7 +299,7 @@ ONE_OUTCOME = """
 kind = "TestOutcome"
 
 [nodes]
-"run-1/TS-1" = { contentHash = "o.txt", result = "failed" }
+"run-1/TS-1" = { contentHash = "o.txt", result = "failed", revision = "r1" }
 """
 
 
@@ -395,9 +393,7 @@ def test_the_store_contains_no_dangling_endpoint(would_be_store: store.StoreLoad
     """
     declared = {node.local_id for node in would_be_store.nodes()}
     endpoints = {
-        endpoint
-        for edge in would_be_store.edges()
-        for endpoint in (edge.from_id, edge.to_id)
+        endpoint for edge in would_be_store.edges() for endpoint in (edge.from_id, edge.to_id)
     }
     assert endpoints <= declared
 
@@ -492,9 +488,9 @@ def test_every_outcome_result_agrees_with_the_content_it_hashes(
     outcomes = [node for node in would_be_store.nodes() if node.kind == "TestOutcome"]
     assert outcomes
     for node in outcomes:
-        text = (
-            WOULD_BE_STORE / "content" / node.content_anchors["contentHash"].path
-        ).read_text(encoding="utf-8")
+        text = (WOULD_BE_STORE / "content" / node.content_anchors["contentHash"].path).read_text(
+            encoding="utf-8"
+        )
         assert node.result is not None, node.local_id
         assert f"result: {node.result.value}" in text, node.local_id
 
@@ -506,6 +502,6 @@ def test_the_store_is_reproducible_across_loads(would_be_store: store.StoreLoade
     every edge suspect on the next look for no reason at all.
     """
     again = store.StoreLoader(WOULD_BE_STORE)
-    assert [
-        (node.local_id, dict(node.content_hashes)) for node in would_be_store.nodes()
-    ] == [(node.local_id, dict(node.content_hashes)) for node in again.nodes()]
+    assert [(node.local_id, dict(node.content_hashes)) for node in would_be_store.nodes()] == [
+        (node.local_id, dict(node.content_hashes)) for node in again.nodes()
+    ]

@@ -87,6 +87,7 @@ def one_node_of_every_kind() -> list[records.NodeRecord]:
                 "contentHash": anchor("passed", locator="nodeid:tests/test_store.py::test_it")
             },
             result=records.TestResult.PASSED,
+            revision="r1",
         ),
         records.NodeRecord(
             local_id="WVR-001",
@@ -206,9 +207,7 @@ def test_a_node_reads_back_with_the_location_of_every_hash(tmp_path: Path) -> No
     store = make_case(tmp_path)
     store.write_nodes([requirement()])
     (read,) = store.nodes()
-    assert read.content_anchors["contentHash"] == anchor(
-        "a statement", locator="need:SEG-SREQ-020"
-    )
+    assert read.content_anchors["contentHash"] == anchor("a statement", locator="need:SEG-SREQ-020")
 
 
 def test_an_outcome_reads_back_with_its_result(tmp_path: Path) -> None:
@@ -222,6 +221,7 @@ def test_an_outcome_reads_back_with_its_result(tmp_path: Path) -> None:
                 kind="TestOutcome",
                 content_anchors={"contentHash": anchor("failed", locator="nodeid:t.py::test_it")},
                 result=records.TestResult.FAILED,
+                revision="r1",
             )
         ]
     )
@@ -239,6 +239,7 @@ def test_a_result_outside_the_vocabulary_is_refused_on_read(tmp_path: Path) -> N
                 kind="TestOutcome",
                 content_anchors={"contentHash": anchor("passed", locator="nodeid:t.py::test_it")},
                 result=records.TestResult.PASSED,
+                revision="r1",
             )
         ]
     )
@@ -256,6 +257,7 @@ def test_an_outcome_stripped_of_its_result_is_refused_on_read(tmp_path: Path) ->
                 kind="TestOutcome",
                 content_anchors={"contentHash": anchor("passed", locator="nodeid:t.py::test_it")},
                 result=records.TestResult.PASSED,
+                revision="r1",
             )
         ]
     )

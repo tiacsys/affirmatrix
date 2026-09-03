@@ -5,11 +5,7 @@ While any condition of a gate is unmet, the action that gate guards is blocked
 is the coverage report: structural gaps reported at the leaf where coverage is
 actually missing rather than up the ancestor chain, the worklist of every
 in-scope strong edge that is not active — including pending and broken, which
-affirmation cannot resolve — and the overall status. A stale-outcomes listing
-joins the report once the proof generator's staleness exclusion
-(SEG-SREQ-040) is realized; the record vocabulary does not yet carry what
-staleness would be computed from, so there is nothing this gate could compute
-one against today.
+affirmation cannot resolve — a stale-outcomes listing, and the overall status.
 
 The commit gate and the release gate are deferred past iteration 0: the commit
 gate's conditions are all extraction conditions and record production is
@@ -20,12 +16,30 @@ caller built as its scope and does no scope collection of its own — walking
 strong edges to decide what is reachable is the proof generator's item
 (SEG-SREQ-036); iteration 0 hands it the whole graph. Every finding becomes a
 :class:`~affirmatrix.diagnostics.Diagnostic`, and :class:`CoverageReport`'s
-``diagnostics`` and ``blocked`` are derived views over the same four typed
+``diagnostics`` and ``blocked`` are derived views over the same seven typed
 findings — never a second telling that could disagree with the first. Every
 gate condition here — an unready edge, a coverage gap, an empty design set —
 is a warning: it blocks the package, never a commit, because a
-commit-blocking error arrives only with the extractors. A discarded outcome is
-informational: visible in the report, blocking nothing.
+commit-blocking error arrives only with the extractors. A discarded outcome
+and a stale one are both informational: visible in the report, blocking
+nothing by themselves.
+
+**The closed condition vocabulary (SEG-SREQ-064, SEG-SREQ-065).** Every
+diagnostic this gate reports carries one of seven fixed :class:`Condition`
+values — never an occurrence-specific sentence built on the fly. Anything
+that varies from one occurrence of the same condition to the next — which
+state an edge is in, say — travels on
+:attr:`~affirmatrix.diagnostics.Diagnostic.detail` instead, kept apart so the
+condition itself stays a member of a set a reader can enumerate once and
+recognise everywhere. Not every finding has such a detail to give: the stale
+finding names only the outcome, because the two revisions being compared
+live elsewhere already — the recorded one on the outcome record, the current
+one in the caller's own input — and repeating either here would be a second
+telling of a fact this report does not otherwise hold. The set lives here,
+in the component the two requirements name, rather than in
+:mod:`affirmatrix.diagnostics`: that module is shared, occurrence-free
+vocabulary with no component's conditions in it, never a requirement
+subject, and declaring a gate's own closed set there would make it one.
 
 A coverage gap is attributed to the requirement whose *own* direct coverage
 fails, never to an ancestor because a descendant failed, by re-asking
@@ -34,6 +48,25 @@ requirement's own refiners forced satisfied — which isolates exactly the
 edges that requirement itself carries. A scope whose design set is empty — no
 Requirement node in it at all — is reported blocked rather than vacuously
 ready (SEG-SREQ-045): sealing emptiness is a gate decision, not a hashing one.
+
+**Staleness (SEG-SREQ-063, SEG-SREQ-067).** ``package_gate`` takes the
+current revision of the implementation repository as an explicit keyword,
+exactly like ``evaluation_date`` — an external input, never read from the
+graph. A ``TestOutcome`` whose recorded revision differs is stale, and is cut
+out of the graph before any other finding is computed: :meth:`Graph.restricted_to`
+(already built for exactly this — the proof generator's scope cuts use it the
+same way) removes the node and, with it, every edge that touched it, so
+:mod:`affirmatrix.satisfaction` sees a graph with no stale outcome in it at
+all and stays exactly as pure and revision-unaware as before — this gate
+supplies it a *view*, not a revision-aware question. A stale-only
+specification therefore reads as an ordinary coverage gap; a fresh sibling
+outcome keeps it covered. The cut is uniform, not limited to coverage: a
+stale outcome is equally absent from the waiver seam below, so it is reported
+exactly once, as the stale finding, never doubled with a discard or a
+non-passing finding for the same underlying reason. (Reading past
+SEG-SREQ-063's own words, which speak only of judging the specification a
+stale outcome confirms — deliberate, so one telling never disagrees with
+another.)
 
 **The waiver seam.** A non-passing outcome (the ``TestResult`` non-``PASSED``
 set, uniformly — failed, error and skipped alike) is now a finding of its own
@@ -67,6 +100,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 
 from affirmatrix import satisfaction, taxonomy
 from affirmatrix.diagnostics import Diagnostic, Severity
@@ -80,20 +114,41 @@ _WAIVER = "Waiver"
 _EXCUSES = "Excuses"
 
 
+class Condition(StrEnum):
+    """The closed vocabulary of every condition this gate can report (SEG-SREQ-064).
+
+    One member per gate condition, occurrence-independent by construction —
+    the varying part of an occurrence, an edge's own state, lives on
+    :attr:`~affirmatrix.diagnostics.Diagnostic.detail` instead (SEG-SREQ-065);
+    not every condition has such a detail to give. Declared here, not in
+    :mod:`affirmatrix.diagnostics`: see the module docstring for why owning
+    the set is this component's, not the shared vocabulary's.
+    """
+
+    UNREADY_EDGE = "strong edge not active"
+    COVERAGE_GAP = "the requirement's own coverage is incomplete"
+    EMPTY_DESIGN_SET = "the design set is empty"
+    UNWAIVED_NON_PASSING_OUTCOME = "non-passing outcome is not excused by a valid waiver"
+    EXCUSED_NON_PASSING_OUTCOME = "non-passing outcome is excused by a valid waiver"
+    DISCARDED_OUTCOME = "outcome discarded as incomplete evidence"
+    STALE_OUTCOME = "outcome's recorded revision differs from the current revision"
+
+
 @dataclass(frozen=True, slots=True)
 class CoverageReport:
-    """The package gate's report: six typed findings, and two derived views.
+    """The package gate's report: seven typed findings, and two derived views.
 
-    ``unready_edges``, ``coverage_gaps``, ``discarded_outcomes``,
-    ``unwaived_outcomes``, ``excused_outcomes`` and ``design_set_empty`` are
-    what :func:`package_gate` actually found. ``diagnostics`` and ``blocked``
-    are computed from those six and nothing else, so the report cannot
-    disagree with itself about what blocks: there is only one place severity
-    is decided, and both views read it from there.
+    ``unready_edges``, ``coverage_gaps``, ``stale_outcomes``,
+    ``discarded_outcomes``, ``unwaived_outcomes``, ``excused_outcomes`` and
+    ``design_set_empty`` are what :func:`package_gate` actually found.
+    ``diagnostics`` and ``blocked`` are computed from those seven and nothing
+    else, so the report cannot disagree with itself about what blocks: there
+    is only one place severity is decided, and both views read it from there.
     """
 
     unready_edges: tuple[EdgeRecord, ...]
     coverage_gaps: frozenset[str]
+    stale_outcomes: frozenset[str]
     discarded_outcomes: frozenset[str]
     unwaived_outcomes: frozenset[str]
     excused_outcomes: frozenset[str]
@@ -102,6 +157,7 @@ class CoverageReport:
     def __post_init__(self) -> None:
         object.__setattr__(self, "unready_edges", tuple(self.unready_edges))
         object.__setattr__(self, "coverage_gaps", frozenset(self.coverage_gaps))
+        object.__setattr__(self, "stale_outcomes", frozenset(self.stale_outcomes))
         object.__setattr__(self, "discarded_outcomes", frozenset(self.discarded_outcomes))
         object.__setattr__(self, "unwaived_outcomes", frozenset(self.unwaived_outcomes))
         object.__setattr__(self, "excused_outcomes", frozenset(self.excused_outcomes))
@@ -112,26 +168,33 @@ class CoverageReport:
 
         Gate conditions — an unready edge, a coverage gap, an empty design
         set, an unwaived non-passing outcome — are all
-        :attr:`~affirmatrix.diagnostics.Severity.WARNING`. A discarded outcome
-        and a validly excused non-passing outcome are both
-        :attr:`~affirmatrix.diagnostics.Severity.INFO`.
+        :attr:`~affirmatrix.diagnostics.Severity.WARNING`. A discarded
+        outcome, a stale outcome, and a validly excused non-passing outcome
+        are all :attr:`~affirmatrix.diagnostics.Severity.INFO`. Every
+        diagnostic's condition is one member of :class:`Condition`
+        (SEG-SREQ-064); whatever varies by occurrence travels on ``detail``
+        instead (SEG-SREQ-065).
 
         :implements: SEG-SREQ-060
         :implements: SEG-SREQ-061
+        :implements: SEG-SREQ-064
+        :implements: SEG-SREQ-065
+        :implements: SEG-SREQ-067
         """
         return (
             tuple(
                 Diagnostic(
                     severity=Severity.WARNING,
-                    condition=f"strong edge is {edge.state.value}, not active",
+                    condition=Condition.UNREADY_EDGE,
                     subject=_edge_subject(edge),
+                    detail=edge.state.value,
                 )
                 for edge in self.unready_edges
             )
             + tuple(
                 Diagnostic(
                     severity=Severity.WARNING,
-                    condition="the requirement's own coverage is incomplete",
+                    condition=Condition.COVERAGE_GAP,
                     subject=local_id,
                 )
                 for local_id in sorted(self.coverage_gaps)
@@ -140,7 +203,7 @@ class CoverageReport:
                 (
                     Diagnostic(
                         severity=Severity.WARNING,
-                        condition="the design set is empty",
+                        condition=Condition.EMPTY_DESIGN_SET,
                         subject="the scope",
                     ),
                 )
@@ -150,7 +213,7 @@ class CoverageReport:
             + tuple(
                 Diagnostic(
                     severity=Severity.WARNING,
-                    condition="non-passing outcome is not excused by a valid waiver",
+                    condition=Condition.UNWAIVED_NON_PASSING_OUTCOME,
                     subject=local_id,
                 )
                 for local_id in sorted(self.unwaived_outcomes)
@@ -158,7 +221,7 @@ class CoverageReport:
             + tuple(
                 Diagnostic(
                     severity=Severity.INFO,
-                    condition="outcome discarded as incomplete evidence",
+                    condition=Condition.DISCARDED_OUTCOME,
                     subject=local_id,
                 )
                 for local_id in sorted(self.discarded_outcomes)
@@ -166,10 +229,18 @@ class CoverageReport:
             + tuple(
                 Diagnostic(
                     severity=Severity.INFO,
-                    condition="non-passing outcome is excused by a valid waiver",
+                    condition=Condition.EXCUSED_NON_PASSING_OUTCOME,
                     subject=local_id,
                 )
                 for local_id in sorted(self.excused_outcomes)
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.INFO,
+                    condition=Condition.STALE_OUTCOME,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.stale_outcomes)
             )
         )
 
@@ -182,12 +253,13 @@ class CoverageReport:
         return any(diagnostic.severity.blocks_package for diagnostic in self.diagnostics)
 
 
-def package_gate(graph: Graph, *, evaluation_date: date) -> CoverageReport:
+def package_gate(graph: Graph, *, evaluation_date: date, current_revision: str) -> CoverageReport:
     """Evaluate the package gate over a scope, judging and reporting only.
 
     :implements: SEG-SREQ-043
     :implements: SEG-SREQ-044
     :implements: SEG-SREQ-045
+    :implements: SEG-SREQ-063
 
     ``graph`` is the scope the caller built; the gate does no scope collection
     of its own, so an iteration-0 caller hands it the whole graph and a later
@@ -201,17 +273,45 @@ def package_gate(graph: Graph, *, evaluation_date: date) -> CoverageReport:
     precedent the commitment layer already sets — an opaque value the caller
     provides rather than the layer discovering it — is exactly what keeps
     this function pure.
+
+    ``current_revision`` is the same kind of explicit external input, never
+    read from the graph: the current revision of the implementation
+    repository, against which every ``TestOutcome``'s own recorded revision
+    is compared. A stale outcome — recorded revision differing from this one
+    — is cut out of ``graph`` before every other finding is computed, so it
+    is absent for coverage and for the waiver seam alike and surfaces exactly
+    once, as the stale finding (see the module docstring's staleness
+    section).
     """
-    requirements = graph.nodes_of_kind(_REQUIREMENT)
-    verdict = satisfaction.evaluate(graph)
-    unwaived, excused = _non_passing_outcomes(graph, evaluation_date)
+    stale = _stale_outcomes(graph, current_revision)
+    judged = graph.restricted_to(graph.node_ids() - stale)
+    requirements = judged.nodes_of_kind(_REQUIREMENT)
+    verdict = satisfaction.evaluate(judged)
+    unwaived, excused = _non_passing_outcomes(judged, evaluation_date)
     return CoverageReport(
-        unready_edges=_unready_edges(graph),
-        coverage_gaps=_coverage_gaps(graph, requirements),
+        unready_edges=_unready_edges(judged),
+        coverage_gaps=_coverage_gaps(judged, requirements),
+        stale_outcomes=stale,
         discarded_outcomes=verdict.discarded_outcomes,
         unwaived_outcomes=unwaived,
         excused_outcomes=excused,
         design_set_empty=not requirements,
+    )
+
+
+def _stale_outcomes(graph: Graph, current_revision: str) -> frozenset[str]:
+    """Every test outcome whose recorded revision differs from ``current_revision``.
+
+    :implements: SEG-SREQ-063
+
+    Asked of the full, unjudged graph — this is what :func:`package_gate`
+    cuts *out* before it asks anything else, so the function must see the
+    outcomes it is about to remove.
+    """
+    return frozenset(
+        outcome.local_id
+        for outcome in graph.nodes_of_kind(_TEST_OUTCOME)
+        if outcome.revision != current_revision
     )
 
 
@@ -321,4 +421,4 @@ def _edge_subject(edge: EdgeRecord) -> str:
     return f"{edge.from_id} -> {edge.to_id} ({edge.kind})"
 
 
-__all__ = ["CoverageReport", "package_gate"]
+__all__ = ["Condition", "CoverageReport", "package_gate"]

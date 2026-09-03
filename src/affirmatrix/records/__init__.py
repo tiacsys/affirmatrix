@@ -189,6 +189,16 @@ class NodeRecord:
     grant it are judgements the gate makes from these claims, not something
     this vocabulary decides — so neither claim enters a hash preimage, the
     same invariant that keeps a test outcome's result out of one.
+
+    A test outcome additionally carries the revision of the implementation
+    repository the test execution ran against (SEG-SREQ-062) — the same
+    required-there-refused-elsewhere move once more. Any non-empty string:
+    the spelling is deliberately unconstrained here, the same way a role or a
+    reason is elsewhere in this vocabulary, and it never enters a hash
+    preimage — a producer that later spells the same revision differently
+    produces a reviewable diff, not a suspicion event. What a gate does with
+    two outcomes' revisions disagreeing is that gate's judgement, not this
+    vocabulary's.
     """
 
     local_id: str
@@ -197,6 +207,7 @@ class NodeRecord:
     result: TestResult | None = field(default=None)
     expiry: date | None = field(default=None)
     approver: str | None = field(default=None)
+    revision: str | None = field(default=None)
 
     def __post_init__(self) -> None:
         _require(self.local_id, "local identifier")
@@ -204,14 +215,24 @@ class NodeRecord:
         if self.kind == _TEST_OUTCOME:
             if self.result is None:
                 raise ValueError(
-                    f"test outcome {self.local_id!r} records an execution and must carry "
-                    "its result"
+                    f"test outcome {self.local_id!r} records an execution and must carry its result"
                 )
             object.__setattr__(self, "result", TestResult(self.result))
+            if self.revision is None:
+                raise ValueError(
+                    f"test outcome {self.local_id!r} records an execution and must carry "
+                    "the revision it ran against"
+                )
+            _require(self.revision, "revision")
         elif self.result is not None:
             raise ValueError(
                 f"node {self.local_id!r} of kind {self.kind!r} records no test execution "
                 "and cannot carry a result"
+            )
+        elif self.revision is not None:
+            raise ValueError(
+                f"node {self.local_id!r} of kind {self.kind!r} records no test execution "
+                "and cannot carry a revision"
             )
         if self.kind == _WAIVER:
             if self.expiry is None:

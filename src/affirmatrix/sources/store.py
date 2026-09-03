@@ -54,9 +54,11 @@ _NODES = "nodes"
 _EDGES = "edges"
 _CONTENT = "content"
 _MANIFEST_GLOB = "*.toml"
-#: The one manifest entry key that is not a content-hash field name: the
-#: recorded result of a test execution, passed through to the record.
+#: The manifest entry keys that are not content-hash field names: the
+#: recorded result of a test execution, and the revision the execution ran
+#: against — both passed through to the record, neither a path to hash.
 _RESULT_KEY = "result"
+_REVISION_KEY = "revision"
 
 
 class StoreError(Exception):
@@ -122,21 +124,30 @@ class StoreLoader:
     ) -> NodeRecord:
         """One manifest entry as the node record it declares.
 
-        The ``result`` key is the entry's one non-content field — the recorded
-        result of the execution a test outcome stands for — separated here so
-        everything that remains is a content-hash declaration. The record type
-        itself decides which kinds must, and which must not, carry one; a
-        refusal it raises is re-said naming the manifest and the entry, because
-        the fix is an edit to exactly there.
+        ``result`` and ``revision`` are the entry's non-content fields — the
+        recorded result of the execution a test outcome stands for, and the
+        revision that execution ran against — separated here so everything
+        that remains is a content-hash declaration. The record type itself
+        decides which kinds must, and which must not, carry either; a
+        refusal it raises is re-said naming the manifest and the entry,
+        because the fix is an edit to exactly there.
         """
         result: TestResult | None = None
-        if isinstance(declaration, dict) and _RESULT_KEY in declaration:
+        revision: str | None = None
+        if isinstance(declaration, dict):
             declaration = dict(declaration)
-            result = self._parsed_result(local_id, declaration.pop(_RESULT_KEY), manifest)
+            if _RESULT_KEY in declaration:
+                result = self._parsed_result(local_id, declaration.pop(_RESULT_KEY), manifest)
+            if _REVISION_KEY in declaration:
+                revision = str(declaration.pop(_REVISION_KEY))
         anchors = self._content_anchors(local_id, declaration, manifest)
         try:
             return NodeRecord(
-                local_id=local_id, kind=kind, content_anchors=anchors, result=result
+                local_id=local_id,
+                kind=kind,
+                content_anchors=anchors,
+                result=result,
+                revision=revision,
             )
         except ValueError as error:
             raise StoreError(

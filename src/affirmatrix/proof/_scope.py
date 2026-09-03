@@ -108,10 +108,15 @@ does not perform; both stay unmarked, the same restraint
 :mod:`affirmatrix.gates` already takes with SEG-SREQ-059's unauthorised-half.
 
 What this module does not attempt: SEG-SREQ-040's stale-outcome exclusion has
-no anchor here. The record vocabulary carries nothing a staleness comparison
-could be computed against yet, so no outcome collected by hop 3 above is ever
-excluded from a scope for being stale — that residue is named openly rather
-than patched around.
+no anchor here either. The staleness comparison itself is now realized —
+:func:`affirmatrix.gates.package_gate` judges it, given the current revision
+of the implementation repository as an explicit input — but that judgement
+happens after this module hands its subgraph to the gate, over the graph the
+gate was handed, not over the collection this module performs. So hop 3
+above still collects every outcome confirming an in-scope specification
+without asking whether any of them is stale; a package's exclusion of what
+the gate reports stale is a later slice's, once a package exists to exclude
+anything from.
 """
 
 from __future__ import annotations
@@ -219,9 +224,7 @@ def _check_requested(graph: Graph, requested: frozenset[str]) -> None:
         try:
             node = graph.node(local_id)
         except KeyError:
-            raise ScopeError(
-                f"requested requirement {local_id!r} is not in the graph"
-            ) from None
+            raise ScopeError(f"requested requirement {local_id!r} is not in the graph") from None
         if node.kind != _REQUIREMENT:
             raise ScopeError(
                 f"requested requirement {local_id!r} is a {node.kind}, not a Requirement"
@@ -250,9 +253,7 @@ def _reachable_ids(graph: Graph, requested: frozenset[str]) -> frozenset[str]:
     implementations: set[str] = set()
     for requirement_id in requirements:
         specifications.update(edge.from_id for edge in graph.incoming(requirement_id, _VERIFIES))
-        implementations.update(
-            edge.from_id for edge in graph.incoming(requirement_id, _IMPLEMENTS)
-        )
+        implementations.update(edge.from_id for edge in graph.incoming(requirement_id, _IMPLEMENTS))
 
     outcomes: set[str] = set()
     for specification_id in specifications:

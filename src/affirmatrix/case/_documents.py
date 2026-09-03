@@ -47,7 +47,8 @@ _PREFIX = "seg:"
 _RESULT = "seg:result"
 _EXPIRY = "seg:expiry"
 _APPROVER = "seg:approver"
-_NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId", _RESULT, _EXPIRY, _APPROVER})
+_REVISION = "seg:revision"
+_NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId", _RESULT, _EXPIRY, _APPROVER, _REVISION})
 _SOURCE_SUFFIX = "Source"
 _SOURCE_MEMBERS = ("seg:sourceRepo", "seg:sourcePath", "seg:sourceLocator")
 
@@ -77,6 +78,8 @@ def node_entry(record: NodeRecord) -> Entry:
         entry[_EXPIRY] = record.expiry.isoformat()
     if record.approver is not None:
         entry[_APPROVER] = record.approver
+    if record.revision is not None:
+        entry[_REVISION] = record.revision
     for name, anchor in sorted(record.content_anchors.items()):
         entry[f"seg:{name}"] = hex_digest(anchor.digest)
         entry[f"seg:{name}{_SOURCE_SUFFIX}"] = {
@@ -94,6 +97,7 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
     :implements: SEG-SREQ-055
     :implements: SEG-SREQ-057
     :implements: SEG-SREQ-058
+    :implements: SEG-SREQ-062
 
     A test outcome's result is read back through the closed vocabulary, so a
     hand-edited spelling the vocabulary does not contain is refused here even
@@ -102,7 +106,10 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
     expiry and approver are read back the same way, through the vocabulary's
     own construction: an expiry that is not an ISO 8601 calendar date, or a
     waiver missing either claim, is refused by :class:`~affirmatrix.records.NodeRecord`
-    itself before the schema is consulted.
+    itself before the schema is consulted. A test outcome's revision is read
+    back as the plain string it was written as — its spelling is deliberately
+    unconstrained (SEG-SREQ-062) — but a test outcome missing it is refused
+    the same way a test outcome missing its result is.
 
     The kind comes from the document being read, never from the entry: the
     schema has already pinned the entry's ``type`` to the document's kind, so
@@ -161,6 +168,7 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
                 f"{document} holds {entry[_ID]}, whose {_EXPIRY} cannot be read back: {error}"
             ) from error
     approver = str(entry[_APPROVER]) if _APPROVER in entry else None
+    revision = str(entry[_REVISION]) if _REVISION in entry else None
     return _reconstructed(
         lambda: NodeRecord(
             local_id=local_id,
@@ -168,6 +176,7 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             result=result,
             expiry=expiry,
             approver=approver,
+            revision=revision,
             content_anchors={
                 name: ContentAnchor(
                     digest=digest,

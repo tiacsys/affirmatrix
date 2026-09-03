@@ -75,7 +75,9 @@ def specification(local_id: str) -> records.NodeRecord:
 
 
 def outcome(local_id: str, result: TestResult = TestResult.PASSED) -> records.NodeRecord:
-    return records.NodeRecord(local_id, "TestOutcome", anchors(("contentHash",)), result=result)
+    return records.NodeRecord(
+        local_id, "TestOutcome", anchors(("contentHash",)), result=result, revision="r1"
+    )
 
 
 def waiver(

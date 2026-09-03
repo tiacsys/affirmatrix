@@ -32,6 +32,10 @@ TIMESTAMP = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
 #: A fixed "today" for the gate calls in this file, matching ``test_gates.py``.
 EVALUATION_DATE = date(2026, 6, 1)
 
+#: A fixed "current revision" for the gate calls in this file, matching
+#: ``test_gates.py`` — every fixture outcome below is fresh against it.
+CURRENT_REVISION = "r1"
+
 
 class Source:
     """A record source built from literals."""
@@ -76,10 +80,17 @@ def specification(local_id: str, seed: str | None = None) -> records.NodeRecord:
 
 
 def outcome(
-    local_id: str, seed: str | None = None, result: TestResult = TestResult.PASSED
+    local_id: str,
+    seed: str | None = None,
+    result: TestResult = TestResult.PASSED,
+    revision: str = CURRENT_REVISION,
 ) -> records.NodeRecord:
     return records.NodeRecord(
-        local_id, "TestOutcome", anchors(("contentHash",), seed or local_id), result=result
+        local_id,
+        "TestOutcome",
+        anchors(("contentHash",), seed or local_id),
+        result=result,
+        revision=revision,
     )
 
 
@@ -289,8 +300,12 @@ def test_the_gate_discards_an_outcome_whose_witnesses_edge_fell_outside_the_scop
     built = graph.build(source)
     scope = proof.collect_scope(built, {"req"}, snapshot_timestamp=TIMESTAMP)
 
-    report_over_scope = gates.package_gate(scope.subgraph, evaluation_date=EVALUATION_DATE)
-    report_over_whole_graph = gates.package_gate(built, evaluation_date=EVALUATION_DATE)
+    report_over_scope = gates.package_gate(
+        scope.subgraph, evaluation_date=EVALUATION_DATE, current_revision=CURRENT_REVISION
+    )
+    report_over_whole_graph = gates.package_gate(
+        built, evaluation_date=EVALUATION_DATE, current_revision=CURRENT_REVISION
+    )
 
     assert "run/spec" in report_over_scope.discarded_outcomes
     assert "run/spec" not in report_over_whole_graph.discarded_outcomes
@@ -322,9 +337,11 @@ def test_package_gate_over_the_collected_subgraph_matches_an_independent_restric
     scope = proof.collect_scope(built, {"top"}, snapshot_timestamp=TIMESTAMP)
 
     independently_restricted = built.restricted_to(scope.member_ids)
-    report_from_scope = gates.package_gate(scope.subgraph, evaluation_date=EVALUATION_DATE)
+    report_from_scope = gates.package_gate(
+        scope.subgraph, evaluation_date=EVALUATION_DATE, current_revision=CURRENT_REVISION
+    )
     report_from_independent_cut = gates.package_gate(
-        independently_restricted, evaluation_date=EVALUATION_DATE
+        independently_restricted, evaluation_date=EVALUATION_DATE, current_revision=CURRENT_REVISION
     )
 
     assert report_from_scope.diagnostics == report_from_independent_cut.diagnostics

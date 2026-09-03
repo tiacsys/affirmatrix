@@ -60,9 +60,7 @@ def test_a_content_anchor_requires_every_part_of_the_location() -> None:
 
 def test_a_content_anchor_rejects_a_digest_that_is_not_raw_bytes() -> None:
     with pytest.raises(ValueError, match="32 raw bytes"):
-        records.ContentAnchor(
-            digest=D1.hex().encode(), repository="r", path="p", locator="file"
-        )
+        records.ContentAnchor(digest=D1.hex().encode(), repository="r", path="p", locator="file")
 
 
 def test_a_content_anchor_is_immutable() -> None:
@@ -142,13 +140,14 @@ def test_a_test_outcome_record_carries_the_result_it_was_given() -> None:
         "TestOutcome",
         {"contentHash": anchor()},
         result=records.TestResult.FAILED,
+        revision="r1",
     )
     assert record.result is records.TestResult.FAILED
 
 
 def test_a_result_spelling_is_read_as_the_closed_vocabulary() -> None:
     record = records.NodeRecord(
-        "run-1/TS-1", "TestOutcome", {"contentHash": anchor()}, result="skipped"
+        "run-1/TS-1", "TestOutcome", {"contentHash": anchor()}, result="skipped", revision="r1"
     )
     assert record.result is records.TestResult.SKIPPED
 
@@ -178,21 +177,66 @@ def test_the_result_vocabulary_is_the_four_ways_a_run_can_end() -> None:
     }
 
 
+# ── Test outcome revision (SEG-SREQ-062) ────────────────────────────────────
+
+
+def test_a_test_outcome_record_must_carry_its_revision() -> None:
+    """The record source's obligation: the revision it ran against, discharged
+    where no supplier can skip it."""
+    with pytest.raises(ValueError, match="revision"):
+        records.NodeRecord("run-1/TS-1", "TestOutcome", {"contentHash": anchor()}, result="passed")
+
+
+def test_a_test_outcome_record_carries_the_revision_it_was_given() -> None:
+    record = records.NodeRecord(
+        "run-1/TS-1",
+        "TestOutcome",
+        {"contentHash": anchor()},
+        result="passed",
+        revision="a1b2c3",
+    )
+    assert record.revision == "a1b2c3"
+
+
+def test_a_test_outcome_revision_cannot_be_empty() -> None:
+    with pytest.raises(ValueError, match="revision"):
+        records.NodeRecord(
+            "run-1/TS-1", "TestOutcome", {"contentHash": anchor()}, result="passed", revision=""
+        )
+
+
+def test_a_revision_on_a_kind_that_records_no_execution_is_refused() -> None:
+    with pytest.raises(ValueError, match="cannot carry a revision"):
+        records.NodeRecord(
+            "SEG-SREQ-062", "Requirement", {"contentHash": anchor()}, revision="a1b2c3"
+        )
+
+
+def test_a_test_outcomes_revision_never_enters_its_content_hashes() -> None:
+    """The same structural exclusion a result and a waiver's expiry/approver
+    already keep: ``content_hashes`` only ever reads ``content_anchors``, and
+    the revision is not one."""
+    record = records.NodeRecord(
+        "run-1/TS-1",
+        "TestOutcome",
+        {"contentHash": anchor()},
+        result="passed",
+        revision="a1b2c3",
+    )
+    assert set(record.content_hashes) == {"contentHash"}
+
+
 # ── Waiver expiry and approver (SEG-SREQ-057, SEG-SREQ-058) ────────────────
 
 
 def test_a_waiver_record_must_carry_its_expiry() -> None:
     with pytest.raises(ValueError, match="expiry"):
-        records.NodeRecord(
-            "WVR-001", "Waiver", {"contentHash": anchor()}, approver="A. Reviewer"
-        )
+        records.NodeRecord("WVR-001", "Waiver", {"contentHash": anchor()}, approver="A. Reviewer")
 
 
 def test_a_waiver_record_must_carry_its_approver() -> None:
     with pytest.raises(ValueError, match="approver"):
-        records.NodeRecord(
-            "WVR-001", "Waiver", {"contentHash": anchor()}, expiry=date(2027, 1, 1)
-        )
+        records.NodeRecord("WVR-001", "Waiver", {"contentHash": anchor()}, expiry=date(2027, 1, 1))
 
 
 def test_a_waiver_record_carries_the_expiry_and_approver_it_was_given() -> None:
@@ -357,8 +401,15 @@ def test_a_review_event_requires_a_non_empty_role() -> None:
 def test_a_role_is_a_free_string_not_a_closed_vocabulary() -> None:
     """Role validation is a process concern; the tool checks non-empty and nothing else."""
     event = records.ReviewEvent(
-        "a", "b", "Refines", D1, D2, "a" * 40, "b" * 40,
-        role="acting deputy reviewer (annex F)", reason="",
+        "a",
+        "b",
+        "Refines",
+        D1,
+        D2,
+        "a" * 40,
+        "b" * 40,
+        role="acting deputy reviewer (annex F)",
+        reason="",
     )
     assert event.role == "acting deputy reviewer (annex F)"
 
@@ -412,9 +463,18 @@ def test_no_record_type_offers_a_field_for_content() -> None:
     allowed = {
         records.ContentAnchor: {"digest", "repository", "path", "locator"},
         # SEG-SREQ-057/SEG-SREQ-058 added ``expiry`` and ``approver`` here,
-        # the same move SEG-SREQ-055 made for ``result``: a producer-recorded
-        # claim, kind-guarded, never a hash preimage member.
-        records.NodeRecord: {"local_id", "kind", "content_anchors", "result", "expiry", "approver"},
+        # and SEG-SREQ-062 added ``revision`` — the same move SEG-SREQ-055
+        # made for ``result``: a producer-recorded claim, kind-guarded, never
+        # a hash preimage member.
+        records.NodeRecord: {
+            "local_id",
+            "kind",
+            "content_anchors",
+            "result",
+            "expiry",
+            "approver",
+            "revision",
+        },
         records.EdgeRecord: {"from_id", "to_id", "kind", "state", "edge_hash"},
         records.EdgeReference: {"kind", "from_id", "to_id"},
         records.ReviewEvent: {
@@ -461,9 +521,7 @@ def test_an_edge_reference_is_usable_as_a_set_member() -> None:
     assert records.EdgeReference("Refines", "a", "b") in {
         records.EdgeReference("Refines", "a", "b")
     }
-    assert records.EdgeReference("Refines", "a", "b") != records.EdgeReference(
-        "Verifies", "a", "b"
-    )
+    assert records.EdgeReference("Refines", "a", "b") != records.EdgeReference("Verifies", "a", "b")
 
 
 # ── Hex is a serialization form ─────────────────────────────────────────────

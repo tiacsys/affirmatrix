@@ -82,6 +82,21 @@ def waiver(
     )
 
 
+def outcome(
+    local_id: str = "run-1/TS-1",
+    content: str = "a test outcome",
+    result: records.TestResult = records.TestResult.PASSED,
+    revision: str = "r1",
+) -> records.NodeRecord:
+    return records.NodeRecord(
+        local_id=local_id,
+        kind="TestOutcome",
+        content_anchors={"contentHash": anchor(content, locator="file")},
+        result=result,
+        revision=revision,
+    )
+
+
 def refines(
     from_id: str = "SEG-SREQ-018",
     to_id: str = "SEG-SYS-007",
@@ -211,9 +226,9 @@ def test_every_declared_kind_has_a_collection_document() -> None:
 
 def test_every_packaged_schema_declares_draft_2020_12() -> None:
     for name in packaged_schema_names():
-        assert (
-            packaged_schema(name)["$schema"] == "https://json-schema.org/draft/2020-12/schema"
-        ), name
+        assert packaged_schema(name)["$schema"] == "https://json-schema.org/draft/2020-12/schema", (
+            name
+        )
 
 
 def test_every_packaged_schema_forbids_properties_it_does_not_declare() -> None:
@@ -295,6 +310,32 @@ def test_a_waiver_missing_its_approver_is_refused_by_the_schema(
         store.write_nodes([waiver()])
 
 
+def test_a_test_outcome_document_carries_its_revision(tmp_path: Path) -> None:
+    """SEG-SREQ-062: a producer-recorded claim, written beside the digest
+    exactly as a waiver's expiry and approver are."""
+    store = make_case(tmp_path)
+    store.write_nodes([outcome(revision="a1b2c3")])
+    (entry,) = entries_of(store, "nodes", "test_outcomes.jsonld")
+    assert entry["seg:revision"] == "a1b2c3"
+    assert "seg:contentHash" in entry
+
+
+def test_a_test_outcome_missing_its_revision_is_refused_by_the_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = _documents.node_entry
+
+    def without_revision(record: records.NodeRecord) -> dict:
+        entry = original(record)
+        entry.pop("seg:revision", None)
+        return entry
+
+    monkeypatch.setattr(_documents, "node_entry", without_revision)
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="seg:revision"):
+        store.write_nodes([outcome()])
+
+
 def test_a_node_document_locates_the_content_behind_each_digest(tmp_path: Path) -> None:
     """SEG-SREQ-050: repository, path and span locator, beside every content hash."""
     store = make_case(tmp_path)
@@ -332,9 +373,7 @@ def test_a_split_hash_node_locates_each_hash_separately(tmp_path: Path) -> None:
     )
     (entry,) = entries_of(store, "nodes", "implementations.jsonld")
     assert entry["seg:apiHashSource"]["seg:sourceLocator"] == "symbol:affirmatrix.graph.build#api"
-    assert (
-        entry["seg:bodyHashSource"]["seg:sourceLocator"] == "symbol:affirmatrix.graph.build#body"
-    )
+    assert entry["seg:bodyHashSource"]["seg:sourceLocator"] == "symbol:affirmatrix.graph.build#body"
 
 
 def test_a_document_never_contains_the_content_a_hash_covers(tmp_path: Path) -> None:
@@ -1011,9 +1050,7 @@ TOY_SCHEMA = {
 }
 
 
-def register_toy_document(
-    store: case.AffirmationStore, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def register_toy_document(store: case.AffirmationStore, monkeypatch: pytest.MonkeyPatch) -> None:
     """Stand in for the evidence-package documents, which arrive with their generator."""
     store.initialize()
     (store.root / "schema" / "toy.schema.json").write_text(

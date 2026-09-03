@@ -10,7 +10,8 @@
     "seg:localId",
     "seg:contentHash",
     "seg:contentHashSource",
-    "seg:result"
+    "seg:result",
+    "seg:revision"
   ],
   "additionalProperties": false,
   "properties": {
@@ -38,6 +39,11 @@
         "skipped"
       ],
       "description": "The result of the test execution this outcome records (SEG-SREQ-055). A closed set. A recorded claim, like an edge's linkState: the content hash covers the artifact that is the authority on it, and the claim never enters a hash preimage."
+    },
+    "seg:revision": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The revision of the implementation repository this execution ran against (SEG-SREQ-062). A producer-recorded claim, like seg:result: never a hash preimage member. The spelling is deliberately open — unlike a sha256 digest or an enumerated vocabulary elsewhere in this schema, no pattern is pinned here."
     },
     "seg:contentHashSource": {
       "type": "object",
