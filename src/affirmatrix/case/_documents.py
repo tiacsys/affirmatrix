@@ -425,6 +425,30 @@ def read_entries(path: Path) -> list[Entry]:
     return entries
 
 
+def read_document(path: Path) -> Entry:
+    """One proof document's fields, without its ``@context`` envelope.
+
+    :implements: SEG-SREQ-020
+
+    Unlike :func:`read_entries`, a missing file is refused rather than
+    answered with an empty reading: a collection document with nothing in it
+    yet is a legitimate state a kind can be in, but there is no legitimate
+    empty reading of *one* proof document — it either exists as written or it
+    does not, and the difference matters to a caller asking for it by name.
+    """
+    if not path.exists():
+        raise AffirmationStoreError(f"{path} does not hold a proof document")
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise AffirmationStoreError(f"{path} cannot be read as a document: {error}") from error
+    if not isinstance(raw, dict) or _CONTEXT not in raw:
+        raise AffirmationStoreError(
+            f"{path} is not a proof document: it carries no {_CONTEXT!r}"
+        )
+    return {key: value for key, value in raw.items() if key != _CONTEXT}
+
+
 def serialized(document: Mapping[str, object], context_reference: str) -> bytes:
     """One document's bytes: deterministic, sorted, newline-terminated.
 
@@ -452,6 +476,7 @@ __all__ = [
     "merged",
     "node_entry",
     "node_record",
+    "read_document",
     "read_entries",
     "review_event_record",
     "serialized",

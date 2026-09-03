@@ -1076,10 +1076,15 @@ def test_a_proof_document_lands_under_its_snapshot_directory(
 
 
 def test_a_proof_document_kind_with_no_registered_schema_is_refused(tmp_path: Path) -> None:
-    """A document with no schema cannot be shown to be valid, so it is not written."""
+    """A document with no schema cannot be shown to be valid, so it is not written.
+
+    ``design_consistency_proof`` stood in for an unregistered kind before the
+    evidence-package generator landed and registered it for real; the
+    placeholder here is a name that is never registered.
+    """
     store = make_case(tmp_path)
     with pytest.raises(case.AffirmationStoreError, match="no schema is registered"):
-        store.write_proof_document("2026-08-10", "design_consistency_proof", {})
+        store.write_proof_document("2026-08-10", "not-a-registered-kind", {})
     assert files_under(store.root / "proofs") == set()
 
 
@@ -1102,6 +1107,69 @@ def test_a_proof_document_is_written_atomically(
     with pytest.raises(OSError):
         store.write_proof_document("2026-08-10", "toy", {"seg:snapshotId": "s"})
     assert files_under(store.root / "proofs") == set()
+
+
+# ── The proof document read face (SEG-SREQ-020 over proofs) ────────────────
+
+
+def test_a_written_proof_document_reads_back_equal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = make_case(tmp_path)
+    register_toy_document(store, monkeypatch)
+    snapshot = "2026-08-10T09-00-00Z-a1b2c3"
+    store.write_proof_document(snapshot, "toy", {"seg:snapshotId": "s"})
+    assert store.read_proof_document(snapshot, "toy") == {"seg:snapshotId": "s"}
+
+
+def test_reading_a_proof_document_kind_with_no_registered_schema_is_refused(
+    tmp_path: Path,
+) -> None:
+    store = make_case(tmp_path)
+    store.initialize()
+    with pytest.raises(case.AffirmationStoreError, match="no schema is registered"):
+        store.read_proof_document("2026-08-10", "not-a-registered-kind")
+
+
+def test_reading_a_proof_document_that_does_not_exist_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = make_case(tmp_path)
+    register_toy_document(store, monkeypatch)
+    with pytest.raises(case.AffirmationStoreError):
+        store.read_proof_document("2026-08-10", "toy")
+
+
+def test_a_hand_edited_proof_document_missing_its_context_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = make_case(tmp_path)
+    register_toy_document(store, monkeypatch)
+    snapshot = "2026-08-10T09-00-00Z-a1b2c3"
+    store.write_proof_document(snapshot, "toy", {"seg:snapshotId": "s"})
+    path = store.root / "proofs" / snapshot / "toy.jsonld"
+    path.write_text(json.dumps({"seg:snapshotId": "s"}) + "\n", encoding="utf-8")
+    with pytest.raises(case.AffirmationStoreError, match="@context"):
+        store.read_proof_document(snapshot, "toy")
+
+
+def test_reading_a_package_returns_every_document_keyed_by_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = make_case(tmp_path)
+    register_toy_document(store, monkeypatch)
+    snapshot = "2026-08-10T09-00-00Z-a1b2c3"
+    store.write_proof_document(snapshot, "toy", {"seg:snapshotId": "s"})
+    assert dict(store.read_package(snapshot)) == {"toy": {"seg:snapshotId": "s"}}
+
+
+def test_reading_a_package_missing_one_document_refuses_the_whole_package(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = make_case(tmp_path)
+    register_toy_document(store, monkeypatch)
+    with pytest.raises(case.AffirmationStoreError):
+        store.read_package("2026-08-10")
 
 
 # ── Identifier minting ──────────────────────────────────────────────────────

@@ -236,3 +236,13 @@ today.** SEG-SREQ-059 itself carries no ``:implements:`` marker anywhere in
 this codebase for exactly that reason: marking it would claim a check this
 gate does not perform. When an authorisation roster exists, the approver
 half joins this predicate and the marker follows.
+
+The coverage report as a persisted document
+------------------------------------------------
+
+An evidence package's coverage report document (see :doc:`proof-package`) is
+this ``CoverageReport`` serialized whole — the same seven typed findings and
+the same two derived views, restated in the shape a schema can validate.
+The generator that assembles a package adds nothing to it: a reader
+comparing the persisted document against a fresh call to ``package_gate``
+over the same inputs sees the same answer twice, never a second opinion.

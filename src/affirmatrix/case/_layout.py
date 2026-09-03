@@ -88,10 +88,21 @@ EDGE_SCHEMAS: MappingProxyType[str, str] = MappingProxyType(
 
 EVENT_SCHEMA = "review_event.schema.json"
 
-#: Proof document kind -> its schema. Empty until the evidence-package
-#: generator lands and brings its four document types with it. The write path
-#: below is complete; what it has nothing to validate against, it refuses.
-PROOF_DOCUMENT_SCHEMAS: MappingProxyType[str, str] = MappingProxyType({})
+#: Proof document kind -> its schema. The evidence package's four document
+#: types, seeded into a fresh case exactly like the record schemas. A case
+#: initialized before this mapping held these kinds has none of them under its
+#: own ``schema/`` until its next write, which seeds whatever it is missing;
+#: reading one of these kinds from such a case before that refuses through
+#: the same "no schema declared for this kind" path the write side already
+#: used while this mapping was empty.
+PROOF_DOCUMENT_SCHEMAS: MappingProxyType[str, str] = MappingProxyType(
+    {
+        "design_consistency_proof": "design_consistency_proof.schema.json",
+        "execution_coverage_record": "execution_coverage_record.schema.json",
+        "coverage_report": "coverage_report.schema.json",
+        "evidence_manifest": "evidence_manifest.schema.json",
+    }
+)
 
 #: The separators a single path segment may not contain. The forward slash is
 #: listed whatever the platform, and so is the backslash: a case is written on

@@ -53,10 +53,22 @@ An entry that cannot be read back as written — malformed, invalid against the
 case's schemas, or failing reconstruction — raises rather than being skipped,
 never a short stream.
 
+**The proof document faces.** ``write_proof_document`` and
+``read_proof_document`` are the same discipline over a different shape: one
+whole document rather than a stream of entries, sealed under a snapshot
+directory rather than a per-kind collection. The same asymmetry holds —
+writing seeds the layout a fresh case needs, reading refuses a case that is
+not self-describing — and the same refusal-over-skipping holds for a
+document kind the case's own schemas do not declare, whichever side asks for
+it. ``read_package`` reads all four of one snapshot's documents at once,
+refusing the whole package if any one is missing or invalid, because a
+package short one document is not a smaller package.
+
 The module keeps the name ``case`` for one-word symmetry with the directory it
 owns; module names denote the artifact, component names the actor.
 
-Iteration-0 backlog items B10 (write) and B11 (read-back).
+Iteration-0 backlog items B10 (write), B11 (read-back), and B17 (the proof
+document faces).
 """
 
 from __future__ import annotations
@@ -66,6 +78,7 @@ from dataclasses import dataclass
 from importlib import resources
 from importlib.resources.abc import Traversable
 from pathlib import Path
+from types import MappingProxyType
 
 from affirmatrix.case import _atomic, _documents, _layout, _validation
 from affirmatrix.case._errors import AffirmationStoreError, DemotionNotRequestedError
@@ -311,11 +324,16 @@ class AffirmationStore:
     ) -> Path:
         """Write one document of the evidence package sealed under a snapshot.
 
-        The mechanism only. The four document types of an evidence package
-        arrive with the generator that computes them, and their schemas arrive
-        with them; until then this refuses every kind, because a document with
-        no schema cannot be shown to be valid and writing it anyway would put
-        an unvalidated file in a case that claims all of them are.
+        :implements: SEG-SREQ-019
+        :implements: SEG-SREQ-021
+        :implements: SEG-SREQ-022
+
+        The mechanism only: it validates, confines the path, and writes
+        atomically, exactly as every other write here does — but it does not
+        decide what a document contains. It refuses every document kind with
+        no schema registered for it, because a document with no schema cannot
+        be shown to be valid and writing it anyway would put an unvalidated
+        file in a case that claims all of them are.
 
         Returns the path written, which is the one thing a caller cannot derive
         for itself: the package directory is the store's to name.
@@ -333,6 +351,49 @@ class AffirmationStore:
         )
         _atomic.replace_file(path, _documents.serialized(document, _layout.PROOF_CONTEXT))
         return path
+
+    def read_proof_document(self, snapshot_id: str, document_name: str) -> Mapping[str, object]:
+        """Read one document of an evidence package back, as it was written.
+
+        :implements: SEG-SREQ-020
+
+        Validated against the case's own schemas, like every other read here
+        (SEG-SREQ-053's discipline): a document that cannot be read as
+        written, or a kind the case's own ``schema/`` directory declares no
+        schema for, is refused rather than skipped. The second case is what a
+        case initialized before its schema directory carried these four kinds
+        hits if asked to read one before its next write has seeded them.
+        """
+        schemas = self._readable()
+        path = _layout.proof_document(self.root, snapshot_id, document_name)
+        try:
+            schema_name = _layout.PROOF_DOCUMENT_SCHEMAS[document_name]
+        except KeyError:
+            raise AffirmationStoreError(
+                f"no schema is registered for the proof document kind {document_name!r}"
+            ) from None
+        document = _documents.read_document(path)
+        _validation.validate_entry(
+            schemas, document, schema_name, f"proof document {document_name!r}"
+        )
+        return MappingProxyType(document)
+
+    def read_package(self, snapshot_id: str) -> Mapping[str, Mapping[str, object]]:
+        """Every document of one evidence package, keyed by document name.
+
+        :implements: SEG-SREQ-020
+
+        Reads all four of :data:`~affirmatrix.case._layout.PROOF_DOCUMENT_SCHEMAS`'
+        kinds; missing or invalid in any one of them refuses the whole
+        package rather than handing back the three that were fine — a
+        package short one document is not a smaller package, it is not one.
+        """
+        return MappingProxyType(
+            {
+                document_name: self.read_proof_document(snapshot_id, document_name)
+                for document_name in sorted(_layout.PROOF_DOCUMENT_SCHEMAS)
+            }
+        )
 
     def _ensure_layout(self) -> None:
         """Create the case's directories and seed the files it is missing.

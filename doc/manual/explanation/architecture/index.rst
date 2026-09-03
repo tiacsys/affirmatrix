@@ -22,4 +22,5 @@ currently in scope to build.
    affirmation-recorder
    package-gate
    proof-scope
+   proof-package
    iteration-0-backlog
