@@ -69,3 +69,13 @@ act is needed, and none is offered.
 
    The suspect detector shall leave recorded affirmations unchanged when it
    derives edge states.
+
+.. sreq:: Per-hash endpoint comparison against the affirming review event
+   :id: SEG-SREQ-128
+   :refines: SEG-SYS-003
+
+   For an edge that has been affirmed, the suspect detector shall report,
+   for each named content hash of either endpoint, whether that hash's
+   current digest matches the digest the affirming review event recorded
+   for that endpoint, together with both digests' anchors and the source
+   revision the review event recorded for that endpoint.

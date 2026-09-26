@@ -54,3 +54,12 @@ affirmation only for an edge where one can mean something.
 
    The affirmation recorder shall record the reason supplied with an
    affirmation in the review event without altering it.
+
+.. sreq:: Affirmations bind each endpoint's named content hashes and anchors
+   :id: SEG-SREQ-127
+   :refines: SEG-SYS-004
+
+   The affirmation recorder shall record in every review event, for each
+   endpoint of the affirmed edge, every named content hash it carries
+   together with that hash's anchor, as they stood at the moment of
+   judgement.

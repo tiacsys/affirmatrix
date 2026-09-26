@@ -25,3 +25,5 @@ subject, not by its parent, so refinement links cross pages freely.
    affirmation-store
    gate-evaluator
    proof-generator
+   command-line-interface
+   configuration-loader
