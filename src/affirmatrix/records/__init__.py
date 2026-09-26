@@ -323,6 +323,16 @@ class ReviewEvent:
     be reconstructed later — nothing else correlates a source revision to the
     moment someone accepted it — so it is captured here or lost.
 
+    Beside the composite hash, every named content hash of each endpoint
+    travels here too, together with the anchor it was found at, exactly as
+    they stood at judgement (SEG-SREQ-127). The composite is what the edge
+    hash binds and what the detector's content axis compares; the named map
+    is the finer record beside it, read by the per-hash comparison a suspect
+    detector builds from this event rather than from the endpoint's current
+    node record. Required and non-empty on both sides, the same
+    at-composition-or-not-at-all rule as the source revisions: an endpoint
+    with no named content hash to carry is not one this judgement could bind.
+
     The role is the capacity the judgement was made in (SEG-SREQ-049): who and
     when come from the commit that introduces the record, but in-what-role is
     the record's own to state. It is required and free — any non-empty string —
@@ -346,6 +356,8 @@ class ReviewEvent:
     to_source_revision: str
     role: str
     reason: str
+    from_content_anchors: Mapping[str, ContentAnchor] = field(kw_only=True)
+    to_content_anchors: Mapping[str, ContentAnchor] = field(kw_only=True)
 
     def __post_init__(self) -> None:
         _require(self.from_id, "source identifier")
@@ -356,6 +368,27 @@ class ReviewEvent:
         _require(self.role, "role")
         checked_digest(self.from_node_hash, f"{self.from_id} node hash")
         checked_digest(self.to_node_hash, f"{self.to_id} node hash")
+        for side, anchors in (
+            ("source", self.from_content_anchors),
+            ("target", self.to_content_anchors),
+        ):
+            if not anchors:
+                raise ValueError(
+                    f"a review event needs at least one named content hash for its {side} "
+                    "endpoint, carried with the anchor it was found at when judged"
+                )
+            for name, anchor in anchors.items():
+                if not isinstance(anchor, ContentAnchor):
+                    raise ValueError(
+                        f"the {side} endpoint's {name!r} is {anchor!r}, which is not a "
+                        "ContentAnchor"
+                    )
+        object.__setattr__(
+            self, "from_content_anchors", MappingProxyType(dict(self.from_content_anchors))
+        )
+        object.__setattr__(
+            self, "to_content_anchors", MappingProxyType(dict(self.to_content_anchors))
+        )
 
 
 @dataclass(frozen=True, slots=True)

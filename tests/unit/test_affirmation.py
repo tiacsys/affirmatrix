@@ -105,6 +105,15 @@ def test_the_event_binds_the_current_hashes_of_both_endpoints() -> None:
     assert composed.event.to_node_hash == node_hash_of(sreq)
 
 
+def test_the_event_carries_each_endpoints_named_content_hashes_verbatim() -> None:
+    """SEG-SREQ-127: the finer record beside the composite hash is exactly
+    what the current node records already state — never a second telling."""
+    edge, impl, sreq = outdated_pair()
+    composed = affirmation.compose(edge, from_node=impl, to_node=sreq, **JUDGEMENT)
+    assert composed.event.from_content_anchors == impl.content_anchors
+    assert composed.event.to_content_anchors == sreq.content_anchors
+
+
 def test_the_event_carries_each_endpoints_source_revision() -> None:
     """SEG-SREQ-025: the anchor is captured at composition or not at all."""
     edge, impl, sreq = outdated_pair()

@@ -124,6 +124,8 @@ def review_event(
         to_source_revision=LATER_REVISION,
         role=role,
         reason=reason,
+        from_content_anchors={"contentHash": anchor(f"{from_id} content")},
+        to_content_anchors={"contentHash": anchor(f"{to_id} content")},
     )
 
 
@@ -829,6 +831,27 @@ def test_a_review_event_records_the_source_revision_of_each_endpoint(tmp_path: P
         "seg:fromRevision": REVISION,
         "seg:toRevision": LATER_REVISION,
     }
+
+
+def test_a_review_event_records_each_endpoints_named_content_hashes(tmp_path: Path) -> None:
+    """SEG-SREQ-127: every named content hash an endpoint carried, paired with
+    its anchor, nested per endpoint the same way a node record's own entry
+    pairs a digest with its source location."""
+    store = make_case(tmp_path)
+    event = review_event()
+    store.append_review_events([event])
+    (entry,) = entries_of(store, "events", "review_events.jsonld")
+    assert entry["seg:fromContentAnchors"] == {
+        "seg:contentHash": records.hex_digest(digest("SEG-SREQ-018 content")),
+        "seg:contentHashSource": {
+            "seg:sourceRepo": "the-source-repo",
+            "seg:sourcePath": "doc/spec/store.rst",
+            "seg:sourceLocator": "file",
+        },
+    }
+    assert entry["seg:toContentAnchors"]["seg:contentHash"] == records.hex_digest(
+        digest("SEG-SYS-007 content")
+    )
 
 
 def test_a_field_declared_to_hold_an_identifier_only_ever_holds_one(tmp_path: Path) -> None:

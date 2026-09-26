@@ -28,6 +28,7 @@ from pathlib import Path
 import pytest
 
 from affirmatrix import case, identity, records
+from affirmatrix.case import _documents
 
 REVISION = "a1b2c3d4" * 5
 LATER_REVISION = "f0e1d2c3" * 5
@@ -127,18 +128,24 @@ def refines(
 
 
 def review_event(
-    reason: str = "reviewed together", role: str = "RequirementsEngineer"
+    from_id: str = "SEG-SREQ-020",
+    to_id: str = "SEG-SYS-007",
+    kind: str = "Refines",
+    reason: str = "reviewed together",
+    role: str = "RequirementsEngineer",
 ) -> records.ReviewEvent:
     return records.ReviewEvent(
-        from_id="SEG-SREQ-020",
-        to_id="SEG-SYS-007",
-        kind="Refines",
-        from_node_hash=digest("SEG-SREQ-020"),
-        to_node_hash=digest("SEG-SYS-007"),
+        from_id=from_id,
+        to_id=to_id,
+        kind=kind,
+        from_node_hash=digest(from_id),
+        to_node_hash=digest(to_id),
         from_source_revision=REVISION,
         to_source_revision=LATER_REVISION,
         role=role,
         reason=reason,
+        from_content_anchors={"contentHash": anchor(f"{from_id} content")},
+        to_content_anchors={"contentHash": anchor(f"{to_id} content")},
     )
 
 
@@ -309,6 +316,57 @@ def test_a_review_event_reads_back_with_its_role(tmp_path: Path) -> None:
     store.append_review_events([review_event(role="acting deputy reviewer (annex F)")])
     (read,) = store.review_events()
     assert read.role == "acting deputy reviewer (annex F)"
+
+
+def test_a_review_events_content_anchors_read_back_unchanged(tmp_path: Path) -> None:
+    """SEG-SREQ-127's record half: the finer, per-hash record round-trips too."""
+    store = make_case(tmp_path)
+    event = review_event()
+    store.append_review_events([event])
+    (read,) = store.review_events()
+    assert read.from_content_anchors == event.from_content_anchors
+    assert read.to_content_anchors == event.to_content_anchors
+
+
+def test_an_event_missing_an_endpoints_content_anchors_is_refused_by_the_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The schema guard holds on its own, for an auditor with only the case."""
+    original = _documents.event_entry
+
+    def without_from_content_anchors(event: records.ReviewEvent, ordinal: int) -> dict:
+        entry = original(event, ordinal)
+        entry.pop("seg:fromContentAnchors", None)
+        return entry
+
+    monkeypatch.setattr(_documents, "event_entry", without_from_content_anchors)
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="seg:fromContentAnchors"):
+        store.append_review_events([review_event()])
+
+
+EDGE = records.EdgeReference("Refines", "SEG-SREQ-020", "SEG-SYS-007")
+
+
+def test_latest_review_event_is_none_for_an_edge_never_affirmed(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.initialize()
+    assert store.latest_review_event(EDGE) is None
+
+
+def test_latest_review_event_is_the_last_one_appended_for_that_edge(tmp_path: Path) -> None:
+    """Among this edge's own events and everyone else's, in append order."""
+    store = make_case(tmp_path)
+    store.append_review_events(
+        [
+            review_event(reason="the first"),
+            review_event(from_id="SEG-SREQ-021", to_id="SEG-SYS-008", reason="a different edge"),
+        ]
+    )
+    store.append_review_events([review_event(reason="the second")])
+    latest = store.latest_review_event(EDGE)
+    assert latest is not None
+    assert latest.reason == "the second"
 
 
 def test_a_pending_edge_reads_back_with_no_edge_hash(tmp_path: Path) -> None:

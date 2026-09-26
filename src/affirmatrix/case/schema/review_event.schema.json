@@ -12,6 +12,8 @@
     "seg:relation",
     "seg:fromNodeHash",
     "seg:toNodeHash",
+    "seg:fromContentAnchors",
+    "seg:toContentAnchors",
     "seg:affirmedAt",
     "seg:affirmingRole",
     "seg:reason"
@@ -46,6 +48,14 @@
     },
     "seg:toNodeHash": {
       "$ref": "#/$defs/sha256"
+    },
+    "seg:fromContentAnchors": {
+      "$ref": "#/$defs/contentAnchors",
+      "description": "Every named content hash the source endpoint carried at judgement, each paired with the anchor it was found at (SEG-SREQ-127) — the finer record beside seg:fromNodeHash, the composite the edge hash binds."
+    },
+    "seg:toContentAnchors": {
+      "$ref": "#/$defs/contentAnchors",
+      "description": "Every named content hash the target endpoint carried at judgement, each paired with the anchor it was found at (SEG-SREQ-127) — the finer record beside seg:toNodeHash, the composite the edge hash binds."
     },
     "seg:affirmedAt": {
       "type": "object",
@@ -83,6 +93,27 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
       "description": "A SHA-256 digest, lowercase hex, exactly 64 characters. SHA-256 is fixed for the whole graph, so the digest needs no algorithm beside it (ADR-0005)."
+    },
+    "contentAnchors": {
+      "type": "object",
+      "description": "Every named content hash one endpoint carried at judgement, keyed by hash name, each paired with the source location it was found at under the name's own 'Source' suffix — the same pairing rule a node record's own entry uses. Field names are open: which names an endpoint carries depends on its kind, so pairing is checked when a review event is read back, not by this schema.",
+      "minProperties": 2,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^seg:[A-Za-z]+Source$": {
+          "type": "object",
+          "required": ["seg:sourceRepo", "seg:sourcePath", "seg:sourceLocator"],
+          "additionalProperties": false,
+          "properties": {
+            "seg:sourceRepo": { "type": "string", "minLength": 1 },
+            "seg:sourcePath": { "type": "string", "minLength": 1 },
+            "seg:sourceLocator": { "type": "string", "minLength": 1 }
+          }
+        },
+        "^seg:(?!.*Source$)[A-Za-z]+$": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
     }
   }
 }

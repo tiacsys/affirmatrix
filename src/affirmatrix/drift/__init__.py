@@ -42,6 +42,18 @@ read. A recorded edge with no current counterpart receives no state at all —
 the requirement set does not yet say what it is — and is carried untouched in
 :attr:`Derivation.vanished` instead.
 
+Beside the truth-table state, :func:`compare` answers a finer question for
+an edge that has been affirmed: not the two-sided verdict alone, but which
+named content hash of which endpoint moved, and against what (SEG-SREQ-128).
+It reads the affirming review event's own per-hash digests and anchors —
+never the current endpoint's node record, which states only what the content
+is today, not what it was judged against — so a reader can see, per name,
+whether it still matches, differs, or was gained or dropped since the
+judgement. The edge's stored hash and the event's named hashes were both
+written by the one affirmation that produced them, so a comparison against
+that same event explains the verdict the truth table reached against that
+hash, rather than telling it a second time.
+
 Iteration-0 backlog item B13 (SEG-SYS-003 and its decomposition).
 """
 
@@ -49,9 +61,18 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 from affirmatrix import commitment, graph, taxonomy
-from affirmatrix.records import EdgeRecord, EdgeReference, LinkState, NodeRecord, RecordSource
+from affirmatrix.records import (
+    ContentAnchor,
+    EdgeRecord,
+    EdgeReference,
+    LinkState,
+    NodeRecord,
+    RecordSource,
+    ReviewEvent,
+)
 
 
 class DriftError(Exception):
@@ -90,6 +111,120 @@ class Derivation:
         affirmed against; deriving a state never strips an affirmation.
         """
         return iter(self._edges)
+
+
+class HashStatus(StrEnum):
+    """Whether one named content hash matches, differs, or exists on one side only.
+
+    Four values, not a boolean: an affirming review event and an endpoint's
+    current record may each carry a hash name the other does not — a name
+    added or dropped since the judgement was made — and that absence is a
+    fact about the comparison, not a verdict about content that was never
+    there to compare (SEG-SREQ-128).
+    """
+
+    MATCHING = "matching"
+    DIFFERING = "differing"
+    RECORDED_ONLY = "recordedOnly"
+    CURRENT_ONLY = "currentOnly"
+
+
+@dataclass(frozen=True, slots=True)
+class HashComparison:
+    """One named content hash's comparison, for one endpoint.
+
+    ``recorded`` is the anchor the affirming review event carried for this
+    name; ``current`` is the anchor the endpoint's current node record
+    carries for it. Either may be absent — :attr:`status` says which — and
+    the other is carried alongside so a reader does not need a second lookup
+    to see what it was. ``source_revision`` is the endpoint's own revision as
+    the review event recorded it, the same value for every name of one
+    endpoint, because the revision is a fact about the endpoint, not about
+    one of its hashes.
+    """
+
+    name: str
+    status: HashStatus
+    recorded: ContentAnchor | None
+    current: ContentAnchor | None
+    source_revision: str
+
+
+@dataclass(frozen=True, slots=True)
+class Comparison:
+    """The per-hash comparison of an edge's two endpoints against the affirming event.
+
+    The value :func:`compare` returns; the marker naming the requirement it
+    discharges lives on that function, the one that actually reads the
+    event and derives the comparison, not on this plain result type.
+
+    One :class:`HashComparison` per named content hash either side carries —
+    the union of the event's names and the current record's names for that
+    endpoint, so a hash dropped or gained since the affirming judgement is
+    reported too, never silently absent.
+    """
+
+    from_hashes: tuple[HashComparison, ...]
+    to_hashes: tuple[HashComparison, ...]
+
+
+def compare(
+    edge: EdgeReference, *, current_from: NodeRecord, current_to: NodeRecord, event: ReviewEvent
+) -> Comparison:
+    """Compare an edge's two current endpoints against the event that last affirmed it.
+
+    :implements: SEG-SREQ-128
+
+    Reads the event's own per-hash digests and anchors — never the current
+    endpoint's recorded node record, which is a different question this
+    function does not ask. ``event`` must be the affirmation this edge was
+    judged under: composing a comparison against an event naming a different
+    edge would silently misattribute a judgement to content nobody bound it
+    to, so a mismatch raises :class:`DriftError` rather than comparing
+    anyway.
+    """
+    if (event.kind, event.from_id, event.to_id) != (edge.kind, edge.from_id, edge.to_id):
+        raise DriftError(
+            f"the review event affirms {event.from_id!r} -> {event.to_id!r} ({event.kind}), "
+            f"not {edge.from_id!r} -> {edge.to_id!r} ({edge.kind}); a comparison cannot be "
+            "built against the wrong affirmation"
+        )
+    return Comparison(
+        from_hashes=_endpoint_comparison(
+            recorded=event.from_content_anchors,
+            current=current_from,
+            source_revision=event.from_source_revision,
+        ),
+        to_hashes=_endpoint_comparison(
+            recorded=event.to_content_anchors,
+            current=current_to,
+            source_revision=event.to_source_revision,
+        ),
+    )
+
+
+def _endpoint_comparison(
+    *, recorded: Mapping[str, ContentAnchor], current: NodeRecord, source_revision: str
+) -> tuple[HashComparison, ...]:
+    """One endpoint's named hashes, recorded against current, in name order."""
+    names = sorted(set(recorded) | set(current.content_anchors))
+    comparisons = []
+    for name in names:
+        was, now = recorded.get(name), current.content_anchors.get(name)
+        if was is None:
+            status = HashStatus.CURRENT_ONLY
+        elif now is None:
+            status = HashStatus.RECORDED_ONLY
+        elif was.digest == now.digest:
+            status = HashStatus.MATCHING
+        else:
+            status = HashStatus.DIFFERING
+        comparisons.append(
+            HashComparison(
+                name=name, status=status, recorded=was, current=now, source_revision=source_revision
+            )
+        )
+    return tuple(comparisons)
 
 
 def truth_table_state(*, content_matches: bool, dependencies_active: bool) -> LinkState:
@@ -315,4 +450,13 @@ def _strong_in(built: graph.Graph, local_id: str) -> tuple[EdgeRecord, ...]:
     return tuple(edge for edge in built.incoming(local_id) if edge.kind in propagating)
 
 
-__all__ = ["Derivation", "DriftError", "derive", "truth_table_state"]
+__all__ = [
+    "Comparison",
+    "Derivation",
+    "DriftError",
+    "HashComparison",
+    "HashStatus",
+    "compare",
+    "derive",
+    "truth_table_state",
+]

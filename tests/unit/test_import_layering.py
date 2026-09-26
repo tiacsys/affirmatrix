@@ -1,6 +1,6 @@
 """Import-direction checks over the engine's own source tree.
 
-The component map (ADR-0004) declares a strict layering, and three ADRs each
+The component map (ADR-0004) declares a strict layering, and four ADRs each
 rest on an import boundary staying intact:
 
 * ADR-0003 / ADR-0005 — the commitment layer is a leaf, so its
@@ -9,7 +9,10 @@ rest on an import boundary staying intact:
   encoding, so it is the only module that may reach ``hashlib``;
 * ADR-0004 / ADR-0007 — ``case`` sits *below* ``proof`` and ``affirmation`` in
   the layering, and ``identity`` never reaches the commitment layer, which is
-  what keeps the revisable IRI base out of every hash preimage.
+  what keeps the revisable IRI base out of every hash preimage;
+* ADR-0010 — ``cli/_repository.py`` is the one module the command-line
+  adapter may run git from, so it is the only module that may reach
+  ``subprocess``.
 
 Prose cannot enforce any of that, so this module parses ``src/affirmatrix``
 with ``ast`` and compares each component's direct imports against a declared
@@ -218,6 +221,17 @@ def test_only_the_hashing_module_imports_hashlib() -> None:
         for path in _module_files()
         if _component_of_path(path) != "_hashing"
         and "hashlib" in _imported_targets(ast.parse(path.read_text(encoding="utf-8")), "")
+    )
+    assert offenders == []
+
+
+def test_only_the_repository_module_imports_subprocess() -> None:
+    """ADR-0010: one adapter module runs git; nothing else may reach ``subprocess``."""
+    offenders = sorted(
+        str(path.relative_to(PACKAGE_ROOT))
+        for path in _module_files()
+        if str(path.relative_to(PACKAGE_ROOT)) != "cli/_repository.py"
+        and "subprocess" in _imported_targets(ast.parse(path.read_text(encoding="utf-8")), "")
     )
     assert offenders == []
 

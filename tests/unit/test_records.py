@@ -36,6 +36,11 @@ def anchor(digest: bytes = D1, locator: str = "file") -> records.ContentAnchor:
     )
 
 
+def content_anchors(digest: bytes = D1) -> dict[str, records.ContentAnchor]:
+    """A minimal one-name content-anchor mapping, for a review event's endpoint."""
+    return {"contentHash": anchor(digest)}
+
+
 # ── Content anchors ─────────────────────────────────────────────────────────
 
 
@@ -377,6 +382,8 @@ def test_a_review_event_binds_both_endpoint_hashes_and_both_anchors() -> None:
         to_source_revision="b" * 40,
         role="RequirementsEngineer",
         reason="Refinement still holds after the wording change.",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
     )
     assert event.from_node_hash == D1
     assert event.to_node_hash == D2
@@ -387,7 +394,17 @@ def test_a_review_event_binds_both_endpoint_hashes_and_both_anchors() -> None:
 def test_a_review_event_carries_the_role_it_was_made_in() -> None:
     """SEG-SREQ-049: the capacity someone was acting in is part of the judgement."""
     event = records.ReviewEvent(
-        "a", "b", "Refines", D1, D2, "a" * 40, "b" * 40, role="TestEngineer", reason="x"
+        "a",
+        "b",
+        "Refines",
+        D1,
+        D2,
+        "a" * 40,
+        "b" * 40,
+        role="TestEngineer",
+        reason="x",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
     )
     assert event.role == "TestEngineer"
 
@@ -395,7 +412,19 @@ def test_a_review_event_carries_the_role_it_was_made_in() -> None:
 def test_a_review_event_requires_a_non_empty_role() -> None:
     """An empty role would satisfy the field while recording nothing."""
     with pytest.raises(ValueError, match="role"):
-        records.ReviewEvent("a", "b", "Refines", D1, D2, "a" * 40, "b" * 40, role="", reason="x")
+        records.ReviewEvent(
+            "a",
+            "b",
+            "Refines",
+            D1,
+            D2,
+            "a" * 40,
+            "b" * 40,
+            role="",
+            reason="x",
+            from_content_anchors=content_anchors(),
+            to_content_anchors=content_anchors(D2),
+        )
 
 
 def test_a_role_is_a_free_string_not_a_closed_vocabulary() -> None:
@@ -410,6 +439,8 @@ def test_a_role_is_a_free_string_not_a_closed_vocabulary() -> None:
         "b" * 40,
         role="acting deputy reviewer (annex F)",
         reason="",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
     )
     assert event.role == "acting deputy reviewer (annex F)"
 
@@ -418,7 +449,17 @@ def test_a_review_event_preserves_the_reason_verbatim() -> None:
     """SEG-SREQ-028: recorded without alteration — including its whitespace."""
     reason = "  Two spaces, a\ttab,\nand a newline.  "
     event = records.ReviewEvent(
-        "a", "b", "Refines", D1, D2, "a" * 40, "b" * 40, role="SoftwareEngineer", reason=reason
+        "a",
+        "b",
+        "Refines",
+        D1,
+        D2,
+        "a" * 40,
+        "b" * 40,
+        role="SoftwareEngineer",
+        reason=reason,
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
     )
     assert event.reason == reason
 
@@ -427,17 +468,47 @@ def test_a_review_event_requires_both_source_anchors() -> None:
     """The anchor cannot be backfilled: nothing else records where each endpoint was."""
     with pytest.raises(ValueError, match="source revision"):
         records.ReviewEvent(
-            "a", "b", "Refines", D1, D2, "", "b" * 40, role="SoftwareEngineer", reason="x"
+            "a",
+            "b",
+            "Refines",
+            D1,
+            D2,
+            "",
+            "b" * 40,
+            role="SoftwareEngineer",
+            reason="x",
+            from_content_anchors=content_anchors(),
+            to_content_anchors=content_anchors(D2),
         )
     with pytest.raises(ValueError, match="source revision"):
         records.ReviewEvent(
-            "a", "b", "Refines", D1, D2, "a" * 40, "", role="SoftwareEngineer", reason="x"
+            "a",
+            "b",
+            "Refines",
+            D1,
+            D2,
+            "a" * 40,
+            "",
+            role="SoftwareEngineer",
+            reason="x",
+            from_content_anchors=content_anchors(),
+            to_content_anchors=content_anchors(D2),
         )
 
 
 def test_a_review_event_is_immutable() -> None:
     event = records.ReviewEvent(
-        "a", "b", "Refines", D1, D2, "a" * 40, "b" * 40, "SoftwareEngineer", "why"
+        "a",
+        "b",
+        "Refines",
+        D1,
+        D2,
+        "a" * 40,
+        "b" * 40,
+        "SoftwareEngineer",
+        "why",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
     )
     with pytest.raises(dataclasses.FrozenInstanceError):
         event.reason = "different"  # type: ignore[misc]
@@ -446,9 +517,71 @@ def test_a_review_event_is_immutable() -> None:
 def test_a_review_event_accepts_an_empty_reason_but_not_a_missing_one() -> None:
     """An unexplained affirmation is a poor one, but it is the operator's to make."""
     event = records.ReviewEvent(
-        "a", "b", "Refines", D1, D2, "a" * 40, "b" * 40, role="SoftwareEngineer", reason=""
+        "a",
+        "b",
+        "Refines",
+        D1,
+        D2,
+        "a" * 40,
+        "b" * 40,
+        role="SoftwareEngineer",
+        reason="",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
     )
     assert event.reason == ""
+
+
+def test_a_review_event_requires_at_least_one_named_content_hash_per_endpoint() -> None:
+    """SEG-SREQ-127: an endpoint with nothing named cannot have this judgement bind it."""
+    with pytest.raises(ValueError, match="source endpoint"):
+        records.ReviewEvent(
+            "a",
+            "b",
+            "Refines",
+            D1,
+            D2,
+            "a" * 40,
+            "b" * 40,
+            role="SoftwareEngineer",
+            reason="x",
+            from_content_anchors={},
+            to_content_anchors=content_anchors(D2),
+        )
+    with pytest.raises(ValueError, match="target endpoint"):
+        records.ReviewEvent(
+            "a",
+            "b",
+            "Refines",
+            D1,
+            D2,
+            "a" * 40,
+            "b" * 40,
+            role="SoftwareEngineer",
+            reason="x",
+            from_content_anchors=content_anchors(),
+            to_content_anchors={},
+        )
+
+
+def test_a_review_events_content_anchors_are_immutable_and_equal_by_value() -> None:
+    """A ``Mapping`` view over the same values, not a second live store."""
+    event = records.ReviewEvent(
+        "a",
+        "b",
+        "Refines",
+        D1,
+        D2,
+        "a" * 40,
+        "b" * 40,
+        role="SoftwareEngineer",
+        reason="x",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
+    )
+    assert event.from_content_anchors == content_anchors()
+    with pytest.raises(TypeError):
+        event.from_content_anchors["contentHash"] = anchor(D2)  # type: ignore[index]
 
 
 # ── No content, ever ────────────────────────────────────────────────────────
@@ -487,6 +620,11 @@ def test_no_record_type_offers_a_field_for_content() -> None:
             "to_source_revision",
             "role",
             "reason",
+            # SEG-SREQ-127 added these: the finer, per-hash record beside the
+            # composite node hashes above, each hash already paired with its
+            # anchor — never a hash preimage member itself.
+            "from_content_anchors",
+            "to_content_anchors",
         },
     }
     for record_type, expected in allowed.items():

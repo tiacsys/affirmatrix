@@ -145,6 +145,22 @@ class AffirmationStore:
         """
         return self._review_event_records(self._readable())
 
+    def latest_review_event(self, edge: EdgeReference) -> ReviewEvent | None:
+        """The most recently appended review event naming this edge, if any.
+
+        A read-face query over :meth:`review_events`, not a new stream: which
+        event is "the affirming one" for an edge is a question about this
+        store's own append order, so it is answered here rather than by a
+        caller re-deriving it. ``None`` when the edge has never been
+        affirmed — the same absence :meth:`edges` reports as a pending edge
+        carrying no stored hash.
+        """
+        latest: ReviewEvent | None = None
+        for event in self.review_events():
+            if (event.kind, event.from_id, event.to_id) == (edge.kind, edge.from_id, edge.to_id):
+                latest = event
+        return latest
+
     def _node_records(self, schemas: _validation.SchemaSet) -> Iterator[NodeRecord]:
         for kind in sorted(_layout.NODE_DOCUMENTS):
             document = _layout.node_document(self.root, kind)

@@ -53,6 +53,24 @@ _SOURCE_SUFFIX = "Source"
 _SOURCE_MEMBERS = ("seg:sourceRepo", "seg:sourcePath", "seg:sourceLocator")
 
 
+def _anchor_fields(anchors: Mapping[str, ContentAnchor]) -> Entry:
+    """Every named content hash as its paired ``seg:{name}``/``seg:{name}Source`` fields.
+
+    The pairing rule stated once, used everywhere a set of named content
+    hashes is serialized: a node's own content, and the two endpoints a
+    review event binds (SEG-SREQ-127).
+    """
+    fields: Entry = {}
+    for name, anchor in sorted(anchors.items()):
+        fields[f"seg:{name}"] = hex_digest(anchor.digest)
+        fields[f"seg:{name}{_SOURCE_SUFFIX}"] = {
+            "seg:sourceRepo": anchor.repository,
+            "seg:sourcePath": anchor.path,
+            "seg:sourceLocator": anchor.locator,
+        }
+    return fields
+
+
 def node_entry(record: NodeRecord) -> Entry:
     """One node record as a JSON-LD entry.
 
@@ -80,13 +98,7 @@ def node_entry(record: NodeRecord) -> Entry:
         entry[_APPROVER] = record.approver
     if record.revision is not None:
         entry[_REVISION] = record.revision
-    for name, anchor in sorted(record.content_anchors.items()):
-        entry[f"seg:{name}"] = hex_digest(anchor.digest)
-        entry[f"seg:{name}{_SOURCE_SUFFIX}"] = {
-            "seg:sourceRepo": anchor.repository,
-            "seg:sourcePath": anchor.path,
-            "seg:sourceLocator": anchor.locator,
-        }
+    entry.update(_anchor_fields(record.content_anchors))
     return entry
 
 
@@ -130,27 +142,9 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             f"{document} holds {entry[_ID]}, but its local identifier {local_id!r} mints "
             f"{minted}; two spellings of one identity must agree"
         )
-    digests: dict[str, bytes] = {}
-    sources: dict[str, tuple[str, str, str]] = {}
-    for name in entry:
-        if name in _NODE_FIXED_FIELDS:
-            continue
-        if not name.startswith(_PREFIX):
-            raise AffirmationStoreError(
-                f"{document} holds {entry[_ID]}, whose field {name!r} is not in the "
-                "case's vocabulary"
-            )
-        local = name.removeprefix(_PREFIX)
-        if local.endswith(_SOURCE_SUFFIX):
-            sources[local.removesuffix(_SOURCE_SUFFIX)] = _read_source(entry, name, document)
-        else:
-            digests[local] = _read_digest(entry, name, document)
-    unpaired = sorted(set(digests) ^ set(sources))
-    if unpaired:
-        raise AffirmationStoreError(
-            f"{document} holds {entry[_ID]}, whose content hashes and source locations do "
-            f"not pair up: {', '.join(repr(name) for name in unpaired)}"
-        )
+    content_anchors = _read_named_anchors(
+        entry, _NODE_FIXED_FIELDS, f"{document} holds {entry[_ID]}, whose"
+    )
     result: TestResult | None = None
     if _RESULT in entry:
         try:
@@ -177,15 +171,7 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             expiry=expiry,
             approver=approver,
             revision=revision,
-            content_anchors={
-                name: ContentAnchor(
-                    digest=digest,
-                    repository=sources[name][0],
-                    path=sources[name][1],
-                    locator=sources[name][2],
-                )
-                for name, digest in digests.items()
-            },
+            content_anchors=content_anchors,
         ),
         entry,
         document,
@@ -231,7 +217,11 @@ def edge_record(entry: Entry, kind: str, document: Path) -> EdgeRecord:
     """
     from_id = _read_endpoint(entry, "seg:from", document)
     to_id = _read_endpoint(entry, "seg:to", document)
-    edge_hash = _read_digest(entry, "seg:edgeHash", document) if "seg:edgeHash" in entry else None
+    edge_hash = (
+        _read_digest(entry, "seg:edgeHash", f"{document} holds {entry[_ID]}, whose")
+        if "seg:edgeHash" in entry
+        else None
+    )
     minted = identity.edge_iri(kind, from_id, to_id)
     if entry[_ID] != minted:
         raise AffirmationStoreError(
@@ -267,6 +257,14 @@ def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
     document, and the endpoint term is defined as holding an identifier — so
     reusing the name here would tell a reader that a git revision is one, and
     it would be resolved as such against the context's base.
+
+    Each endpoint's named content hashes travel under their own nested
+    object, ``seg:fromContentAnchors``/``seg:toContentAnchors``
+    (SEG-SREQ-127), paired the same ``Source``-suffix way a node's own
+    entry pairs them — nested rather than flattened alongside
+    ``seg:fromNodeHash``, because the two endpoints' hash-name sets would
+    otherwise share one flat namespace and a name common to both kinds
+    could not tell them apart.
     """
     return {
         _ID: identity.review_event_iri(ordinal),
@@ -276,6 +274,8 @@ def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
         "seg:relation": f"seg:{event.kind}",
         "seg:fromNodeHash": hex_digest(event.from_node_hash),
         "seg:toNodeHash": hex_digest(event.to_node_hash),
+        "seg:fromContentAnchors": _anchor_fields(event.from_content_anchors),
+        "seg:toContentAnchors": _anchor_fields(event.to_content_anchors),
         "seg:affirmedAt": {
             "seg:fromRevision": event.from_source_revision,
             "seg:toRevision": event.to_source_revision,
@@ -307,15 +307,22 @@ def review_event_record(entry: Entry, document: Path) -> ReviewEvent:
             f"{document} holds {entry[_ID]}, whose seg:affirmedAt is not the pair of "
             "revisions the judgement was made at"
         )
+    label = f"{document} holds {entry[_ID]}, whose"
     return _reconstructed(
         lambda: ReviewEvent(
             from_id=_read_endpoint(entry, "seg:from", document),
             to_id=_read_endpoint(entry, "seg:to", document),
             kind=relation.removeprefix(_PREFIX),
-            from_node_hash=_read_digest(entry, "seg:fromNodeHash", document),
-            to_node_hash=_read_digest(entry, "seg:toNodeHash", document),
+            from_node_hash=_read_digest(entry, "seg:fromNodeHash", label),
+            to_node_hash=_read_digest(entry, "seg:toNodeHash", label),
             from_source_revision=str(revisions["seg:fromRevision"]),
             to_source_revision=str(revisions["seg:toRevision"]),
+            from_content_anchors=_read_content_anchor_object(
+                entry, "seg:fromContentAnchors", document
+            ),
+            to_content_anchors=_read_content_anchor_object(
+                entry, "seg:toContentAnchors", document
+            ),
             role=str(entry["seg:affirmingRole"]),
             reason=str(entry["seg:reason"]),
         ),
@@ -334,31 +341,95 @@ def _read_endpoint(entry: Entry, field: str, document: Path) -> str:
         ) from error
 
 
-def _read_source(entry: Entry, field: str, document: Path) -> tuple[str, str, str]:
+def _read_source(container: Mapping[str, object], field: str, label: str) -> tuple[str, str, str]:
     """One source-location field back as its (repository, path, locator) triple.
 
     Exactly the three members, no more and no fewer: a member this module did
     not write is a member it cannot reproduce on the next rewrite, and a
-    missing one is a location that cannot fetch.
+    missing one is a location that cannot fetch. ``container`` is whatever
+    object the field lives on — a node or edge entry, or one endpoint's
+    nested content-anchor object — and ``label`` is the already-assembled
+    context a caller wants every message about ``container`` to start with.
     """
-    value = entry[field]
+    value = container[field]
     if not isinstance(value, Mapping) or set(value) != set(_SOURCE_MEMBERS):
         raise AffirmationStoreError(
-            f"{document} holds {entry[_ID]}, whose {field} is not the source location of a "
-            "content hash: it must carry exactly repository, path and locator"
+            f"{label} {field} is not the source location of a content hash: it must carry "
+            "exactly repository, path and locator"
         )
     repository, path, locator = (str(value[member]) for member in _SOURCE_MEMBERS)
     return repository, path, locator
 
 
-def _read_digest(entry: Entry, field: str, document: Path) -> bytes:
+def _read_digest(container: Mapping[str, object], field: str, label: str) -> bytes:
     """One digest field back as raw bytes; uppercase is refused, not folded."""
     try:
-        return digest_from_hex(str(entry[field]))
+        return digest_from_hex(str(container[field]))
     except ValueError as error:
+        raise AffirmationStoreError(f"{label} {field} cannot be read back: {error}") from error
+
+
+def _read_named_anchors(
+    container: Mapping[str, object], excluded: frozenset[str], label: str
+) -> dict[str, ContentAnchor]:
+    """Every ``seg:{name}``/``seg:{name}Source`` pair in ``container`` as named anchors.
+
+    The pairing rule stated once, used everywhere a serialized set of named
+    content hashes is read back: a node entry's own fields, and one
+    endpoint's nested content-anchor object on a review event
+    (SEG-SREQ-127). ``excluded`` names fields that are not part of this set
+    at all — a node entry's identity and its producer-recorded fields;
+    empty for a review event's endpoint object, which carries nothing else.
+    """
+    digests: dict[str, bytes] = {}
+    sources: dict[str, tuple[str, str, str]] = {}
+    for name in container:
+        if name in excluded:
+            continue
+        if not name.startswith(_PREFIX):
+            raise AffirmationStoreError(f"{label} field {name!r} is not in the case's vocabulary")
+        local = name.removeprefix(_PREFIX)
+        if local.endswith(_SOURCE_SUFFIX):
+            sources[local.removesuffix(_SOURCE_SUFFIX)] = _read_source(container, name, label)
+        else:
+            digests[local] = _read_digest(container, name, label)
+    unpaired = sorted(set(digests) ^ set(sources))
+    if unpaired:
         raise AffirmationStoreError(
-            f"{document} holds {entry[_ID]}, whose {field} cannot be read back: {error}"
-        ) from error
+            f"{label} content hashes and source locations do not pair up: "
+            f"{', '.join(repr(name) for name in unpaired)}"
+        )
+    return {
+        name: ContentAnchor(
+            digest=digest,
+            repository=sources[name][0],
+            path=sources[name][1],
+            locator=sources[name][2],
+        )
+        for name, digest in digests.items()
+    }
+
+
+def _read_content_anchor_object(
+    entry: Entry, field: str, document: Path
+) -> Mapping[str, ContentAnchor]:
+    """One endpoint's nested content-anchor object back as named anchors.
+
+    Reads back what SEG-SREQ-127 asks the affirmation recorder to record;
+    this function discharges nothing of that requirement itself, since
+    reading a record is not recording one. ``field`` is
+    ``seg:fromContentAnchors`` or ``seg:toContentAnchors``; the
+    pairing within it is the same rule :func:`_read_named_anchors` already
+    applies to a node entry's own flat fields, applied here to the nested
+    object instead of excluding nothing from it.
+    """
+    value = entry[field]
+    if not isinstance(value, Mapping):
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose {field} is not the named content hashes "
+            "an endpoint carried at judgement"
+        )
+    return _read_named_anchors(value, frozenset(), f"{document} holds {entry[_ID]}, whose {field}")
 
 
 def _reconstructed[RecordT](build: Callable[[], RecordT], entry: Entry, document: Path) -> RecordT:

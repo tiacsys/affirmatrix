@@ -641,3 +641,112 @@ def test_store_backed_round_trip_derives_drift_and_leaves_the_case_unchanged(
         path: path.read_bytes() for path in sorted((tmp_path / "case").rglob("*")) if path.is_file()
     }
     assert case_after == case_before
+
+
+# --- the per-hash comparison against the affirming event (SEG-SREQ-128) -----
+
+
+def affirming_event(
+    from_node: records.NodeRecord,
+    to_node: records.NodeRecord,
+    *,
+    kind: str = "Implements",
+    from_source_revision: str = "a" * 40,
+    to_source_revision: str = "b" * 40,
+) -> records.ReviewEvent:
+    """The event a real affirmation of ``from_node -> to_node`` would compose —
+    built directly, the way :func:`affirmatrix.affirmation.compose` builds it,
+    so a test can affirm against one seed and then compare against another."""
+    return records.ReviewEvent(
+        from_id=from_node.local_id,
+        to_id=to_node.local_id,
+        kind=kind,
+        from_node_hash=node_hash_of(from_node),
+        to_node_hash=node_hash_of(to_node),
+        from_source_revision=from_source_revision,
+        to_source_revision=to_source_revision,
+        from_content_anchors=from_node.content_anchors,
+        to_content_anchors=to_node.content_anchors,
+        role="SoftwareEngineer",
+        reason="reviewed",
+    )
+
+
+def reference(from_node: records.NodeRecord, to_node: records.NodeRecord) -> EdgeReference:
+    return EdgeReference(kind="Implements", from_id=from_node.local_id, to_id=to_node.local_id)
+
+
+def test_an_unmoved_hash_compares_as_matching() -> None:
+    impl = implementation("pkg.fn", "v1")
+    sreq = requirement("SEG-SREQ-1", "v1")
+    event = affirming_event(impl, sreq)
+    comparison = drift.compare(
+        reference(impl, sreq), current_from=impl, current_to=sreq, event=event
+    )
+    assert {row.status for row in comparison.from_hashes} == {drift.HashStatus.MATCHING}
+    assert {row.status for row in comparison.to_hashes} == {drift.HashStatus.MATCHING}
+
+
+def test_a_moved_hash_compares_as_differing() -> None:
+    impl_then = implementation("pkg.fn", "v1")
+    impl_now = implementation("pkg.fn", "v2")
+    sreq = requirement("SEG-SREQ-1", "v1")
+    event = affirming_event(impl_then, sreq)
+    comparison = drift.compare(
+        reference(impl_then, sreq), current_from=impl_now, current_to=sreq, event=event
+    )
+    by_name = {row.name: row for row in comparison.from_hashes}
+    assert {row.status for row in by_name.values()} == {drift.HashStatus.DIFFERING}
+    assert by_name["apiHash"].recorded == impl_then.content_anchors["apiHash"]
+    assert by_name["apiHash"].current == impl_now.content_anchors["apiHash"]
+    assert by_name["apiHash"].source_revision == event.from_source_revision
+
+
+def test_a_name_the_event_never_carried_compares_as_current_only() -> None:
+    """A hash gained since the affirming judgement — not an error, a fact."""
+    impl_then = records.NodeRecord("pkg.fn", "Implementation", anchors(("apiHash",), "v1"))
+    impl_now = implementation("pkg.fn", "v1")  # apiHash + bodyHash
+    sreq = requirement("SEG-SREQ-1", "v1")
+    event = affirming_event(impl_then, sreq)
+    comparison = drift.compare(
+        reference(impl_then, sreq), current_from=impl_now, current_to=sreq, event=event
+    )
+    by_name = {row.name: row for row in comparison.from_hashes}
+    assert by_name["bodyHash"].status is drift.HashStatus.CURRENT_ONLY
+    assert by_name["bodyHash"].recorded is None
+    assert by_name["bodyHash"].current == impl_now.content_anchors["bodyHash"]
+    assert by_name["apiHash"].status is drift.HashStatus.MATCHING
+
+
+def test_a_name_only_the_event_carried_compares_as_recorded_only() -> None:
+    """A hash dropped since the affirming judgement, the mirror image."""
+    impl_then = implementation("pkg.fn", "v1")  # apiHash + bodyHash
+    impl_now = records.NodeRecord("pkg.fn", "Implementation", anchors(("apiHash",), "v1"))
+    sreq = requirement("SEG-SREQ-1", "v1")
+    event = affirming_event(impl_then, sreq)
+    comparison = drift.compare(
+        reference(impl_then, sreq), current_from=impl_now, current_to=sreq, event=event
+    )
+    by_name = {row.name: row for row in comparison.from_hashes}
+    assert by_name["bodyHash"].status is drift.HashStatus.RECORDED_ONLY
+    assert by_name["bodyHash"].current is None
+    assert by_name["bodyHash"].recorded == impl_then.content_anchors["bodyHash"]
+
+
+def test_both_endpoints_moving_is_reported_independently() -> None:
+    impl_then, sreq_then = implementation("pkg.fn", "v1"), requirement("SEG-SREQ-1", "v1")
+    impl_now, sreq_now = implementation("pkg.fn", "v2"), requirement("SEG-SREQ-1", "v2")
+    event = affirming_event(impl_then, sreq_then)
+    comparison = drift.compare(
+        reference(impl_then, sreq_then), current_from=impl_now, current_to=sreq_now, event=event
+    )
+    assert {row.status for row in comparison.from_hashes} == {drift.HashStatus.DIFFERING}
+    assert {row.status for row in comparison.to_hashes} == {drift.HashStatus.DIFFERING}
+
+
+def test_comparing_against_the_wrong_events_edge_is_refused() -> None:
+    impl, sreq = implementation("pkg.fn", "v1"), requirement("SEG-SREQ-1", "v1")
+    other = requirement("SEG-SREQ-2", "v1")
+    event = affirming_event(impl, other)
+    with pytest.raises(drift.DriftError, match="SEG-SREQ-2"):
+        drift.compare(reference(impl, sreq), current_from=impl, current_to=sreq, event=event)
