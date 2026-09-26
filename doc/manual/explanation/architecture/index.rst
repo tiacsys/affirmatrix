@@ -23,4 +23,5 @@ currently in scope to build.
    package-gate
    proof-scope
    proof-package
+   command-line-interface
    iteration-0-backlog

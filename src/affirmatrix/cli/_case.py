@@ -1,0 +1,163 @@
+"""The case noun: bring a case into being, inspect it, sync it, and trim it (SEG-SREQ-069).
+
+Four verbs, one write root: ``init`` creates the layout and schema set
+without altering an existing one; ``check`` reports five judgements about
+what is there; ``sync`` writes the derived stream a producer and the case
+together imply; ``remove`` trims exactly what its selector names.
+"""
+
+from __future__ import annotations
+
+import argparse
+
+from affirmatrix import drift, graph
+from affirmatrix.case import AffirmationStore, AffirmationStoreError
+from affirmatrix.cli import _judgement, _outcome, _selector
+from affirmatrix.config import Config
+from affirmatrix.sources.store import StoreError
+
+
+def add_check_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--current", help="the producer supplying the current stream")
+
+
+def add_sync_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--current", help="the producer supplying the current stream")
+
+
+def add_remove_arguments(parser: argparse.ArgumentParser) -> None:
+    _selector.add_selector_arguments(parser)
+
+
+def handle_init(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Create a case's layout and schema set, unaltered if already there.
+
+    :implements: SEG-SREQ-070
+    """
+    store.initialize()
+    print(f"case initialized at {store.root}")
+    return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Report the case's five judgements.
+
+    :implements: SEG-SREQ-071
+
+    Layout and schema set are read whether or not the case is otherwise
+    readable; record counts default to zero for a case that is not yet
+    self-describing rather than propagating that refusal, since a fresh
+    root reporting zero of everything is itself the honest report.
+    """
+    layout = sorted(store.layout())
+    missing_schemas = sorted(store.missing_schemas())
+    counts = _record_counts(store)
+    config_found = (args.config_path is not None and args.config_path.is_file())
+    producer_readable = _producer_readable(args, config)
+    report = {
+        "layout": layout,
+        "missingSchemas": missing_schemas,
+        "recordCounts": counts,
+        "configurationFound": config_found,
+        "producerReadable": producer_readable,
+    }
+    if args.json:
+        _outcome.render_json(report)
+    else:
+        print(f"layout: {', '.join(layout) or '(none)'}")
+        print(f"missing schemas: {', '.join(missing_schemas) or '(none)'}")
+        print(f"record counts: {counts}")
+        print(f"configuration found: {config_found}")
+        print(f"producer readable: {producer_readable}")
+    healthy = not missing_schemas and producer_readable
+    return _outcome.exit_for(_outcome.POSITIVE if healthy else _outcome.NEGATIVE)
+
+
+def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Write the derived stream case sync produces, from both record sources.
+
+    :implements: SEG-SREQ-072
+    :implements: SEG-SREQ-073
+    :implements: SEG-SREQ-074
+    """
+    try:
+        current = _judgement.resolve_current(args.current, config)
+    except _judgement.JudgementError as error:
+        return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
+    try:
+        derivation = drift.derive(recorded=store, current=current)
+    except (graph.GraphError, drift.DriftError, StoreError) as error:
+        return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
+    store.write_nodes(derivation.nodes())
+    store.write_edges(derivation.edges(), demote=())
+    print(f"synced {store.root}")
+    for edge in derivation.vanished:
+        print(f"vanished: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+    return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def handle_remove(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Remove only the edge records the selector names.
+
+    :implements: SEG-SREQ-075
+    :implements: SEG-SREQ-103
+
+    The selector's grammar is edge-shaped (SEG-SREQ-099): this pass removes
+    matched edges only. Addressing a node record by the same grammar is
+    unspecified by the requirements — SEG-SREQ-075 names both node and edge
+    records, but no selector field addresses a node on its own — so it is
+    left out rather than inventing a form the requirements do not describe.
+    """
+    selector = _selector.selector_from_args(args)
+    try:
+        built = graph.build(store)
+    except graph.GraphError as error:
+        return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
+    matched = _selector.select(store.edges(), selector, built)
+    if not matched:
+        return _outcome.exit_for(
+            _report_refusal("the selector matched no edge", _outcome.INDETERMINATE)
+        )
+    for kind in {edge.kind for edge in matched}:
+        store.remove_edges(
+            kind, [(edge.from_id, edge.to_id) for edge in matched if edge.kind == kind]
+        )
+    for edge in matched:
+        print(f"removed: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+    return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def _record_counts(store: AffirmationStore) -> dict[str, int]:
+    try:
+        return {
+            "nodes": sum(1 for _ in store.nodes()),
+            "edges": sum(1 for _ in store.edges()),
+            "reviewEvents": sum(1 for _ in store.review_events()),
+        }
+    except AffirmationStoreError:
+        return {"nodes": 0, "edges": 0, "reviewEvents": 0}
+
+
+def _producer_readable(args: argparse.Namespace, config: Config) -> bool:
+    try:
+        current = _judgement.resolve_current(args.current, config)
+        list(current.nodes())
+    except (_judgement.JudgementError, StoreError):
+        return False
+    return True
+
+
+def _report_refusal(message: str, status: int) -> int:
+    _outcome.render_refusal(message, as_json=False)
+    return status
+
+
+__all__ = [
+    "add_check_arguments",
+    "add_remove_arguments",
+    "add_sync_arguments",
+    "handle_check",
+    "handle_init",
+    "handle_remove",
+    "handle_sync",
+]

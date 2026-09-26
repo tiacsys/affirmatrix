@@ -223,7 +223,7 @@ def assemble(
     documents = {
         DESIGN_CONSISTENCY_PROOF: _design_consistency_proof_document(scope, current_revision),
         EXECUTION_COVERAGE_RECORD: _execution_coverage_record_document(scope, report),
-        COVERAGE_REPORT: _coverage_report_document(report),
+        COVERAGE_REPORT: coverage_report_document(report),
         EVIDENCE_MANIFEST: _evidence_manifest_document(scope, current_revision),
     }
     return Package(scope=scope, coverage_report=report, documents=documents)
@@ -407,12 +407,14 @@ def _excusing_waiver(subgraph: Graph, outcome_id: str) -> NodeRecord:
     )
 
 
-def _coverage_report_document(report: gates.CoverageReport) -> Mapping[str, object]:
+def coverage_report_document(report: gates.CoverageReport) -> Mapping[str, object]:
     """The coverage report, serialized whole — single-authored, nothing added.
 
     Every field here is a direct reading of one of ``report``'s own seven
     typed findings or its two derived views; this function states none of
-    its own.
+    its own. Public, and the one serialization site: a package's own
+    ``coverage_report.jsonld`` document and the command line's machine
+    readable rendering of the gate's verdict are both exactly this.
     """
     return {
         "unreadyEdges": [
@@ -473,5 +475,6 @@ __all__ = [
     "Package",
     "assemble",
     "check_readiness",
+    "coverage_report_document",
     "persist",
 ]

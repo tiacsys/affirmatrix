@@ -64,6 +64,7 @@ from affirmatrix.proof._package import (
     Package,
     assemble,
     check_readiness,
+    coverage_report_document,
     persist,
 )
 from affirmatrix.proof._scope import Scope, ScopeError, collect_scope
@@ -80,5 +81,6 @@ __all__ = [
     "assemble",
     "check_readiness",
     "collect_scope",
+    "coverage_report_document",
     "persist",
 ]

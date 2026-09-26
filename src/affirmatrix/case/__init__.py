@@ -161,6 +161,38 @@ class AffirmationStore:
                 latest = event
         return latest
 
+    def layout(self) -> frozenset[str]:
+        """The directories this case's root already has, of the five it should.
+
+        Report-only: unlike :meth:`initialize` and every write face, this
+        never creates what is missing — a case's layout is exactly what
+        ``case check`` needs to see, seeded or not.
+        """
+        return frozenset(
+            name for name in _layout.DIRECTORIES if _layout.resolved_under(self.root, name).is_dir()
+        )
+
+    def missing_schemas(self) -> frozenset[str]:
+        """Every schema this case's own ``schema/`` directory is missing.
+
+        Named against the full declared set — every node, edge, review-event
+        and proof-document schema the package itself carries — never seeded
+        by asking; seeding is a write face's job, this one only looks.
+        """
+        declared = (
+            frozenset(_layout.NODE_SCHEMAS.values())
+            | frozenset(_layout.EDGE_SCHEMAS.values())
+            | {_layout.EVENT_SCHEMA}
+            | frozenset(_layout.PROOF_DOCUMENT_SCHEMAS.values())
+        )
+        directory = _layout.schema_directory(self.root)
+        present = (
+            frozenset(path.name for path in directory.glob("*.json"))
+            if directory.is_dir()
+            else frozenset()
+        )
+        return declared - present
+
     def _node_records(self, schemas: _validation.SchemaSet) -> Iterator[NodeRecord]:
         for kind in sorted(_layout.NODE_DOCUMENTS):
             document = _layout.node_document(self.root, kind)
