@@ -1,0 +1,2 @@
+The configuration loader shall read its configuration from a file given
+by its caller, or from ./affirmatrix.yaml when none is given.

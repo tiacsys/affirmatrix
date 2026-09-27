@@ -1,10 +1,8 @@
-# Test-specification nodes — hand-authored. The identity is the manual
-# SEG-TS-nnn, independent of test function name and file location, so moving or
-# renaming the test it stands for changes neither.
-#
-# These identifiers are fixture-local. They do not yet correspond to entries in
-# the test specification document, which does not exist; when it does, either
-# the two agree or this store has already been retired by record production.
+# Test-specification nodes — one per pytest function under the
+# verification suite carrying both a :verifies: and a :test-id: field
+# in its docstring. The identity is the manual SEG-TS-nnn the docstring
+# states, independent of the function's name and file location. Taken
+# verbatim from the tree at 678f72f.
 
 kind = "TestSpecification"
 
@@ -18,3 +16,4 @@ kind = "TestSpecification"
 "SEG-TS-007" = { specHash = "test-specification/SEG-TS-007.spec.txt", implHash = "test-specification/SEG-TS-007.impl.txt" }
 "SEG-TS-008" = { specHash = "test-specification/SEG-TS-008.spec.txt", implHash = "test-specification/SEG-TS-008.impl.txt" }
 "SEG-TS-009" = { specHash = "test-specification/SEG-TS-009.spec.txt", implHash = "test-specification/SEG-TS-009.impl.txt" }
+"SEG-TS-010" = { specHash = "test-specification/SEG-TS-010.spec.txt", implHash = "test-specification/SEG-TS-010.impl.txt" }

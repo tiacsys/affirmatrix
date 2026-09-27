@@ -1,0 +1,74 @@
+    selector = _selector.selector_from_args(args)
+    if selector.is_empty():
+        _outcome.render_refusal("edge affirm requires an explicit selector", as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    built, error_status = _build(args, config, store)
+    if built is None:
+        return error_status
+    matched = _selector.select(built.edges, selector, built)
+    if not matched:
+        _outcome.render_refusal("the selector matched no edge", as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    try:
+        _judgement.check_role(args.role, config)
+    except _judgement.JudgementError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+
+    not_affirmed: list[dict[str, str]] = [
+        {"edge": _label(edge), "reason": _state_reason(edge)}
+        for edge in matched
+        if not affirmation.affirmable(edge.state, edge.kind)
+    ]
+    affirmable_edges = [edge for edge in matched if affirmation.affirmable(edge.state, edge.kind)]
+
+    composed: list[affirmation.Affirmation] = []
+    for edge in affirmable_edges:
+        from_node = built.node(edge.from_id)
+        to_node = built.node(edge.to_id)
+        try:
+            from_revision = _judgement.resolve_revision(
+                from_node, config=config, given=args.revision, label=edge.from_id
+            )
+            to_revision = _judgement.resolve_revision(
+                to_node, config=config, given=args.revision, label=edge.to_id
+            )
+        except _judgement.JudgementError as error:
+            _outcome.render_refusal(str(error), as_json=args.json)
+            return _outcome.exit_for(_outcome.INDETERMINATE)
+        try:
+            affirmed = affirmation.compose(
+                edge,
+                from_node=from_node,
+                to_node=to_node,
+                role=args.role,
+                reason=args.reason,
+                from_source_revision=from_revision,
+                to_source_revision=to_revision,
+            )
+        except affirmation.AffirmationError as error:
+            not_affirmed.append({"edge": _label(edge), "reason": str(error)})
+            continue
+        composed.append(affirmed)
+
+    if composed:
+        endpoint_nodes = {}
+        for one in composed:
+            endpoint_nodes[one.event.from_id] = built.node(one.event.from_id)
+            endpoint_nodes[one.event.to_id] = built.node(one.event.to_id)
+        store.write_nodes(endpoint_nodes.values())
+        store.write_edges([one.edge for one in composed])
+        store.append_review_events([one.event for one in composed])
+
+    report = {
+        "affirmed": [_label(one.edge) for one in composed],
+        "notAffirmed": not_affirmed,
+    }
+    if args.json:
+        _outcome.render_json(report)
+    else:
+        for one in composed:
+            print(f"affirmed: {_label(one.edge)}")
+        for entry in not_affirmed:
+            print(f"not affirmed: {entry['edge']} ({entry['reason']})")
+    return _outcome.exit_for(_outcome.POSITIVE if composed else _outcome.NEGATIVE)

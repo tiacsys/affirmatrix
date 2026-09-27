@@ -1,0 +1,19 @@
+def collect_scope(
+    graph: Graph, requested_ids: Iterable[str], *, snapshot_timestamp: datetime
+) -> Scope:
+    """Expand a set of requested requirements into the scope that judges them faithfully.
+
+    :implements: SEG-SREQ-036
+    :implements: SEG-SREQ-039
+    :implements: SEG-SREQ-052
+
+    Pure over ``graph``: no store write, no package file, no mutation of the
+    graph or anything reachable from it — this function only reads.
+    ``snapshot_timestamp`` must be timezone-aware; a naive value is refused
+    rather than read against an assumed timezone, the same purity the
+    ``evaluation_date`` precedent already keeps for the package gate.
+
+    A requested identifier absent from ``graph``, or present as something
+    other than a Requirement, is refused loudly with :class:`ScopeError`
+    rather than silently dropped — see the class for why.
+    """

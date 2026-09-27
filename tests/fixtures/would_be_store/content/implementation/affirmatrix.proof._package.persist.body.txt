@@ -1,0 +1,8 @@
+    return MappingProxyType(
+        {
+            name: store.write_proof_document(
+                package.scope.snapshot_id, name, package.documents[name]
+            )
+            for name in _DOCUMENT_NAMES
+        }
+    )

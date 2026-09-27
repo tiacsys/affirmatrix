@@ -1,0 +1,2 @@
+The command-line interface shall have proof check report the coverage
+the gate finds for a requested scope, without generating a package.

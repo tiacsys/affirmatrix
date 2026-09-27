@@ -1,2 +1,11 @@
-Each node kind declares the names of the content hashes it carries, and a node
-carrying names its kind does not declare is refused by the builder.
+    """A record of an undeclared kind is refused.
+
+    Building a graph from a node record declaring a kind the taxonomy
+    provider does not declare is refused, and building a graph from an
+    edge record declaring such a kind is refused likewise — an
+    undeclared kind stops the build whether it appears on a node or an
+    edge.
+
+    :verifies: SEG-SREQ-031
+    :test-id: SEG-TS-009
+    """

@@ -1,4 +1,4 @@
-    sorted_nodes = sorted(node_hashes)
+    sorted_nodes = sorted(checked_digest(digest, "node hash") for digest in node_hashes)
     sorted_edges = sorted(edge_tuple(*edge) for edge in edges)
     return digest_of(
         length_prefixed(utf8(ROOT_TAG))

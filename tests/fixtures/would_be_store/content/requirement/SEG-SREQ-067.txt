@@ -1,0 +1,3 @@
+The gate evaluator shall report an outcome whose recorded revision
+differs from the current revision it is given as an informational
+finding in its report.

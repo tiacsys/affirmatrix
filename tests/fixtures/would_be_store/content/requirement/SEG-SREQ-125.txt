@@ -1,0 +1,2 @@
+The configuration loader shall prefer a value given by its caller over
+the corresponding value in its file.

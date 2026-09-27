@@ -1,2 +1,2 @@
 The proof generator shall exclude from an evidence package every outcome
-that was not produced against the current implementation content.
+the gate evaluator reports as stale.

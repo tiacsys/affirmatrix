@@ -1,0 +1,1 @@
+    return _PROPAGATING_EDGE_KINDS

@@ -1,0 +1,21 @@
+    snapshot = _Snapshot(taken_nodes=tuple(current.nodes()), taken_edges=tuple(current.edges()))
+    built = graph.build(snapshot)
+    resolution = _Resolution(
+        built=built,
+        affirmations=_by_reference(recorded.edges()),
+        node_hashes={
+            local_id: commitment.node_hash(
+                built.node(local_id).kind, built.node(local_id).content_hashes
+            )
+            for local_id in built.node_ids()
+        },
+        node_ids=built.node_ids(),
+    )
+    derived = tuple(_derived_edge(edge, resolution) for edge in built.edges)
+    present = {_reference(edge) for edge in built.edges}
+    vanished = tuple(
+        record
+        for reference, record in resolution.affirmations.items()
+        if reference not in present
+    )
+    return Derivation(_nodes=snapshot.taken_nodes, _edges=derived, vanished=vanished)

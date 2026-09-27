@@ -1,0 +1,5 @@
+    def nodes(self) -> Iterator[NodeRecord]:
+        """The node records the case holds, kind by kind, as they were written.
+
+        :implements: SEG-SREQ-020
+        """

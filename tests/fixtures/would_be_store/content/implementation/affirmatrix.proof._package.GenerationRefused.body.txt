@@ -1,0 +1,9 @@
+
+    def __init__(self, scope: Scope, coverage_report: gates.CoverageReport) -> None:
+        blocking = sum(1 for d in coverage_report.diagnostics if d.severity.blocks_package)
+        super().__init__(
+            f"scope {sorted(scope.requested_ids)!r} (snapshot {scope.snapshot_id!r}) is "
+            f"blocked: {blocking} blocking finding(s)"
+        )
+        self.scope = scope
+        self.coverage_report = coverage_report

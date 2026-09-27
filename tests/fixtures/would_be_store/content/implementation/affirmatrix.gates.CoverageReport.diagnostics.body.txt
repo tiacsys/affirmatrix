@@ -1,0 +1,62 @@
+        return (
+            tuple(
+                Diagnostic(
+                    severity=Severity.WARNING,
+                    condition=Condition.UNREADY_EDGE,
+                    subject=_edge_subject(edge),
+                    detail=edge.state.value,
+                )
+                for edge in self.unready_edges
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.WARNING,
+                    condition=Condition.COVERAGE_GAP,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.coverage_gaps)
+            )
+            + (
+                (
+                    Diagnostic(
+                        severity=Severity.WARNING,
+                        condition=Condition.EMPTY_DESIGN_SET,
+                        subject="the scope",
+                    ),
+                )
+                if self.design_set_empty
+                else ()
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.WARNING,
+                    condition=Condition.UNWAIVED_NON_PASSING_OUTCOME,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.unwaived_outcomes)
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.INFO,
+                    condition=Condition.DISCARDED_OUTCOME,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.discarded_outcomes)
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.INFO,
+                    condition=Condition.EXCUSED_NON_PASSING_OUTCOME,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.excused_outcomes)
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.INFO,
+                    condition=Condition.STALE_OUTCOME,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.stale_outcomes)
+            )
+        )

@@ -1,0 +1,2 @@
+The command-line interface shall accept an edge selector's kind, source,
+and target as separate values, never as one combined token.

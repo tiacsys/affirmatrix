@@ -1,0 +1,5 @@
+def _read_file(path: Path) -> Mapping[str, object]:
+    """The file's own mapping, or empty if it does not exist or is empty.
+
+    :implements: SEG-SREQ-119
+    """

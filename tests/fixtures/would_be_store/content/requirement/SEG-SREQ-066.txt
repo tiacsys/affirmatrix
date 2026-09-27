@@ -1,0 +1,3 @@
+The proof generator shall include in a package's scope every test
+outcome confirming an in-scope test specification and every waiver
+excusing an in-scope test outcome.

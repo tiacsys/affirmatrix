@@ -1,0 +1,3 @@
+The command-line interface shall have case init create a case's layout
+and schema set, succeeding without altering either when the case root
+it is given already carries them.

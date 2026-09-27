@@ -1,0 +1,6 @@
+def handle_show(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Render the per-hash comparison and recovered before-content.
+
+    :implements: SEG-SREQ-085
+    :implements: SEG-SREQ-103
+    """

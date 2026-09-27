@@ -1,6 +1,8 @@
+    if not content_hashes:
+        raise ValueError(f"node type {node_type!r} needs at least one content hash")
     fields = [
-        length_prefixed(utf8(name)) + length_prefixed(digest)
-        for name, digest in sorted(content_hashes.items())
+        length_prefixed(utf8(name)) + length_prefixed(checked_digest(digest, name))
+        for name, digest in sorted(content_hashes.items(), key=lambda pair: utf8(pair[0]))
     ]
     return digest_of(
         length_prefixed(utf8(NODE_TAG))

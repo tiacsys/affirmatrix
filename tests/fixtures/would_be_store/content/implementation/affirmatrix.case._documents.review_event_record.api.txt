@@ -1,0 +1,10 @@
+def review_event_record(entry: Entry, document: Path) -> ReviewEvent:
+    """One persisted entry back as the review event it serializes.
+
+    :implements: SEG-SREQ-020
+
+    The event's position is not read back into the record: identity-by-position
+    is the events document's rule, and the record type deliberately has no
+    field for it. The edge kind is recovered from ``seg:relation`` by the
+    prefix-only mapping of ADR-0007 — one rule, no translation table.
+    """

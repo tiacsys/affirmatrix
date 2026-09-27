@@ -1,0 +1,10 @@
+    repository_name = endpoint_repository_name(node)
+    if repository_name is None:
+        return None
+    repository_path = config.repository(repository_name)
+    if repository_path is None:
+        return None
+    paths = {anchor.path for anchor in node.content_anchors.values()}
+    if len(paths) != 1:
+        return None
+    return _repository.read_before_content(repository_path, revision, Path(next(iter(paths))))

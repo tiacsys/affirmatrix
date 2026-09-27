@@ -1,0 +1,22 @@
+    layout = sorted(store.layout())
+    missing_schemas = sorted(store.missing_schemas())
+    counts = _record_counts(store)
+    config_found = (args.config_path is not None and args.config_path.is_file())
+    producer_readable = _producer_readable(args, config)
+    report = {
+        "layout": layout,
+        "missingSchemas": missing_schemas,
+        "recordCounts": counts,
+        "configurationFound": config_found,
+        "producerReadable": producer_readable,
+    }
+    if args.json:
+        _outcome.render_json(report)
+    else:
+        print(f"layout: {', '.join(layout) or '(none)'}")
+        print(f"missing schemas: {', '.join(missing_schemas) or '(none)'}")
+        print(f"record counts: {counts}")
+        print(f"configuration found: {config_found}")
+        print(f"producer readable: {producer_readable}")
+    healthy = not missing_schemas and producer_readable
+    return _outcome.exit_for(_outcome.POSITIVE if healthy else _outcome.NEGATIVE)

@@ -1,0 +1,3 @@
+When an edge is rendered for a reviewer's judgement or for inspection,
+the command-line interface shall recover, for display only, the content
+an anchor names as it stood at a review event's recorded revision.

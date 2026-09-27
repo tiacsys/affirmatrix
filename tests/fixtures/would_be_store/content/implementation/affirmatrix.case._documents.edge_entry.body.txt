@@ -1,0 +1,10 @@
+    entry: Entry = {
+        _ID: identity.edge_iri(record.kind, record.from_id, record.to_id),
+        "type": f"seg:{record.kind}",
+        "seg:from": identity.node_iri(record.from_id),
+        "seg:to": identity.node_iri(record.to_id),
+        "seg:linkState": record.state.value,
+    }
+    if record.edge_hash is not None:
+        entry["seg:edgeHash"] = hex_digest(record.edge_hash)
+    return entry

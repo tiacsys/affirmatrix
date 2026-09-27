@@ -1,0 +1,5 @@
+def propagating_edge_kinds() -> frozenset[str]:
+    """The edge kinds that carry suspicion from one endpoint to the other.
+
+    :implements: SEG-SREQ-030
+    """

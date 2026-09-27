@@ -1,0 +1,2 @@
+The record source shall supply, in every waiver record, the name of the
+approver who granted it.

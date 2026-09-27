@@ -1,9 +1,16 @@
-def test_the_built_in_kind_set_is_closed() -> None:
-    """
-    :verifies: SEG-SREQ-029
-    :test-id: SEG-TS-007
-    """
-    assert node_kinds() == frozenset(
-        {"Requirement", "Implementation", "TestSpecification", "TestOutcome", "Waiver"}
+    with pytest.raises(graph.GraphError, match="cycle"):
+        graph.build(Source([requirement("a")], [refines("a", "a")]))
+    with pytest.raises(graph.GraphError, match="cycle"):
+        graph.build(
+            Source(
+                [requirement("a"), requirement("b"), requirement("c")],
+                [refines("a", "b"), refines("b", "c"), refines("c", "a")],
+            )
+        )
+    diamond = graph.build(
+        Source(
+            [requirement("a"), requirement("b"), requirement("c"), requirement("d")],
+            [refines("a", "b"), refines("a", "c"), refines("b", "d"), refines("c", "d")],
+        )
     )
-    assert len(edge_kinds()) == 7
+    assert set(diamond.node_ids()) == {"a", "b", "c", "d"}

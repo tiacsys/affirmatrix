@@ -1,0 +1,24 @@
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    if args.version:
+        print(f"affirmatrix {_version()}")
+        return _outcome.exit_for(_outcome.POSITIVE)
+    handler = getattr(args, "handler", None)
+    if handler is None:
+        parser.print_help()
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    given_config = getattr(args, "config", None)
+    given_case = getattr(args, "case", None)
+    config_path = Path(given_config) if given_config else _config.DEFAULT_CONFIG_PATH
+    args.config_path = config_path
+    try:
+        resolved_config = _config.load(config_path, case=Path(given_case) if given_case else None)
+    except _config.ConfigError as error:
+        _outcome.render_refusal(str(error), as_json=getattr(args, "json", False))
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    store = AffirmationStore(root=resolved_config.case)
+    try:
+        return handler(args, resolved_config, store)
+    except _judgement.JudgementError as error:
+        _outcome.render_refusal(str(error), as_json=getattr(args, "json", False))
+        return _outcome.exit_for(_outcome.INDETERMINATE)

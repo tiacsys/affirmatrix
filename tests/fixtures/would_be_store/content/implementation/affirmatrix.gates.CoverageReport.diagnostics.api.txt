@@ -1,0 +1,18 @@
+    def diagnostics(self) -> tuple[Diagnostic, ...]:
+        """Every typed finding, as one flat sequence of diagnostics.
+
+        Gate conditions — an unready edge, a coverage gap, an empty design
+        set, an unwaived non-passing outcome — are all
+        :attr:`~affirmatrix.diagnostics.Severity.WARNING`. A discarded
+        outcome, a stale outcome, and a validly excused non-passing outcome
+        are all :attr:`~affirmatrix.diagnostics.Severity.INFO`. Every
+        diagnostic's condition is one member of :class:`Condition`
+        (SEG-SREQ-064); whatever varies by occurrence travels on ``detail``
+        instead (SEG-SREQ-065).
+
+        :implements: SEG-SREQ-060
+        :implements: SEG-SREQ-061
+        :implements: SEG-SREQ-064
+        :implements: SEG-SREQ-065
+        :implements: SEG-SREQ-067
+        """

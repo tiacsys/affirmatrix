@@ -1,0 +1,2 @@
+The gate evaluator shall report the condition of every diagnostic as one
+member of a fixed set of named conditions.

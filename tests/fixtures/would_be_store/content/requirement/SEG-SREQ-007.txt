@@ -1,3 +1,4 @@
 The satisfaction evaluator shall report a non-leaf requirement as satisfied
 when, and only when, every requirement refining it is satisfied and every
-verifies or implements edge it carries is active.
+verifies or implements edge it carries is active, regardless of whether the
+outcomes of the specifications those edges name have passed.

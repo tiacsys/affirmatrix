@@ -1,0 +1,5 @@
+The command-line interface shall supply every value a judgement depends
+on — an affirmation's role, reason, and source revisions, and the
+package gate's implementation revision — either as an explicit input, as
+a value it discovers under one checked rule, or as a refusal when
+neither is available.

@@ -1,0 +1,2 @@
+The gate evaluator shall keep every diagnostic's condition free of detail
+that varies by occurrence, such as which state an edge is in.

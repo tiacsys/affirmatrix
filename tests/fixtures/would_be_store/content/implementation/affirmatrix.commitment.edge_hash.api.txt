@@ -8,4 +8,8 @@ def edge_hash(
     """Compute a strong edge's hash from its endpoints, type, and node hashes.
 
     :implements: SEG-SREQ-002
+
+    Two-sided by construction: either endpoint moving changes the hash, which
+    is what lets recomputation detect that an affirmation no longer covers the
+    content it was made against.
     """

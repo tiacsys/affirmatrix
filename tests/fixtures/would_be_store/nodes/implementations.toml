@@ -1,19 +1,89 @@
-# Implementation nodes — hand-authored. Nothing extracts these yet, so both
-# their identities and their content are authored here rather than located in
-# source. See ../README.md for what that means for reading them.
-#
-# The identity is the dotted path of the function the entry stands for. That is
-# a fixture convention, not a ruling: implementation identity is undecided and
-# blocks the record-production slice, not this one.
+# Implementation nodes — one per definition carrying an :implements:
+# marker in its docstring, found by walking the source tree. The
+# identity is the dotted path of the function, method, or class the
+# entry stands for, class-qualified for a method. Taken verbatim from
+# the tree at 678f72f. See ../README.md for what that means for reading
+# them, and for the exact span each of apiHash and bodyHash covers.
 
 kind = "Implementation"
 
 [nodes]
-"affirmatrix.commitment.node_hash" = { apiHash = "implementation/affirmatrix.commitment.node_hash.api.txt", bodyHash = "implementation/affirmatrix.commitment.node_hash.body.txt" }
-"affirmatrix.commitment.edge_hash" = { apiHash = "implementation/affirmatrix.commitment.edge_hash.api.txt", bodyHash = "implementation/affirmatrix.commitment.edge_hash.body.txt" }
+"affirmatrix.affirmation.affirmable" = { apiHash = "implementation/affirmatrix.affirmation.affirmable.api.txt", bodyHash = "implementation/affirmatrix.affirmation.affirmable.body.txt" }
+"affirmatrix.affirmation.compose" = { apiHash = "implementation/affirmatrix.affirmation.compose.api.txt", bodyHash = "implementation/affirmatrix.affirmation.compose.body.txt" }
+"affirmatrix.case.AffirmationStore.append_review_events" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.append_review_events.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.append_review_events.body.txt" }
+"affirmatrix.case.AffirmationStore.edges" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.edges.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.edges.body.txt" }
+"affirmatrix.case.AffirmationStore.nodes" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.nodes.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.nodes.body.txt" }
+"affirmatrix.case.AffirmationStore.read_package" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.read_package.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.read_package.body.txt" }
+"affirmatrix.case.AffirmationStore.read_proof_document" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.read_proof_document.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.read_proof_document.body.txt" }
+"affirmatrix.case.AffirmationStore.remove_edges" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.remove_edges.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.remove_edges.body.txt" }
+"affirmatrix.case.AffirmationStore.remove_nodes" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.remove_nodes.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.remove_nodes.body.txt" }
+"affirmatrix.case.AffirmationStore.review_events" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.review_events.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.review_events.body.txt" }
+"affirmatrix.case.AffirmationStore.write_edges" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.write_edges.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.write_edges.body.txt" }
+"affirmatrix.case.AffirmationStore.write_proof_document" = { apiHash = "implementation/affirmatrix.case.AffirmationStore.write_proof_document.api.txt", bodyHash = "implementation/affirmatrix.case.AffirmationStore.write_proof_document.body.txt" }
+"affirmatrix.case._atomic.replace_file" = { apiHash = "implementation/affirmatrix.case._atomic.replace_file.api.txt", bodyHash = "implementation/affirmatrix.case._atomic.replace_file.body.txt" }
+"affirmatrix.case._documents.edge_entry" = { apiHash = "implementation/affirmatrix.case._documents.edge_entry.api.txt", bodyHash = "implementation/affirmatrix.case._documents.edge_entry.body.txt" }
+"affirmatrix.case._documents.edge_record" = { apiHash = "implementation/affirmatrix.case._documents.edge_record.api.txt", bodyHash = "implementation/affirmatrix.case._documents.edge_record.body.txt" }
+"affirmatrix.case._documents.event_entry" = { apiHash = "implementation/affirmatrix.case._documents.event_entry.api.txt", bodyHash = "implementation/affirmatrix.case._documents.event_entry.body.txt" }
+"affirmatrix.case._documents.merged" = { apiHash = "implementation/affirmatrix.case._documents.merged.api.txt", bodyHash = "implementation/affirmatrix.case._documents.merged.body.txt" }
+"affirmatrix.case._documents.node_entry" = { apiHash = "implementation/affirmatrix.case._documents.node_entry.api.txt", bodyHash = "implementation/affirmatrix.case._documents.node_entry.body.txt" }
+"affirmatrix.case._documents.node_record" = { apiHash = "implementation/affirmatrix.case._documents.node_record.api.txt", bodyHash = "implementation/affirmatrix.case._documents.node_record.body.txt" }
+"affirmatrix.case._documents.read_document" = { apiHash = "implementation/affirmatrix.case._documents.read_document.api.txt", bodyHash = "implementation/affirmatrix.case._documents.read_document.body.txt" }
+"affirmatrix.case._documents.review_event_record" = { apiHash = "implementation/affirmatrix.case._documents.review_event_record.api.txt", bodyHash = "implementation/affirmatrix.case._documents.review_event_record.body.txt" }
+"affirmatrix.case._layout.resolved_under" = { apiHash = "implementation/affirmatrix.case._layout.resolved_under.api.txt", bodyHash = "implementation/affirmatrix.case._layout.resolved_under.body.txt" }
+"affirmatrix.case._validation.validate_entry" = { apiHash = "implementation/affirmatrix.case._validation.validate_entry.api.txt", bodyHash = "implementation/affirmatrix.case._validation.validate_entry.body.txt" }
+"affirmatrix.cli._case.handle_check" = { apiHash = "implementation/affirmatrix.cli._case.handle_check.api.txt", bodyHash = "implementation/affirmatrix.cli._case.handle_check.body.txt" }
+"affirmatrix.cli._case.handle_init" = { apiHash = "implementation/affirmatrix.cli._case.handle_init.api.txt", bodyHash = "implementation/affirmatrix.cli._case.handle_init.body.txt" }
+"affirmatrix.cli._case.handle_remove" = { apiHash = "implementation/affirmatrix.cli._case.handle_remove.api.txt", bodyHash = "implementation/affirmatrix.cli._case.handle_remove.body.txt" }
+"affirmatrix.cli._case.handle_sync" = { apiHash = "implementation/affirmatrix.cli._case.handle_sync.api.txt", bodyHash = "implementation/affirmatrix.cli._case.handle_sync.body.txt" }
+"affirmatrix.cli._edge._before_content_entry" = { apiHash = "implementation/affirmatrix.cli._edge._before_content_entry.api.txt", bodyHash = "implementation/affirmatrix.cli._edge._before_content_entry.body.txt" }
+"affirmatrix.cli._edge.add_affirm_arguments" = { apiHash = "implementation/affirmatrix.cli._edge.add_affirm_arguments.api.txt", bodyHash = "implementation/affirmatrix.cli._edge.add_affirm_arguments.body.txt" }
+"affirmatrix.cli._edge.handle_affirm" = { apiHash = "implementation/affirmatrix.cli._edge.handle_affirm.api.txt", bodyHash = "implementation/affirmatrix.cli._edge.handle_affirm.body.txt" }
+"affirmatrix.cli._edge.handle_show" = { apiHash = "implementation/affirmatrix.cli._edge.handle_show.api.txt", bodyHash = "implementation/affirmatrix.cli._edge.handle_show.body.txt" }
+"affirmatrix.cli._graph.handle_check" = { apiHash = "implementation/affirmatrix.cli._graph.handle_check.api.txt", bodyHash = "implementation/affirmatrix.cli._graph.handle_check.body.txt" }
+"affirmatrix.cli._graph.handle_status" = { apiHash = "implementation/affirmatrix.cli._graph.handle_status.api.txt", bodyHash = "implementation/affirmatrix.cli._graph.handle_status.body.txt" }
+"affirmatrix.cli._judgement.check_role" = { apiHash = "implementation/affirmatrix.cli._judgement.check_role.api.txt", bodyHash = "implementation/affirmatrix.cli._judgement.check_role.body.txt" }
+"affirmatrix.cli._judgement.recover_before_content" = { apiHash = "implementation/affirmatrix.cli._judgement.recover_before_content.api.txt", bodyHash = "implementation/affirmatrix.cli._judgement.recover_before_content.body.txt" }
+"affirmatrix.cli._judgement.resolve_gate_revision" = { apiHash = "implementation/affirmatrix.cli._judgement.resolve_gate_revision.api.txt", bodyHash = "implementation/affirmatrix.cli._judgement.resolve_gate_revision.body.txt" }
+"affirmatrix.cli._judgement.resolve_revision" = { apiHash = "implementation/affirmatrix.cli._judgement.resolve_revision.api.txt", bodyHash = "implementation/affirmatrix.cli._judgement.resolve_revision.body.txt" }
+"affirmatrix.cli._outcome.exit_for" = { apiHash = "implementation/affirmatrix.cli._outcome.exit_for.api.txt", bodyHash = "implementation/affirmatrix.cli._outcome.exit_for.body.txt" }
+"affirmatrix.cli._outcome.render_json" = { apiHash = "implementation/affirmatrix.cli._outcome.render_json.api.txt", bodyHash = "implementation/affirmatrix.cli._outcome.render_json.body.txt" }
+"affirmatrix.cli._outcome.render_refusal" = { apiHash = "implementation/affirmatrix.cli._outcome.render_refusal.api.txt", bodyHash = "implementation/affirmatrix.cli._outcome.render_refusal.body.txt" }
+"affirmatrix.cli._proof.handle_check" = { apiHash = "implementation/affirmatrix.cli._proof.handle_check.api.txt", bodyHash = "implementation/affirmatrix.cli._proof.handle_check.body.txt" }
+"affirmatrix.cli._proof.handle_generate" = { apiHash = "implementation/affirmatrix.cli._proof.handle_generate.api.txt", bodyHash = "implementation/affirmatrix.cli._proof.handle_generate.body.txt" }
+"affirmatrix.cli._selector.Selector" = { apiHash = "implementation/affirmatrix.cli._selector.Selector.api.txt", bodyHash = "implementation/affirmatrix.cli._selector.Selector.body.txt" }
+"affirmatrix.cli._selector.add_selector_arguments" = { apiHash = "implementation/affirmatrix.cli._selector.add_selector_arguments.api.txt", bodyHash = "implementation/affirmatrix.cli._selector.add_selector_arguments.body.txt" }
+"affirmatrix.cli._selector.select" = { apiHash = "implementation/affirmatrix.cli._selector.select.api.txt", bodyHash = "implementation/affirmatrix.cli._selector.select.body.txt" }
+"affirmatrix.cli.main" = { apiHash = "implementation/affirmatrix.cli.main.api.txt", bodyHash = "implementation/affirmatrix.cli.main.body.txt" }
 "affirmatrix.commitment.design_root" = { apiHash = "implementation/affirmatrix.commitment.design_root.api.txt", bodyHash = "implementation/affirmatrix.commitment.design_root.body.txt" }
+"affirmatrix.commitment.edge_hash" = { apiHash = "implementation/affirmatrix.commitment.edge_hash.api.txt", bodyHash = "implementation/affirmatrix.commitment.edge_hash.body.txt" }
+"affirmatrix.commitment.node_hash" = { apiHash = "implementation/affirmatrix.commitment.node_hash.api.txt", bodyHash = "implementation/affirmatrix.commitment.node_hash.body.txt" }
+"affirmatrix.config.Config" = { apiHash = "implementation/affirmatrix.config.Config.api.txt", bodyHash = "implementation/affirmatrix.config.Config.body.txt" }
+"affirmatrix.config.Config.implementation_repository" = { apiHash = "implementation/affirmatrix.config.Config.implementation_repository.api.txt", bodyHash = "implementation/affirmatrix.config.Config.implementation_repository.body.txt" }
+"affirmatrix.config.Config.repository" = { apiHash = "implementation/affirmatrix.config.Config.repository.api.txt", bodyHash = "implementation/affirmatrix.config.Config.repository.body.txt" }
+"affirmatrix.config._read_file" = { apiHash = "implementation/affirmatrix.config._read_file.api.txt", bodyHash = "implementation/affirmatrix.config._read_file.body.txt" }
+"affirmatrix.config.load" = { apiHash = "implementation/affirmatrix.config.load.api.txt", bodyHash = "implementation/affirmatrix.config.load.body.txt" }
+"affirmatrix.drift.compare" = { apiHash = "implementation/affirmatrix.drift.compare.api.txt", bodyHash = "implementation/affirmatrix.drift.compare.body.txt" }
+"affirmatrix.drift.derive" = { apiHash = "implementation/affirmatrix.drift.derive.api.txt", bodyHash = "implementation/affirmatrix.drift.derive.body.txt" }
+"affirmatrix.drift.truth_table_state" = { apiHash = "implementation/affirmatrix.drift.truth_table_state.api.txt", bodyHash = "implementation/affirmatrix.drift.truth_table_state.body.txt" }
+"affirmatrix.gates.CoverageReport.blocked" = { apiHash = "implementation/affirmatrix.gates.CoverageReport.blocked.api.txt", bodyHash = "implementation/affirmatrix.gates.CoverageReport.blocked.body.txt" }
+"affirmatrix.gates.CoverageReport.diagnostics" = { apiHash = "implementation/affirmatrix.gates.CoverageReport.diagnostics.api.txt", bodyHash = "implementation/affirmatrix.gates.CoverageReport.diagnostics.body.txt" }
+"affirmatrix.gates._stale_outcomes" = { apiHash = "implementation/affirmatrix.gates._stale_outcomes.api.txt", bodyHash = "implementation/affirmatrix.gates._stale_outcomes.body.txt" }
+"affirmatrix.gates.package_gate" = { apiHash = "implementation/affirmatrix.gates.package_gate.api.txt", bodyHash = "implementation/affirmatrix.gates.package_gate.body.txt" }
 "affirmatrix.graph.build" = { apiHash = "implementation/affirmatrix.graph.build.api.txt", bodyHash = "implementation/affirmatrix.graph.build.body.txt" }
-"affirmatrix.taxonomy.node_kinds" = { apiHash = "implementation/affirmatrix.taxonomy.node_kinds.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.node_kinds.body.txt" }
-"affirmatrix.taxonomy.edge_kinds" = { apiHash = "implementation/affirmatrix.taxonomy.edge_kinds.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.edge_kinds.body.txt" }
-"affirmatrix.taxonomy.propagates" = { apiHash = "implementation/affirmatrix.taxonomy.propagates.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.propagates.body.txt" }
+"affirmatrix.proof._package.GenerationRefused" = { apiHash = "implementation/affirmatrix.proof._package.GenerationRefused.api.txt", bodyHash = "implementation/affirmatrix.proof._package.GenerationRefused.body.txt" }
+"affirmatrix.proof._package._design_consistency_proof_document" = { apiHash = "implementation/affirmatrix.proof._package._design_consistency_proof_document.api.txt", bodyHash = "implementation/affirmatrix.proof._package._design_consistency_proof_document.body.txt" }
+"affirmatrix.proof._package._evidence_manifest_document" = { apiHash = "implementation/affirmatrix.proof._package._evidence_manifest_document.api.txt", bodyHash = "implementation/affirmatrix.proof._package._evidence_manifest_document.body.txt" }
+"affirmatrix.proof._package._execution_coverage_record_document" = { apiHash = "implementation/affirmatrix.proof._package._execution_coverage_record_document.api.txt", bodyHash = "implementation/affirmatrix.proof._package._execution_coverage_record_document.body.txt" }
+"affirmatrix.proof._package.assemble" = { apiHash = "implementation/affirmatrix.proof._package.assemble.api.txt", bodyHash = "implementation/affirmatrix.proof._package.assemble.body.txt" }
+"affirmatrix.proof._package.persist" = { apiHash = "implementation/affirmatrix.proof._package.persist.api.txt", bodyHash = "implementation/affirmatrix.proof._package.persist.body.txt" }
+"affirmatrix.proof._scope.collect_scope" = { apiHash = "implementation/affirmatrix.proof._scope.collect_scope.api.txt", bodyHash = "implementation/affirmatrix.proof._scope.collect_scope.body.txt" }
+"affirmatrix.satisfaction._excused" = { apiHash = "implementation/affirmatrix.satisfaction._excused.api.txt", bodyHash = "implementation/affirmatrix.satisfaction._excused.body.txt" }
+"affirmatrix.satisfaction._specification_confirmed" = { apiHash = "implementation/affirmatrix.satisfaction._specification_confirmed.api.txt", bodyHash = "implementation/affirmatrix.satisfaction._specification_confirmed.body.txt" }
+"affirmatrix.satisfaction.evaluate" = { apiHash = "implementation/affirmatrix.satisfaction.evaluate.api.txt", bodyHash = "implementation/affirmatrix.satisfaction.evaluate.body.txt" }
+"affirmatrix.satisfaction.leaf_satisfied" = { apiHash = "implementation/affirmatrix.satisfaction.leaf_satisfied.api.txt", bodyHash = "implementation/affirmatrix.satisfaction.leaf_satisfied.body.txt" }
+"affirmatrix.satisfaction.non_leaf_satisfied" = { apiHash = "implementation/affirmatrix.satisfaction.non_leaf_satisfied.api.txt", bodyHash = "implementation/affirmatrix.satisfaction.non_leaf_satisfied.body.txt" }
 "affirmatrix.taxonomy.content_hash_names" = { apiHash = "implementation/affirmatrix.taxonomy.content_hash_names.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.content_hash_names.body.txt" }
+"affirmatrix.taxonomy.edge_kinds" = { apiHash = "implementation/affirmatrix.taxonomy.edge_kinds.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.edge_kinds.body.txt" }
+"affirmatrix.taxonomy.node_kinds" = { apiHash = "implementation/affirmatrix.taxonomy.node_kinds.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.node_kinds.body.txt" }
+"affirmatrix.taxonomy.propagates" = { apiHash = "implementation/affirmatrix.taxonomy.propagates.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.propagates.body.txt" }
+"affirmatrix.taxonomy.propagating_edge_kinds" = { apiHash = "implementation/affirmatrix.taxonomy.propagating_edge_kinds.api.txt", bodyHash = "implementation/affirmatrix.taxonomy.propagating_edge_kinds.body.txt" }

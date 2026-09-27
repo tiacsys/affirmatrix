@@ -1,0 +1,3 @@
+The command-line interface shall let the operator judge whether a
+record stream forms a graph and derive the state of every edge in it,
+each as its own verb.

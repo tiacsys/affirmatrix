@@ -1,0 +1,3 @@
+If an edge-affirm selection includes no affirmable edge, then the
+command-line interface shall list every selected edge with the reason
+it is not affirmable and exit with status 1, its negative verdict.

@@ -1,0 +1,8 @@
+def add_selector_arguments(parser: argparse.ArgumentParser) -> None:
+    """Register the selector's four fields as separate options.
+
+    :implements: SEG-SREQ-102
+
+    ``--kind --from --to --below``, never a joined token: argparse gives
+    each its own flag, so a selector cannot be built any other way.
+    """

@@ -1,0 +1,3 @@
+If a verb's outcome is a refusal, then the command-line interface shall
+render to the operator the report the library returned with that
+refusal.

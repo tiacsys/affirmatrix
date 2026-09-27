@@ -1,0 +1,12 @@
+    def read_proof_document(self, snapshot_id: str, document_name: str) -> Mapping[str, object]:
+        """Read one document of an evidence package back, as it was written.
+
+        :implements: SEG-SREQ-020
+
+        Validated against the case's own schemas, like every other read here
+        (SEG-SREQ-053's discipline): a document that cannot be read as
+        written, or a kind the case's own ``schema/`` directory declares no
+        schema for, is refused rather than skipped. The second case is what a
+        case initialized before its schema directory carried these four kinds
+        hits if asked to read one before its next write has seeded them.
+        """

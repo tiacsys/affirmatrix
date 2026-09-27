@@ -1,0 +1,4 @@
+    if as_json:
+        render_json({"error": message}, stream)
+    else:
+        print(message, file=stream if stream is not None else sys.stdout)

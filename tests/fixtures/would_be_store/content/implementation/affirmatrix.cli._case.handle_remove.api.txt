@@ -1,0 +1,12 @@
+def handle_remove(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Remove only the edge records the selector names.
+
+    :implements: SEG-SREQ-075
+    :implements: SEG-SREQ-103
+
+    The selector's grammar is edge-shaped (SEG-SREQ-099): this pass removes
+    matched edges only. Addressing a node record by the same grammar is
+    unspecified by the requirements — SEG-SREQ-075 names both node and edge
+    records, but no selector field addresses a node on its own — so it is
+    left out rather than inventing a form the requirements do not describe.
+    """

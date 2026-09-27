@@ -1,0 +1,14 @@
+def _evidence_manifest_document(scope: Scope, current_revision: str) -> Mapping[str, object]:
+    """The evidence manifest: the package's scope, its totality, and its siblings.
+
+    :implements: SEG-SREQ-038
+    :implements: SEG-SREQ-039
+
+    Scope (SEG-SREQ-038) and the partial-vs-total signal (SEG-SREQ-039) both
+    live here, on the package's own binder document, rather than on the
+    coverage report: both are stated over the package as a whole, and the
+    coverage report's seven fields are exactly, and only, the gate's own
+    findings. The single ``revision`` is the one source revision a
+    single-repository layout has, where a multi-repository layout would
+    anchor one per repository.
+    """

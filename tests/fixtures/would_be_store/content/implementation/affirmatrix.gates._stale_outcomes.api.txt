@@ -1,0 +1,9 @@
+def _stale_outcomes(graph: Graph, current_revision: str) -> frozenset[str]:
+    """Every test outcome whose recorded revision differs from ``current_revision``.
+
+    :implements: SEG-SREQ-063
+
+    Asked of the full, unjudged graph — this is what :func:`package_gate`
+    cuts *out* before it asks anything else, so the function must see the
+    outcomes it is about to remove.
+    """

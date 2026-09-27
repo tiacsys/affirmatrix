@@ -1,0 +1,6 @@
+def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Report the gate's coverage verdict for a requested scope.
+
+    :implements: SEG-SREQ-090
+    :implements: SEG-SREQ-091
+    """

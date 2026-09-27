@@ -1,0 +1,3 @@
+Where an endpoint's anchor names a repository and no revision is given,
+the command-line interface shall discover that endpoint's source
+revision from the repository the anchor names.

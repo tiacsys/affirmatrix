@@ -1,0 +1,5 @@
+    return frozenset(
+        outcome.local_id
+        for outcome in graph.nodes_of_kind(_TEST_OUTCOME)
+        if outcome.revision != current_revision
+    )

@@ -1,0 +1,13 @@
+    """Every edge touching an absent node is broken.
+
+    Deriving edge states from a current record stream whose declared
+    source or target node is absent from that stream reports the edge as
+    broken — for a strong edge whose recorded affirmation no longer has
+    both endpoints present, and equally for an edge of a kind that
+    carries no suspicion, such as an outcome's confirms edge to a
+    specification that is not in the current stream. Absence of an
+    endpoint takes precedence over every other derived state.
+
+    :verifies: SEG-SREQ-017
+    :test-id: SEG-TS-010
+    """

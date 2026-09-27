@@ -1,0 +1,3 @@
+    entries = {entry[_ID]: entry for entry in existing}
+    entries.update({entry[_ID]: entry for entry in incoming})
+    return sorted(entries.values(), key=itemgetter(_ID))

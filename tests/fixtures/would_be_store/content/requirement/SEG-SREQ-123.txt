@@ -1,0 +1,2 @@
+The configuration loader shall carry the location of the producer that
+supplies the current stream.

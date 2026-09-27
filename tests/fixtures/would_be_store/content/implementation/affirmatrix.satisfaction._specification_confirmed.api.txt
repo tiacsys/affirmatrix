@@ -1,0 +1,13 @@
+def _specification_confirmed(graph: Graph, spec_id: str) -> bool:
+    """Whether this specification's evidence satisfies the leaf rule.
+
+    :implements: SEG-SREQ-006
+
+    At least one evidence-valid outcome must confirm this specification, and
+    every one that does must either have passed or be excused by a waiver.
+    The universal closes the hole the old existential left open: one passing
+    outcome beside an unwaived failing one no longer satisfies, and a
+    specification with no confirming outcome at all never satisfies
+    vacuously — an empty ``all()`` would otherwise answer ``True``, so the
+    existence check comes first and stands on its own.
+    """

@@ -1,0 +1,3 @@
+While the file it would read does not exist, the configuration loader
+shall supply a default value for every parameter it carries rather than
+refuse.

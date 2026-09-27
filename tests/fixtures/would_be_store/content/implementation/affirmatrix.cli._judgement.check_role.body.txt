@@ -1,0 +1,5 @@
+    if config.roles is not None and role not in config.roles:
+        raise JudgementError(
+            f"role {role!r} is outside the configured role vocabulary: "
+            f"{', '.join(sorted(config.roles))}"
+        )

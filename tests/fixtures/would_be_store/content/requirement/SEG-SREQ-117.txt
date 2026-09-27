@@ -1,0 +1,4 @@
+The configuration loader shall supply the command-line interface with
+every value describing where source content and its history live and
+how the command line's own defaults are drawn, so no such value must be
+given on every invocation.

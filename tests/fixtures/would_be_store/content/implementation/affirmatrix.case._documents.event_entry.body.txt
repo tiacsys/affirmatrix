@@ -1,0 +1,17 @@
+    return {
+        _ID: identity.review_event_iri(ordinal),
+        "type": "seg:ReviewEvent",
+        "seg:from": identity.node_iri(event.from_id),
+        "seg:to": identity.node_iri(event.to_id),
+        "seg:relation": f"seg:{event.kind}",
+        "seg:fromNodeHash": hex_digest(event.from_node_hash),
+        "seg:toNodeHash": hex_digest(event.to_node_hash),
+        "seg:fromContentAnchors": _anchor_fields(event.from_content_anchors),
+        "seg:toContentAnchors": _anchor_fields(event.to_content_anchors),
+        "seg:affirmedAt": {
+            "seg:fromRevision": event.from_source_revision,
+            "seg:toRevision": event.to_source_revision,
+        },
+        "seg:affirmingRole": event.role,
+        "seg:reason": event.reason,
+    }

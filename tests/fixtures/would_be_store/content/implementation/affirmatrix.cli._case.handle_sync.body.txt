@@ -1,0 +1,14 @@
+    try:
+        current = _judgement.resolve_current(args.current, config)
+    except _judgement.JudgementError as error:
+        return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
+    try:
+        derivation = drift.derive(recorded=store, current=current)
+    except (graph.GraphError, drift.DriftError, StoreError) as error:
+        return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
+    store.write_nodes(derivation.nodes())
+    store.write_edges(derivation.edges(), demote=())
+    print(f"synced {store.root}")
+    for edge in derivation.vanished:
+        print(f"vanished: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+    return _outcome.exit_for(_outcome.POSITIVE)

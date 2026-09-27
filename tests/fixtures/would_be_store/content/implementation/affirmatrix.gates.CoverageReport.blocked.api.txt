@@ -1,0 +1,5 @@
+    def blocked(self) -> bool:
+        """Whether this scope is blocked: any diagnostic whose severity blocks the package.
+
+        :implements: SEG-SREQ-042
+        """

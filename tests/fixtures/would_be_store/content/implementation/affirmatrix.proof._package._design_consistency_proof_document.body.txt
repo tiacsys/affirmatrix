@@ -1,0 +1,19 @@
+    node_manifest = [
+        {
+            "id": node.local_id,
+            "kind": node.kind,
+            "hash": records.hex_digest(commitment.node_hash(node.kind, node.content_hashes)),
+        }
+        for node in _design_nodes(scope)
+    ]
+    design_edges = [
+        {"from": edge.from_id, "to": edge.to_id, "kind": edge.kind} for edge in _design_edges(scope)
+    ]
+    return {
+        "snapshotId": scope.snapshot_id,
+        "scope": sorted(scope.requested_ids),
+        "revision": current_revision,
+        "nodeManifest": node_manifest,
+        "designEdges": design_edges,
+        "root": records.hex_digest(_package_root(scope, current_revision)),
+    }

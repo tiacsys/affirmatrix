@@ -1,0 +1,3 @@
+Where proof generate is given an output directory, the command-line
+interface shall write the whole generated package under it instead of
+the case.

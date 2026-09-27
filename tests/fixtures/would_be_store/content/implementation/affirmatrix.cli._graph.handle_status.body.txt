@@ -1,0 +1,20 @@
+    try:
+        current = _judgement.resolve_current(args.current, config)
+    except _judgement.JudgementError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    try:
+        derivation = drift.derive(recorded=store, current=current)
+        built = graph.build(derivation)
+    except (graph.GraphError, drift.DriftError, StoreError) as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    rows = [_status_row(built, edge, store, verbose=args.verbose) for edge in built.edges]
+    if args.json:
+        _outcome.render_json({"edges": rows})
+    else:
+        _print_status(rows)
+    not_active = {edge.state for edge in built.edges if edge.state is not LinkState.ACTIVE}
+    if not_active & _SUSPECT_OR_BROKEN:
+        return _outcome.exit_for(_outcome.NEGATIVE)
+    return _outcome.exit_for(_outcome.POSITIVE)

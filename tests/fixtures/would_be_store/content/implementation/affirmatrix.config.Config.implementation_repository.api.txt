@@ -1,0 +1,9 @@
+    def implementation_repository(self) -> Path | None:
+        """The implementation repository's path, if one is named and mapped.
+
+        :implements: SEG-SREQ-122
+
+        ``None`` both when no repository is named as the implementation one
+        and when it is named but absent from the map — the same no-repository
+        reading :meth:`repository` already gives a lookup miss.
+        """

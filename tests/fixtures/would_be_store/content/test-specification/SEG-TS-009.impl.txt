@@ -1,8 +1,9 @@
-def test_each_kind_declares_its_content_hashes() -> None:
-    """
-    :verifies: SEG-SREQ-032
-    :test-id: SEG-TS-009
-    """
-    assert content_hash_names("Implementation") == frozenset({"apiHash", "bodyHash"})
-    with pytest.raises(ValueError):
-        content_hash_names("Speculation")
+    with pytest.raises(graph.GraphError, match="Speculation"):
+        graph.build(Source([records.NodeRecord("x", "Speculation", anchors({"contentHash": D1}))]))
+    with pytest.raises(graph.GraphError, match="Resembles"):
+        graph.build(
+            Source(
+                [requirement("a"), requirement("b")],
+                [records.EdgeRecord("a", "b", "Resembles", records.LinkState.PENDING)],
+            )
+        )

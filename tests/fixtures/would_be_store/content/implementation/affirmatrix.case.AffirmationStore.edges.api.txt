@@ -1,0 +1,9 @@
+    def edges(self) -> Iterator[EdgeRecord]:
+        """The edge records the case holds, each with its stored state and hash.
+
+        :implements: SEG-SREQ-020
+
+        This is the recorded stream drift detection compares against a current
+        one: what an edge was last affirmed with is a fact about the past, read
+        from the record and never recomputed.
+        """

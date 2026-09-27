@@ -1,8 +1,8 @@
-def test_an_edge_with_no_affirmed_hash_is_pending() -> None:
-    """
-    :verifies: SEG-SREQ-016
-    :test-id: SEG-TS-005
-    """
-    claimed = EdgeRecord("a", "b", "Refines", LinkState.DIRECTLY_OUTDATED)
-    built = build(Source([requirement("a"), requirement("b")], [claimed]))
-    assert built.edges[0].state is LinkState.PENDING
+    edges = [("a", "b", "Refines"), ("b", "c", "Verifies")]
+    reordered_edges = [("b", "c", "Verifies"), ("a", "b", "Refines")]
+    baseline = commitment.design_root(b"meta", [N1, N2], edges)
+    assert commitment.design_root(b"meta", [N2, N1], reordered_edges) == baseline
+    assert commitment.design_root(b"meta", [N3, N2], edges) != baseline
+    assert commitment.design_root(b"meta", [N1, N2], [("a", "x", "Refines"), edges[1]]) != baseline
+    assert commitment.design_root(b"meta", [N1, N2], [("a", "b", "Verifies"), edges[1]]) != baseline
+    assert commitment.design_root(b"other-meta", [N1, N2], edges) != baseline

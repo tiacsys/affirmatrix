@@ -1,0 +1,10 @@
+class Selector:
+    """One edge selection, as the four narrowing fields that build it.
+
+    :implements: SEG-SREQ-099
+
+    Kind, source, target, and subtree ("below") are separate values
+    (SEG-SREQ-102); every combination narrows the set the others admit
+    (SEG-SREQ-100), and kind together with both endpoints narrows to at most
+    one edge (SEG-SREQ-101), because that triple is an edge's own identity.
+    """

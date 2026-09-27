@@ -1,0 +1,12 @@
+def validate_entry(
+    schema_set: SchemaSet, entry: Mapping[str, object], schema_name: str, label: str
+) -> None:
+    """Refuse ``entry`` unless it validates against the named schema.
+
+    :implements: SEG-SREQ-019
+
+    Reports the first violation in document order, naming the record and the
+    field. A refusal that named only the schema would leave the operator to
+    find which record of a batch was wrong, and a batch is the usual size of a
+    write.
+    """

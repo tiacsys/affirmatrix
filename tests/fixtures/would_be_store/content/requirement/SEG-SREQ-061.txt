@@ -1,0 +1,2 @@
+If a non-passing outcome is excused by a valid waiver, then the gate
+evaluator shall report that outcome as informational.

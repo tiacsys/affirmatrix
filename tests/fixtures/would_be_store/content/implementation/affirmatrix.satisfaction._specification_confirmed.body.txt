@@ -1,0 +1,10 @@
+    confirming = [
+        edge.from_id
+        for edge in graph.incoming(spec_id, _CONFIRMS)
+        if _is_evidence(graph, edge.from_id)
+    ]
+    if not confirming:
+        return False
+    return all(
+        _passing(graph, outcome_id) or _excused(graph, outcome_id) for outcome_id in confirming
+    )

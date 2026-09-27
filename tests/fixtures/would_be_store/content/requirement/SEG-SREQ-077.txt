@@ -1,0 +1,3 @@
+The command-line interface shall have graph check report node and edge
+counts by kind and the count of pending edges, never a count of dangling
+endpoints.

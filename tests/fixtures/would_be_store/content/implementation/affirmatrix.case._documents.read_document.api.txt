@@ -1,0 +1,11 @@
+def read_document(path: Path) -> Entry:
+    """One proof document's fields, without its ``@context`` envelope.
+
+    :implements: SEG-SREQ-020
+
+    Unlike :func:`read_entries`, a missing file is refused rather than
+    answered with an empty reading: a collection document with nothing in it
+    yet is a legitimate state a kind can be in, but there is no legitimate
+    empty reading of *one* proof document — it either exists as written or it
+    does not, and the difference matters to a caller asking for it by name.
+    """

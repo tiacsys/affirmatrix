@@ -6,4 +6,16 @@ def design_root(
     """Seal a design set under one flat root, with caller-supplied metadata.
 
     :implements: SEG-SREQ-003
+
+    One canonical sort and one hash — no per-node aggregation and no
+    traversal. ``metadata`` is opaque: the caller supplies it already
+    canonical, and this function frames and hashes it without parsing, which is
+    what keeps snapshot semantics out of the commitment layer (ADR-0003).
+
+    Sorting never deduplicates. Two same-type nodes covering identical content
+    share a node hash, and both must count, or a graph would seal identically
+    to a smaller graph that merely resembles it.
+
+    The primitive is total: an empty design set seals to a well-defined value.
+    Refusing to seal an empty scope is a gate decision, not a hashing one.
     """

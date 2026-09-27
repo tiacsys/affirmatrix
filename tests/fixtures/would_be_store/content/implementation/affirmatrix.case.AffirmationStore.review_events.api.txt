@@ -1,0 +1,11 @@
+    def review_events(self) -> Iterator[ReviewEvent]:
+        """The recorded judgements, in the order they were appended.
+
+        :implements: SEG-SREQ-020
+
+        Deliberately outside the record-source protocol, which carries nodes
+        and edges only. Position is identity for a review event, so order is
+        the one thing this stream must preserve — and the one thing a consumer
+        needing the next ordinal has to count; the record type carries no
+        ordinal field, because that would be a second spelling of position.
+        """

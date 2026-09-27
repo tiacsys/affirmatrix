@@ -1,0 +1,3 @@
+    return any(
+        _waiver_present(graph, edge.from_id) for edge in graph.incoming(outcome_id, _EXCUSES)
+    )

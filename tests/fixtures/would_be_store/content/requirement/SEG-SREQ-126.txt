@@ -1,0 +1,3 @@
+The configuration loader shall supply no value it carries to the
+computation of a content hash, a node hash, an edge hash, or a design
+root.

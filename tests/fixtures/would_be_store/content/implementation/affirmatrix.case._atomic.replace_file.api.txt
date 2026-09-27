@@ -1,0 +1,16 @@
+def replace_file(path: Path, payload: bytes) -> None:
+    """Give ``path`` these bytes, atomically.
+
+    :implements: SEG-SREQ-022
+
+    The temporary file is created in the target's **own directory**, which is
+    what makes the rename a same-filesystem operation and therefore atomic; a
+    temporary file elsewhere would degrade into a copy and reintroduce exactly
+    the half-written document this exists to prevent.
+
+    The contents are flushed to the device before the rename, so a power loss
+    between the two cannot leave a file that has been renamed into place but is
+    still empty. On any failure the temporary file is removed, so an
+    interrupted run leaves neither a partial document nor a stray file for the
+    next reader to wonder about.
+    """

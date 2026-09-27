@@ -1,0 +1,3 @@
+For proof check, the command-line interface shall render its
+machine-readable output as exactly the coverage report the gate
+produced.

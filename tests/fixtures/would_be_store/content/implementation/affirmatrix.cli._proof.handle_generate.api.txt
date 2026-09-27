@@ -1,0 +1,7 @@
+def handle_generate(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Assemble and persist an evidence package, or refuse with the gate's report.
+
+    :implements: SEG-SREQ-092
+    :implements: SEG-SREQ-093
+    :implements: SEG-SREQ-094
+    """

@@ -1,0 +1,5 @@
+The command-line interface shall obtain the implementation repository's
+revision for proof check and proof generate under the same rule as an
+affirmation endpoint's revision: recorded as given when given, otherwise
+discovered and refused when the anchored content differs from the
+committed content.

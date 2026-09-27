@@ -1,0 +1,14 @@
+    stale = _stale_outcomes(graph, current_revision)
+    judged = graph.restricted_to(graph.node_ids() - stale)
+    requirements = judged.nodes_of_kind(_REQUIREMENT)
+    verdict = satisfaction.evaluate(judged)
+    unwaived, excused = _non_passing_outcomes(judged, evaluation_date)
+    return CoverageReport(
+        unready_edges=_unready_edges(judged),
+        coverage_gaps=_coverage_gaps(judged, requirements),
+        stale_outcomes=stale,
+        discarded_outcomes=verdict.discarded_outcomes,
+        unwaived_outcomes=unwaived,
+        excused_outcomes=excused,
+        design_set_empty=not requirements,
+    )

@@ -1,0 +1,9 @@
+    def remove_edges(self, kind: str, endpoints: Iterable[tuple[str, str]]) -> None:
+        """Remove the edge records between the named endpoint pairs, and only those.
+
+        :implements: SEG-SREQ-023
+
+        Endpoints, never an identifier: an identifier is an opaque key, so an
+        interface that took one would be inviting the caller to build it by
+        splitting another one apart (ADR-0007).
+        """

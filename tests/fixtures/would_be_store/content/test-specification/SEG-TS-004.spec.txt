@@ -1,2 +1,12 @@
-A refines relation containing a cycle or a self-loop is refused as a
-graph-level error that names the cycle, and a diamond is not a cycle.
+    """The edge hash binds both endpoints.
+
+    Computing an edge's hash from a fixed baseline of endpoint identifiers,
+    edge type, and both node hashes, then independently varying each of
+    the five inputs in turn — the source identifier, the target
+    identifier, the edge type, the source node hash, and the target node
+    hash — changes the resulting hash on every variation. No single input
+    can move without the edge hash moving with it.
+
+    :verifies: SEG-SREQ-002
+    :test-id: SEG-TS-004
+    """

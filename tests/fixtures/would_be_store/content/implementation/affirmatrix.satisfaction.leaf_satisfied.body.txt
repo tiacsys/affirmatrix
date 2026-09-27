@@ -1,0 +1,7 @@
+    verifying = graph.incoming(local_id, _VERIFIES)
+    if not _any_active(verifying):
+        return False
+    if not _any_active(graph.incoming(local_id, _IMPLEMENTS)):
+        return False
+    specifications = {edge.from_id for edge in verifying}
+    return all(_specification_confirmed(graph, spec_id) for spec_id in specifications)

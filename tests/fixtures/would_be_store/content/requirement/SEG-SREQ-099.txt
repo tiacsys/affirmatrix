@@ -1,0 +1,3 @@
+The command-line interface shall address every edge selection — for
+show, affirm, and remove alike — through one grammar of narrowing
+fields, rather than a distinct address form per verb.

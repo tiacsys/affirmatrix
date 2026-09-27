@@ -1,0 +1,2 @@
+The command-line interface shall remove, in response to case remove,
+only the node and edge records its selector names.

@@ -1,0 +1,3 @@
+If graph status cannot build a graph from the current stream it is
+given, then the command-line interface shall exit with status 2, a
+request it could not judge.

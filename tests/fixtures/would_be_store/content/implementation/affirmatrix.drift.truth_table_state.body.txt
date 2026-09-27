@@ -1,0 +1,3 @@
+    if content_matches:
+        return LinkState.ACTIVE if dependencies_active else LinkState.TRANSITIVELY_SUSPECT
+    return LinkState.DIRECTLY_OUTDATED if dependencies_active else LinkState.DOUBLY_OUTDATED

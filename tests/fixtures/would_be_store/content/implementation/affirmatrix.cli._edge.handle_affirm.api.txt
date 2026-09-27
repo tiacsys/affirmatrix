@@ -1,0 +1,20 @@
+def handle_affirm(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Record an affirmation over every affirmable member of a selection.
+
+    :implements: SEG-SREQ-086
+    :implements: SEG-SREQ-087
+    :implements: SEG-SREQ-088
+    :implements: SEG-SREQ-103
+    :implements: SEG-SREQ-104
+
+    Two kinds of "cannot" are kept apart. The role is one input for the
+    whole invocation, checked once before any edge is even looked at; a
+    revision that cannot be resolved for an affirmable edge's endpoint is
+    the same kind of failure, one this invocation cannot proceed past —
+    either refuses the whole request (exit 2), nothing written, before the
+    recorder is asked to compose anything. Only the recorder's own
+    signposts — :func:`~affirmatrix.affirmation.affirmable` finding a state
+    or kind it cannot resolve, :class:`~affirmatrix.affirmation.AffirmationError`
+    from :func:`~affirmatrix.affirmation.compose` itself — land in the
+    per-edge "not affirmed" list the 0/1 verdict (SEG-SREQ-087/088) reads.
+    """

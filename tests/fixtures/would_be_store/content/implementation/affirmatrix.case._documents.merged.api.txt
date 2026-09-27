@@ -1,0 +1,15 @@
+def merged(existing: Iterable[Entry], incoming: Iterable[Entry]) -> list[Entry]:
+    """The document's entries after this write, keyed by identifier.
+
+    :implements: SEG-SREQ-023
+
+    An entry the call did not mention is carried through exactly as it was
+    read. That is what makes a write of one record a write of one record: with
+    the whole document as the unit of atomicity, anything not preserved here is
+    silently deleted, and a producer that happened to yield a short stream
+    would prune the case without saying so.
+
+    Sorted by identifier, so the document is a function of what it holds rather
+    than of the order a producer streamed it in, and two runs over an unchanged
+    graph leave byte-identical files.
+    """

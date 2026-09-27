@@ -1,0 +1,14 @@
+def persist(package: Package, store: AffirmationStore) -> Mapping[str, Path]:
+    """Write a package's four documents under its snapshot directory.
+
+    :implements: SEG-SREQ-041
+
+    A straight-line write: a ``Package`` is always complete, so there is
+    nothing here to check before writing it. SEG-SREQ-046's second half —
+    nothing on disk for a blocked scope, not even the snapshot directory a
+    first write would otherwise create — holds because this function is
+    never reached for one: :func:`assemble` already refused before
+    returning. Generation itself changes nothing about the graph or the
+    store's node, edge and review-event streams: every document here is
+    written under ``proofs/{snapshot_id}/`` alone.
+    """

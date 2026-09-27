@@ -1,0 +1,2 @@
+If edge affirm is given no selector at all, then the command-line
+interface shall exit with status 2, a request it could not judge.

@@ -1,0 +1,3 @@
+The command-line interface shall have graph status report, for every
+edge, the state the suspect detector derives for it from the recorded
+and the current record sources.

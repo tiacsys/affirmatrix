@@ -1,0 +1,3 @@
+The command-line interface shall determine every verb's outcome by
+invoking the library alone, performing no judgement of its own beyond
+rendering that outcome.

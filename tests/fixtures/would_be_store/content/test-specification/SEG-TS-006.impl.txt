@@ -1,7 +1,5 @@
-def test_an_undeclared_kind_stops_the_build() -> None:
-    """
-    :verifies: SEG-SREQ-031
-    :test-id: SEG-TS-006
-    """
-    with pytest.raises(GraphError, match="Speculation"):
-        build(Source([NodeRecord("x", "Speculation", {"contentHash": D1})]))
+    baseline = commitment.node_hash("Requirement", {"contentHash": D1})
+    assert commitment.node_hash("Waiver", {"contentHash": D1}) != baseline
+    assert commitment.node_hash("Requirement", {"contentHash": D2}) != baseline
+    assert commitment.node_hash("Requirement", {"otherName": D1}) != baseline
+    assert baseline != D1

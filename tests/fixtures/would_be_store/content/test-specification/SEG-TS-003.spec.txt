@@ -1,3 +1,11 @@
-The design root is one hash over the canonically sorted node hashes, the
-canonically sorted edge tuples, and the caller's metadata; reordering the
-inputs does not change it, and repeating a node hash does.
+    """Each node kind declares its content hashes.
+
+    For each of the five built-in node kinds, querying the taxonomy
+    provider's content-hash names returns exactly the names that kind
+    carries: ``contentHash`` alone for Requirement, TestOutcome, and
+    Waiver; ``apiHash`` and ``bodyHash`` for Implementation; ``specHash``
+    and ``implHash`` for TestSpecification.
+
+    :verifies: SEG-SREQ-032
+    :test-id: SEG-TS-003
+    """

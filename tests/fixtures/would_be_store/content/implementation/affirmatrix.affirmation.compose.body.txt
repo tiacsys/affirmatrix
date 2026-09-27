@@ -1,0 +1,50 @@
+    if edge.kind not in taxonomy.propagating_edge_kinds():
+        raise AffirmationError(
+            f"edge {edge.from_id!r} -> {edge.to_id!r} ({edge.kind}) cannot be affirmed: "
+            f"{edge.kind} is an evidence edge, not a strong one — re-execution resolves "
+            "it, not a judgement"
+        )
+    if not affirmable(edge.state, edge.kind):
+        raise AffirmationError(
+            f"edge {edge.from_id!r} -> {edge.to_id!r} ({edge.kind}) cannot be "
+            f"affirmed: {_REFUSALS[edge.state]}"
+        )
+    mismatches = [
+        f"{node.local_id!r} is not the edge's {side} endpoint {expected!r}"
+        for node, side, expected in (
+            (from_node, "source", edge.from_id),
+            (to_node, "target", edge.to_id),
+        )
+        if node.local_id != expected
+    ]
+    if mismatches:
+        raise AffirmationError(
+            f"this judgement does not bind edge {edge.from_id!r} -> {edge.to_id!r} "
+            f"({edge.kind}): {'; '.join(mismatches)}"
+        )
+    from_node_hash = commitment.node_hash(from_node.kind, from_node.content_hashes)
+    to_node_hash = commitment.node_hash(to_node.kind, to_node.content_hashes)
+    return Affirmation(
+        event=ReviewEvent(
+            from_id=edge.from_id,
+            to_id=edge.to_id,
+            kind=edge.kind,
+            from_node_hash=from_node_hash,
+            to_node_hash=to_node_hash,
+            from_source_revision=from_source_revision,
+            to_source_revision=to_source_revision,
+            from_content_anchors=from_node.content_anchors,
+            to_content_anchors=to_node.content_anchors,
+            role=role,
+            reason=reason,
+        ),
+        edge=EdgeRecord(
+            from_id=edge.from_id,
+            to_id=edge.to_id,
+            kind=edge.kind,
+            state=LinkState.ACTIVE,
+            edge_hash=commitment.edge_hash(
+                edge.from_id, edge.to_id, edge.kind, from_node_hash, to_node_hash
+            ),
+        ),
+    )

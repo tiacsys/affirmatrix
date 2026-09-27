@@ -1,0 +1,10 @@
+    def append_review_events(self, events: Iterable[ReviewEvent]) -> None:
+        """Add review events to the case, after the ones already recorded.
+
+        :implements: SEG-SREQ-033
+
+        Append-only. An event already in the document is never rewritten and
+        never re-numbered, so a recorded affirmation changes only when someone
+        asks for the change — and the one operation that could quietly reword
+        one does not exist.
+        """

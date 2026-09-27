@@ -1,0 +1,2 @@
+The affirmation store shall persist, for each content hash a node record
+carries, the source location of the content that hash covers.

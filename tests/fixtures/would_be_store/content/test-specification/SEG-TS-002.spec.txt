@@ -1,2 +1,10 @@
-An edge hash changes when either endpoint's node hash changes, when either
-endpoint identifier changes, and when the edge type changes.
+    """Exactly three edge kinds propagate.
+
+    Querying the taxonomy provider for the edge kinds that propagate
+    suspicion returns exactly three: Refines, Verifies, and Implements. No
+    other declared edge kind is included, and none of these three is
+    missing.
+
+    :verifies: SEG-SREQ-030
+    :test-id: SEG-TS-002
+    """

@@ -1,0 +1,25 @@
+def derive(*, recorded: RecordSource, current: RecordSource) -> Derivation:
+    """Derive every current edge's state from the two streams alone.
+
+    :implements: SEG-SREQ-015
+    :implements: SEG-SREQ-017
+    :implements: SEG-SREQ-034
+    :implements: SEG-SREQ-054
+
+    ``recorded`` is the affirmation store's read face — edge records carrying
+    the hashes they were affirmed against; ``current`` is a producer's stream
+    over today's content. The roles are the parameters' to name and the
+    caller's to honour: what a current edge claims about its own state or
+    hash is ignored, because affirmed state is the recorded stream's to
+    supply, and honouring the claim would let a producer assert a history
+    that never happened. Non-mutation is structural — the function computes
+    and returns, asking each stream for its records at most once and writing
+    nowhere.
+
+    The current stream must be buildable: anything :func:`graph.build`
+    refuses is refused here, and the refines gate it enforces is what
+    guarantees the dependency recursion terminates on well-kinded records.
+    A recorded stream naming one edge twice, or a strong-edge structure that
+    cycles anyway, raises :class:`DriftError` rather than deriving states
+    that mean nothing.
+    """

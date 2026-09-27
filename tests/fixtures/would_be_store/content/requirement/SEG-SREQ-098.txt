@@ -1,0 +1,3 @@
+The command-line interface shall offer, for every read-only verb, a
+machine-readable rendering that structures the same report its
+human-readable rendering presents.

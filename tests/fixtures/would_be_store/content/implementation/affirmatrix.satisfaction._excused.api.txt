@@ -1,0 +1,13 @@
+def _excused(graph: Graph, outcome_id: str) -> bool:
+    """Whether a waiver excuses this outcome.
+
+    :implements: SEG-SREQ-006
+
+    Presence, not state: the excusing edge (``Excuses``, Waiver to
+    TestOutcome, per ``case/schema/edge-excuses.schema.json``) is evidence,
+    like ``Confirms`` and ``Witnesses``, and can never be affirmed active — so
+    excusal reads as a Waiver record reached through an incoming excusing
+    edge, whatever that edge's own recorded state happens to be. An excusing
+    edge whose Waiver record is absent from the graph excuses nothing: the
+    waiver itself must be present, not merely declared.
+    """

@@ -1,0 +1,12 @@
+def render_json(data: Mapping[str, object], stream: TextIO | None = None) -> None:
+    """Print a structured report, stable keys, stdlib ``json``.
+
+    :implements: SEG-SREQ-098
+
+    Sorted keys and a fixed indent: a machine-readable rendering that
+    structures the same report the human-readable one presents, and is
+    itself reproducible byte for byte across two runs over the same report.
+    ``stream`` defaults to whichever object ``sys.stdout`` names at call
+    time, not at import time — a default parameter value is bound once,
+    which would otherwise print past a test's own captured stream.
+    """

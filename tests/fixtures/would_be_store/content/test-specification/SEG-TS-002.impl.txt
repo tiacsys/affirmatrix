@@ -1,8 +1,1 @@
-def test_the_edge_hash_is_two_sided() -> None:
-    """
-    :verifies: SEG-SREQ-002
-    :test-id: SEG-TS-002
-    """
-    baseline = edge_hash("a", "b", "Refines", D1, D2)
-    assert edge_hash("a", "b", "Refines", D2, D2) != baseline
-    assert edge_hash("a", "b", "Refines", D1, D1) != baseline
+    assert taxonomy.propagating_edge_kinds() == frozenset({"Refines", "Verifies", "Implements"})

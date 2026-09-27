@@ -1,0 +1,9 @@
+def resolve_gate_revision(config: Config, *, given: str | None) -> str:
+    """The proof gate's implementation revision, under the same rule as an endpoint's.
+
+    :implements: SEG-SREQ-112
+
+    ``given`` overrides discovery; otherwise the configured implementation
+    repository's revision is discovered and the whole repository checked
+    clean, or a revision must be given explicitly when none is configured.
+    """

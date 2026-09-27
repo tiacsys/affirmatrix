@@ -1,0 +1,17 @@
+class Config:
+    """Every value describing where source content and its history live.
+
+    :implements: SEG-SREQ-117
+
+    ``case`` is the case root a caller's own default may still override
+    (command-line ``--case``, say); ``producer_root`` is where the current
+    stream's producer is found, absent when none is configured — in which
+    case a caller must supply one explicitly, a two-stream verb's own rule to
+    enforce, not this loader's. ``repositories`` maps a name an anchor's
+    ``repository`` field may carry to the path it names; a name absent from
+    it resolves to no repository (:meth:`repository`) rather than raising.
+    ``implementation`` names which configured repository is the
+    implementation one; ``roles`` is the optional closed vocabulary an
+    affirmation's role is checked against, ``None`` when none is configured
+    (every role accepted).
+    """

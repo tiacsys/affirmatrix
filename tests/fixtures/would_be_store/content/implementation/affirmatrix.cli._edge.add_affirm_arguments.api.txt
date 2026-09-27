@@ -1,0 +1,9 @@
+def add_affirm_arguments(parser: argparse.ArgumentParser) -> None:
+    """Register ``edge affirm``'s own arguments.
+
+    :implements: SEG-SREQ-106
+
+    ``--role``/``--reason`` are both ``required=True`` — including when the
+    reason is empty, which ``required`` still accepts as a given value —
+    so neither is ever silently defaulted.
+    """

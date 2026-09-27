@@ -1,0 +1,10 @@
+    def read_package(self, snapshot_id: str) -> Mapping[str, Mapping[str, object]]:
+        """Every document of one evidence package, keyed by document name.
+
+        :implements: SEG-SREQ-020
+
+        Reads all four of :data:`~affirmatrix.case._layout.PROOF_DOCUMENT_SCHEMAS`'
+        kinds; missing or invalid in any one of them refuses the whole
+        package rather than handing back the three that were fine — a
+        package short one document is not a smaller package, it is not one.
+        """

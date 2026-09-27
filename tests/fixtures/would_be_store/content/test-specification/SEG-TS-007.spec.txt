@@ -1,2 +1,12 @@
-The vocabulary offers exactly five node kinds and seven edge kinds, and the
-sets it returns cannot be mutated by a caller.
+    """A refines cycle or self-loop is refused.
+
+    Building a graph whose refines edges contain a self-loop, and
+    separately one whose refines edges form a longer cycle, is refused
+    with a graph-level error naming a cycle in both cases. Building a
+    graph whose refines edges converge without looping — two children
+    refining into one shared ancestor — succeeds; a diamond is not
+    mistaken for a cycle.
+
+    :verifies: SEG-SREQ-004
+    :test-id: SEG-TS-007
+    """

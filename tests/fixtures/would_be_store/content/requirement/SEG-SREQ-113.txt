@@ -1,0 +1,2 @@
+Where a role vocabulary is configured, the command-line interface shall
+refuse an affirmation whose role lies outside it.

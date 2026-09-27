@@ -1,0 +1,18 @@
+def evaluate(graph: Graph) -> Verdict:
+    """Every requirement's satisfaction, decided over the whole graph.
+
+    :implements: SEG-SREQ-008
+    :implements: SEG-SREQ-009
+    :implements: SEG-SREQ-010
+
+    Iterative post-order over the refines relation, memoised across roots: a
+    shared child is judged once, and a deep decomposition cannot exhaust the
+    interpreter stack — the depth here is the caller's decomposition, not
+    ours. Termination rests on the builder's acyclicity guarantee
+    (SEG-SREQ-004). The function only reads: determinism and graph
+    immutability are consequences of there being nothing else it does.
+
+    A graph with no requirement nodes yields an empty verdict rather than a
+    refusal — an empty scope is the gate evaluator's alarm to raise
+    (SEG-SREQ-045), not this component's.
+    """

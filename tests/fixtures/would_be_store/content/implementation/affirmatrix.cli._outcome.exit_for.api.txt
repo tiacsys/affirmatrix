@@ -1,0 +1,10 @@
+def exit_for(status: int) -> int:
+    """One of the three exit statuses, and nothing else.
+
+    :implements: SEG-SREQ-095
+    :implements: SEG-SREQ-096
+
+    Every handler funnels its final decision through this one function
+    rather than returning a bare literal scattered through the package, so
+    the vocabulary stays exactly the three members it is ever a member of.
+    """

@@ -1,0 +1,3 @@
+The command-line interface shall report every verb's outcome through one
+shared vocabulary of exit status and rendered report, distinguishing a
+positive verdict, a negative verdict, and a request it could not judge.

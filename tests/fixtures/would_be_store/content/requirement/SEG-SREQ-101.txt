@@ -1,0 +1,2 @@
+While an edge selection narrows by kind and by both its source and its
+target, the command-line interface shall select at most one edge.

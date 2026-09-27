@@ -1,0 +1,8 @@
+def handle_status(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Derive every edge's state from both the recorded and current streams.
+
+    :implements: SEG-SREQ-080
+    :implements: SEG-SREQ-081
+    :implements: SEG-SREQ-082
+    :implements: SEG-SREQ-083
+    """

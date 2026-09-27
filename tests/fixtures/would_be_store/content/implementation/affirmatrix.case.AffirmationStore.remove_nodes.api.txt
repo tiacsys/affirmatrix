@@ -1,0 +1,5 @@
+    def remove_nodes(self, kind: str, local_ids: Iterable[str]) -> None:
+        """Remove the named node records, and only those.
+
+        :implements: SEG-SREQ-023
+        """

@@ -1,0 +1,2 @@
+The command-line interface shall let the operator inspect an edge
+selection and record an affirmation over it, each as its own verb.

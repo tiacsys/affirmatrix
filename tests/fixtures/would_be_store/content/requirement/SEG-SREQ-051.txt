@@ -1,0 +1,3 @@
+If a write would replace an edge record carrying the hash it was affirmed
+against with a record carrying no such hash, and demotion of that edge was
+not requested, then the affirmation store shall refuse the write.

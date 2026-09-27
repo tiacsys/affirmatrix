@@ -1,0 +1,32 @@
+
+    case: Path = DEFAULT_CASE
+    producer_root: Path | None = None
+    repositories: Mapping[str, Path] = field(default_factory=dict)
+    implementation: str | None = None
+    roles: frozenset[str] | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "repositories", MappingProxyType(dict(self.repositories)))
+
+    def repository(self, name: str) -> Path | None:
+        """The path a repository name maps to, or no repository at all.
+
+        :implements: SEG-SREQ-121
+
+        A lookup miss is data, not an error: an anchor naming a repository
+        this configuration does not map is read as having no repository
+        behind it, the fallback trigger a judgement's revision resolution
+        acts on, never a special case checked for separately.
+        """
+        return self.repositories.get(name)
+
+    def implementation_repository(self) -> Path | None:
+        """The implementation repository's path, if one is named and mapped.
+
+        :implements: SEG-SREQ-122
+
+        ``None`` both when no repository is named as the implementation one
+        and when it is named but absent from the map — the same no-repository
+        reading :meth:`repository` already gives a lookup miss.
+        """
+        return None if self.implementation is None else self.repository(self.implementation)

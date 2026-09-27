@@ -1,0 +1,20 @@
+def assemble(
+    graph: Graph,
+    requested_ids: Iterable[str],
+    *,
+    snapshot_timestamp: datetime,
+    evaluation_date: date,
+    current_revision: str,
+) -> Package:
+    """Collect a scope, judge it, and build its documents — or refuse.
+
+    :implements: SEG-SREQ-035
+    :implements: SEG-SREQ-046
+    :implements: SEG-SREQ-048
+
+    Composes :func:`check_readiness`. When the judgement is blocked, raises
+    :class:`GenerationRefused` at this one point, before any document body
+    is built — the whole of SEG-SREQ-046's first half, and SEG-SREQ-048's
+    boundary: this is the only place a scope is ever refused, and it is
+    refused if and only if the gate's own report says it is blocked.
+    """

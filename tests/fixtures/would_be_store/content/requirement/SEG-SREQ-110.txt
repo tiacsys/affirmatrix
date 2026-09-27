@@ -1,0 +1,3 @@
+Where no repository stands behind an endpoint's anchor, the
+command-line interface shall require a revision to be given explicitly
+for that endpoint.

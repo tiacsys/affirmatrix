@@ -1,0 +1,16 @@
+    if given is not None:
+        return given
+    repository_path = config.implementation_repository()
+    if repository_path is None:
+        raise JudgementError(
+            "no implementation repository is configured; a revision must be given "
+            "explicitly (--revision)"
+        )
+    revision = _repository.discover_revision(repository_path)
+    cleanliness = _repository.check_clean(repository_path, [Path(".")])
+    if not cleanliness.clean:
+        raise JudgementError(
+            f"the implementation repository is dirty at {', '.join(cleanliness.dirty_paths)}; "
+            f"refusing to record a discovered revision at {revision}"
+        )
+    return str(revision)

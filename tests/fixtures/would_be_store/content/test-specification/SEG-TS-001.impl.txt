@@ -1,9 +1,6 @@
-def test_the_node_hash_binds_the_type_and_the_field_names() -> None:
-    """
-    :verifies: SEG-SREQ-005
-    :test-id: SEG-TS-001
-    """
-    assert node_hash("Requirement", {"contentHash": D1}) != node_hash(
-        "Waiver", {"contentHash": D1}
+    assert taxonomy.node_kinds() == frozenset(
+        {"Requirement", "Implementation", "TestSpecification", "TestOutcome", "Waiver"}
     )
-    assert node_hash("Requirement", {"contentHash": D1}) != D1
+    assert taxonomy.edge_kinds() == frozenset(
+        {"Refines", "Verifies", "Implements", "Confirms", "Witnesses", "Excuses", "Calls"}
+    )

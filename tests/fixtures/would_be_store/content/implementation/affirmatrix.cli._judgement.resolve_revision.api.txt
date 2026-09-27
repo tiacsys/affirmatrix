@@ -1,0 +1,18 @@
+def resolve_revision(
+    node: NodeRecord, *, config: Config, given: str | None, label: str
+) -> str:
+    """One endpoint's source revision: given, discovered, or refused.
+
+    :implements: SEG-SREQ-107
+    :implements: SEG-SREQ-108
+    :implements: SEG-SREQ-109
+    :implements: SEG-SREQ-110
+
+    ``given`` overrides discovery entirely when present, recorded exactly as
+    given, neither discovered nor checked (SEG-SREQ-109). Otherwise, where
+    the node's anchors name a repository the configuration maps
+    (SEG-SREQ-107), the working tree's revision is discovered and the
+    anchored paths checked clean before it is trusted (SEG-SREQ-108);
+    lacking a mapped repository, a revision must be given explicitly
+    (SEG-SREQ-110).
+    """

@@ -1,0 +1,24 @@
+    from_id = _read_endpoint(entry, "seg:from", document)
+    to_id = _read_endpoint(entry, "seg:to", document)
+    edge_hash = (
+        _read_digest(entry, "seg:edgeHash", f"{document} holds {entry[_ID]}, whose")
+        if "seg:edgeHash" in entry
+        else None
+    )
+    minted = identity.edge_iri(kind, from_id, to_id)
+    if entry[_ID] != minted:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, but its endpoints mint {minted}; "
+            "two spellings of one identity must agree"
+        )
+    return _reconstructed(
+        lambda: EdgeRecord(
+            from_id=from_id,
+            to_id=to_id,
+            kind=kind,
+            state=LinkState(str(entry["seg:linkState"])),
+            edge_hash=edge_hash,
+        ),
+        entry,
+        document,
+    )

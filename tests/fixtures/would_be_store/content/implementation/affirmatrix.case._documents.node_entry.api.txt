@@ -1,0 +1,14 @@
+def node_entry(record: NodeRecord) -> Entry:
+    """One node record as a JSON-LD entry.
+
+    :implements: SEG-SREQ-018
+    :implements: SEG-SREQ-050
+
+    Every value is an identifier, a kind token, a digest, the source location
+    of what a digest covers, or a test outcome's recorded result. The content
+    itself has no field to travel in, which is the structural half of the
+    guarantee; the schema's refusal of any undeclared property is the other.
+    Each digest's location is written beside it under the digest's own name
+    plus ``Source``, so the pairing is a spelling rule a reader can apply
+    without a table.
+    """

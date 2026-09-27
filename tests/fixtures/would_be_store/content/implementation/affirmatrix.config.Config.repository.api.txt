@@ -1,0 +1,10 @@
+    def repository(self, name: str) -> Path | None:
+        """The path a repository name maps to, or no repository at all.
+
+        :implements: SEG-SREQ-121
+
+        A lookup miss is data, not an error: an anchor naming a repository
+        this configuration does not map is read as having no repository
+        behind it, the fallback trigger a judgement's revision resolution
+        acts on, never a special case checked for separately.
+        """

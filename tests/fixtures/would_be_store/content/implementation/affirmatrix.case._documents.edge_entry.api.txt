@@ -1,0 +1,10 @@
+def edge_entry(record: EdgeRecord) -> Entry:
+    """One edge record as a JSON-LD entry.
+
+    :implements: SEG-SREQ-018
+
+    The endpoints are written as their own fields rather than left to be read
+    out of the entry's identifier. An identifier is an opaque key (ADR-0007),
+    and a reader that split one would be relying on a separator that either
+    part may itself contain.
+    """

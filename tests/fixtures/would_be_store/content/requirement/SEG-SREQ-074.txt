@@ -1,0 +1,2 @@
+The command-line interface shall report every vanished edge case sync's
+derivation finds, without removing it from the case.

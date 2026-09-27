@@ -1,0 +1,33 @@
+def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
+    """One persisted entry back as the node record it serializes.
+
+    :implements: SEG-SREQ-020
+    :implements: SEG-SREQ-055
+    :implements: SEG-SREQ-057
+    :implements: SEG-SREQ-058
+    :implements: SEG-SREQ-062
+
+    A test outcome's result is read back through the closed vocabulary, so a
+    hand-edited spelling the vocabulary does not contain is refused here even
+    before the schema is consulted — the recorded stream supplies a result in
+    every test outcome record or refuses to be a stream at all. A waiver's
+    expiry and approver are read back the same way, through the vocabulary's
+    own construction: an expiry that is not an ISO 8601 calendar date, or a
+    waiver missing either claim, is refused by :class:`~affirmatrix.records.NodeRecord`
+    itself before the schema is consulted. A test outcome's revision is read
+    back as the plain string it was written as — its spelling is deliberately
+    unconstrained (SEG-SREQ-062) — but a test outcome missing it is refused
+    the same way a test outcome missing its result is.
+
+    The kind comes from the document being read, never from the entry: the
+    schema has already pinned the entry's ``type`` to the document's kind, so
+    reading it out again would be stating one fact twice. The identifier is
+    read from ``seg:localId`` and then verified by re-minting: an entry whose
+    ``id`` and local identifier disagree carries two identities, and reading
+    back either one silently would let the record move on its next rewrite.
+
+    Digests and source locations are paired by the ``Source`` spelling rule and
+    the pairing is re-established here, not leaned on the schema: a digest
+    without its location, or a location without its digest, is half a record,
+    and half a record is refused rather than guessed at.
+    """

@@ -1,0 +1,9 @@
+        self._ensure_layout()
+        document = _layout.edge_document(self.root, kind)
+        self._remove(
+            document,
+            {
+                edge_iri(kind, from_id, to_id): f"{from_id} -> {to_id}"
+                for from_id, to_id in endpoints
+            },
+        )

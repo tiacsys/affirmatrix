@@ -1,2 +1,12 @@
-A node or edge record declaring a kind the vocabulary does not contain stops
-the build rather than being skipped.
+    """The node hash derives from type and content hashes alone.
+
+    Computing a node hash from a fixed node type and one named content
+    hash, then independently varying the node type, the content digest,
+    and the content-hash field name, changes the resulting hash on every
+    variation; and the node hash of a single content hash never equals
+    that content hash's own digest — the type and the name are folded
+    in, not merely passed through.
+
+    :verifies: SEG-SREQ-005
+    :test-id: SEG-TS-006
+    """

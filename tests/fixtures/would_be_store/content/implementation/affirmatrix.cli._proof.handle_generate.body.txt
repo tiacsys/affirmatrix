@@ -1,0 +1,44 @@
+    built, error_status = _build(args, config, store)
+    if built is None:
+        return error_status
+    try:
+        gate_revision = _judgement.resolve_gate_revision(config, given=args.revision)
+    except _judgement.JudgementError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    write_store = AffirmationStore(root=Path(args.output_dir)) if args.output_dir else store
+    try:
+        package = proof.assemble(
+            built,
+            args.scope,
+            snapshot_timestamp=_judgement.resolve_timestamp(args.timestamp),
+            evaluation_date=_judgement.resolve_evaluation_date(args.evaluation_date),
+            current_revision=gate_revision,
+        )
+    except proof.ScopeError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    except proof.GenerationRefused as refusal:
+        document = proof.coverage_report_document(refusal.coverage_report)
+        if args.json:
+            _outcome.render_json(document)
+        else:
+            print(f"refused: {refusal}")
+            for diagnostic in refusal.coverage_report.diagnostics:
+                print(
+                    f"  {diagnostic.severity.value}: {diagnostic.condition} "
+                    f"({diagnostic.subject})"
+                )
+        return _outcome.exit_for(_outcome.NEGATIVE)
+    written = proof.persist(package, write_store)
+    report = {
+        "snapshotId": package.scope.snapshot_id,
+        "documents": {name: str(path) for name, path in written.items()},
+    }
+    if args.json:
+        _outcome.render_json(report)
+    else:
+        print(f"snapshot: {package.scope.snapshot_id}")
+        for name, path in sorted(written.items()):
+            print(f"wrote {name}: {path}")
+    return _outcome.exit_for(_outcome.POSITIVE)

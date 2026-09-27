@@ -1,0 +1,21 @@
+    source = _current_or_case(args, config, store)
+    try:
+        built = graph.build(source)
+    except (graph.GraphError, StoreError) as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.NEGATIVE)
+    node_counts = Counter(built.node(local_id).kind for local_id in built.node_ids())
+    edge_counts = Counter(edge.kind for edge in built.edges)
+    pending = sum(1 for edge in built.edges if edge.state is LinkState.PENDING)
+    report = {
+        "nodesByKind": dict(sorted(node_counts.items())),
+        "edgesByKind": dict(sorted(edge_counts.items())),
+        "pending": pending,
+    }
+    if args.json:
+        _outcome.render_json(report)
+    else:
+        print(f"nodes by kind: {report['nodesByKind']}")
+        print(f"edges by kind: {report['edgesByKind']}")
+        print(f"pending: {pending}")
+    return _outcome.exit_for(_outcome.POSITIVE)

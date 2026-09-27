@@ -1,0 +1,3 @@
+    store.initialize()
+    print(f"case initialized at {store.root}")
+    return _outcome.exit_for(_outcome.POSITIVE)

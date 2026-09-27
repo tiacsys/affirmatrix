@@ -1,0 +1,3 @@
+    if status not in _STATUSES:
+        raise ValueError(f"{status} is not one of the three exit statuses (0, 1, 2)")
+    return status

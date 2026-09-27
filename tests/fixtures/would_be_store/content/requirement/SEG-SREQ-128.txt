@@ -1,0 +1,5 @@
+For an edge that has been affirmed, the suspect detector shall report,
+for each named content hash of either endpoint, whether that hash's
+current digest matches the digest the affirming review event recorded
+for that endpoint, together with both digests' anchors and the source
+revision the review event recorded for that endpoint.

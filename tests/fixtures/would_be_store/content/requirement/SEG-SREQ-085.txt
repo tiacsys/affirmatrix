@@ -1,0 +1,4 @@
+The command-line interface shall have edge show render, for every edge
+a selection includes, the per-hash comparison of its endpoints and, for
+an edge that has been affirmed, the content recovered at its last
+affirmation's revision.

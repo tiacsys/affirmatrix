@@ -1,0 +1,20 @@
+def load(path: Path | None = None, *, case: Path | None = None) -> Config:
+    """Read a configuration file, or default every parameter it carries.
+
+    :implements: SEG-SREQ-118
+    :implements: SEG-SREQ-119
+    :implements: SEG-SREQ-120
+    :implements: SEG-SREQ-123
+    :implements: SEG-SREQ-124
+    :implements: SEG-SREQ-125
+
+    ``path`` is the file to read, defaulting to :data:`DEFAULT_CONFIG_PATH`
+    when not given; while that file does not exist, every parameter this
+    loader carries defaults rather than the load refusing — the case root to
+    :data:`DEFAULT_CASE`, everything else to absent. ``case``, when given, is
+    the caller's own value (the command line's ``--case``) and is preferred
+    over the file's — the loader's keyword parameter is where a caller's
+    override enters; a future flag overriding another field is the same
+    shape, not a new mechanism. Raises :class:`ConfigError` for a file that
+    exists but cannot be made sense of — never for one that is merely absent.
+    """

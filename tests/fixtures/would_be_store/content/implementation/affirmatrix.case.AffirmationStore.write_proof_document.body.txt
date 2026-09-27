@@ -1,0 +1,13 @@
+        schemas = self._prepared()
+        path = _layout.proof_document(self.root, snapshot_id, document_name)
+        try:
+            schema_name = _layout.PROOF_DOCUMENT_SCHEMAS[document_name]
+        except KeyError:
+            raise AffirmationStoreError(
+                f"no schema is registered for the proof document kind {document_name!r}"
+            ) from None
+        _validation.validate_entry(
+            schemas, document, schema_name, f"proof document {document_name!r}"
+        )
+        _atomic.replace_file(path, _documents.serialized(document, _layout.PROOF_CONTEXT))
+        return path

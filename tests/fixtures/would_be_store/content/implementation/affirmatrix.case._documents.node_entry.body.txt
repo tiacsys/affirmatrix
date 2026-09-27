@@ -1,0 +1,15 @@
+    entry: Entry = {
+        _ID: identity.node_iri(record.local_id),
+        "type": f"seg:{record.kind}",
+        "seg:localId": record.local_id,
+    }
+    if record.result is not None:
+        entry[_RESULT] = record.result.value
+    if record.expiry is not None:
+        entry[_EXPIRY] = record.expiry.isoformat()
+    if record.approver is not None:
+        entry[_APPROVER] = record.approver
+    if record.revision is not None:
+        entry[_REVISION] = record.revision
+    entry.update(_anchor_fields(record.content_anchors))
+    return entry

@@ -1,0 +1,17 @@
+    selector = _selector.selector_from_args(args)
+    try:
+        built = graph.build(store)
+    except graph.GraphError as error:
+        return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
+    matched = _selector.select(store.edges(), selector, built)
+    if not matched:
+        return _outcome.exit_for(
+            _report_refusal("the selector matched no edge", _outcome.INDETERMINATE)
+        )
+    for kind in {edge.kind for edge in matched}:
+        store.remove_edges(
+            kind, [(edge.from_id, edge.to_id) for edge in matched if edge.kind == kind]
+        )
+    for edge in matched:
+        print(f"removed: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+    return _outcome.exit_for(_outcome.POSITIVE)

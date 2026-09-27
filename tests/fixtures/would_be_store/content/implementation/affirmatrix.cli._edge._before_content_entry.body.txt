@@ -1,0 +1,5 @@
+    content = _judgement.recover_before_content(node, revision, config)
+    return {
+        "revision": revision,
+        "content": content.decode("utf-8", errors="replace") if content is not None else None,
+    }

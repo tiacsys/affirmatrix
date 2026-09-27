@@ -1,0 +1,8 @@
+def check_role(role: str, config: Config) -> None:
+    """Refuse a role outside a configured vocabulary.
+
+    :implements: SEG-SREQ-113
+
+    Where no vocabulary is configured, every role is accepted — enforcement
+    is opt-in, by configuring one at all.
+    """

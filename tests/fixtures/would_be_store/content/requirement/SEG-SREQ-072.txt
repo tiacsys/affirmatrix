@@ -1,0 +1,3 @@
+The command-line interface shall write, in response to case sync, the
+derived stream the suspect detector produces from both record sources,
+never the current stream a producer supplies unmodified.

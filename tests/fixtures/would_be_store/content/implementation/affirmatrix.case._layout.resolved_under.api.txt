@@ -1,0 +1,23 @@
+def resolved_under(root: Path, *parts: str) -> Path:
+    """A path built from ``parts`` and proven to lie under ``root``.
+
+    :implements: SEG-SREQ-021
+
+    Two checks, because either alone is escapable. The segment rules stop the
+    obvious constructions — a parent reference, an absolute path, a separator
+    smuggled into what should be one name — and the resolution catches the case
+    no lexical rule can see, where a directory in the path is a symlink out of
+    the root.
+
+    A character invalid in a file name on Windows is refused on every platform,
+    control characters with it. A published case must be checkable out on
+    either filesystem; the proof generator's minting rule (SEG-SREQ-052) is the
+    primary guard, and this is the store's defense in depth at its one path
+    choke point, so no caller-supplied name can put an uncheckoutable file in a
+    case. Windows's reserved device names and trailing dots or spaces remain
+    the minting rule's concern — this rule is about characters only.
+
+    A leading dot is refused as well. It is not an escape, but it would let a
+    caller-supplied name hide a document from an ordinary listing of the case,
+    and the review surface for the whole store is somebody reading that listing.
+    """

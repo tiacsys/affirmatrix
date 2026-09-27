@@ -1,0 +1,2 @@
+The affirmation recorder shall accept an affirmation only for a strong
+edge.

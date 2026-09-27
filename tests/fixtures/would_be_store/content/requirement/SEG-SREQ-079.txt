@@ -1,0 +1,2 @@
+If graph check refuses, then the command-line interface shall render
+that refusal's report with no count of anything.

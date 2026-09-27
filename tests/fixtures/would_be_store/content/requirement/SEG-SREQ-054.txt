@@ -1,0 +1,2 @@
+The suspect detector shall take its recorded record source from the
+affirmation store.

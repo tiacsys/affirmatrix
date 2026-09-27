@@ -1,0 +1,3 @@
+The command-line interface shall narrow an edge selection by any
+combination of kind, either endpoint, and subtree, each restricting the
+set the others admit.

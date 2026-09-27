@@ -1,0 +1,3 @@
+The command-line interface shall require an explicit role and an
+explicit reason — which may be empty — for every affirmation, supplying
+neither as a default.

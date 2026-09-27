@@ -1,0 +1,18 @@
+        schemas = self._prepared()
+        document = _layout.events_document(self.root)
+        existing = _documents.read_entries(document)
+        recorded = {entry["id"] for entry in existing}
+        entries: list[_documents.Entry] = []
+        for ordinal, event in enumerate(events, start=len(existing) + 1):
+            entry = _documents.event_entry(event, ordinal)
+            if entry["id"] in recorded:
+                raise AffirmationStoreError(
+                    f"{document} already holds an event at position {ordinal}; its events are "
+                    "not numbered as they were appended and appending would overwrite one"
+                )
+            _validation.validate_entry(
+                schemas, entry, _layout.EVENT_SCHEMA, f"review event {entry['id']}"
+            )
+            entries.append(entry)
+        if entries:
+            self._rewrite(document, entries)

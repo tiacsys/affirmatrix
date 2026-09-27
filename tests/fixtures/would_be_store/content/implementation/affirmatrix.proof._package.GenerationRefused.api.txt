@@ -1,0 +1,16 @@
+class GenerationRefused(Exception):
+    """The proof gate reported the requested scope blocked; there is no package for it.
+
+    :implements: SEG-SREQ-047
+
+    Carries the judgement as two typed attributes, not only in the message,
+    so a caller can render every diagnostic rather than parse a string:
+    ``scope`` (the collected :class:`~affirmatrix.proof.Scope` — its
+    snapshot id and the requested and member identifiers it was collected
+    for) and ``coverage_report`` (the gate's own
+    :class:`~affirmatrix.gates.CoverageReport`, unchanged). Named without
+    the ``Error`` suffix every other refusal in this codebase carries,
+    deliberately: this is the gate's own verdict acted on, not an input the
+    generator failed to make sense of, and the two are never to be confused
+    for one another (SEG-SREQ-048).
+    """

@@ -1,0 +1,4 @@
+The command-line interface shall have case check report the case's
+layout, its schema set — naming any schema missing rather than
+supplying one — its record counts, whether its configuration was found
+or defaults were used, and whether its producer is readable.

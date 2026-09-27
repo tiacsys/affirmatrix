@@ -1,0 +1,1 @@
+    return kind in taxonomy.propagating_edge_kinds() and state in _AFFIRMABLE

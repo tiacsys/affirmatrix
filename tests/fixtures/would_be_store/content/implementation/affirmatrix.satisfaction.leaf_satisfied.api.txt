@@ -1,0 +1,25 @@
+def leaf_satisfied(graph: Graph, local_id: str) -> bool:
+    """The leaf rule: a requirement nothing refines is satisfied when, and
+    only when, it carries at least one active verifies edge, at least one
+    active implements edge, and every test specification named by a verifies
+    edge has at least one confirming outcome, with every confirming outcome
+    either passed or excused by a waiver.
+
+    :implements: SEG-SREQ-006
+
+    Every specification a verifies edge names is a verifying specification,
+    whatever the edge's state: the state gates whether the edge counts as
+    coverage, not whether the specification it names owes evidence. Releasing
+    a specification because its edge went suspect would let suspicion quietly
+    shrink what the leaf must show.
+
+    The outcome clause is a universal with an existence obligation, not the
+    existential it used to be: a specification with no confirming outcome at
+    all never satisfies vacuously, and one passing outcome sitting beside an
+    unwaived failing one no longer satisfies either — every confirming
+    outcome must clear the bar itself. "Confirming" still means what the
+    discard rule below already means by it: an outcome counts only once it
+    both confirms this specification and witnesses an implementation: an
+    incomplete outcome is discarded, not counted either way, so it neither
+    satisfies nor fails a specification it hangs off.
+    """

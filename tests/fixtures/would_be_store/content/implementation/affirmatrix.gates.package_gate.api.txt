@@ -1,0 +1,30 @@
+def package_gate(graph: Graph, *, evaluation_date: date, current_revision: str) -> CoverageReport:
+    """Evaluate the package gate over a scope, judging and reporting only.
+
+    :implements: SEG-SREQ-043
+    :implements: SEG-SREQ-044
+    :implements: SEG-SREQ-045
+    :implements: SEG-SREQ-063
+
+    ``graph`` is the scope the caller built; the gate does no scope collection
+    of its own, so an iteration-0 caller hands it the whole graph and a later
+    caller a reachability subset through the same function — scope collection
+    (SEG-SREQ-036) is the proof generator's to build, not this one's.
+
+    ``evaluation_date`` is the caller-supplied "today" a waiver's expiry is
+    judged against (SEG-SREQ-059's expiry half). Required and never defaulted:
+    a gate that read the system clock itself could not repeat its own verdict
+    on a later call over the same graph, and the caller-supplied-metadata
+    precedent the commitment layer already sets — an opaque value the caller
+    provides rather than the layer discovering it — is exactly what keeps
+    this function pure.
+
+    ``current_revision`` is the same kind of explicit external input, never
+    read from the graph: the current revision of the implementation
+    repository, against which every ``TestOutcome``'s own recorded revision
+    is compared. A stale outcome — recorded revision differing from this one
+    — is cut out of ``graph`` before every other finding is computed, so it
+    is absent for coverage and for the waiver seam alike and surfaces exactly
+    once, as the stale finding (see the module docstring's staleness
+    section).
+    """

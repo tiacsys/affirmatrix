@@ -1,0 +1,11 @@
+def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Report node and edge counts by kind, and the count of pending edges.
+
+    :implements: SEG-SREQ-077
+    :implements: SEG-SREQ-078
+    :implements: SEG-SREQ-079
+
+    Over the one stream given: ``--current`` when given, the case itself
+    otherwise. An unbuildable stream is the negative verdict, and its
+    refusal renders the builder's own message with no count of anything.
+    """

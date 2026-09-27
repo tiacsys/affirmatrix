@@ -1,0 +1,1 @@
+        return any(diagnostic.severity.blocks_package for diagnostic in self.diagnostics)

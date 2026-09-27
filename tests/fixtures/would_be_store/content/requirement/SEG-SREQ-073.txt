@@ -1,0 +1,2 @@
+The command-line interface shall never request the demotion of an edge
+when writing case sync's derived stream to the case.

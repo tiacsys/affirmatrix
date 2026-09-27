@@ -1,0 +1,15 @@
+def edge_record(entry: Entry, kind: str, document: Path) -> EdgeRecord:
+    """One persisted entry back as the edge record it serializes.
+
+    :implements: SEG-SREQ-020
+
+    The endpoints are read from ``seg:from`` and ``seg:to`` — the record's own
+    fields, exactly as ADR-0007 instructs — and those values are node IRIs, so
+    each is undone by the one inverse that exists. The recovery is then
+    verified by re-minting the edge's identifier from the recovered parts: a
+    parse this module cannot reproduce is a parse it refuses to trust.
+
+    The record type re-establishes its own invariants on construction, so an
+    entry hand-edited into a pending edge that carries a hash, or an active one
+    that lacks it, fails here even before the schema is consulted.
+    """

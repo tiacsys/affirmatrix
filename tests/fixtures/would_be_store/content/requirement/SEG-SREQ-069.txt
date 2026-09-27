@@ -1,0 +1,3 @@
+The command-line interface shall let the operator bring a case into
+being, inspect it, mirror the current stream into it, and remove named
+records from it, each as its own verb.

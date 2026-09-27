@@ -1,0 +1,4 @@
+The affirmation recorder shall record in every review event, for each
+endpoint of the affirmed edge, every named content hash it carries
+together with that hash's anchor, as they stood at the moment of
+judgement.

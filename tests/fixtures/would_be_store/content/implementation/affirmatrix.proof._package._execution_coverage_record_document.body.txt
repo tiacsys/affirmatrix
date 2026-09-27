@@ -1,0 +1,15 @@
+    outcomes: list[dict[str, object]] = []
+    for node in (scope.subgraph.node(local_id) for local_id in sorted(scope.subgraph.node_ids())):
+        if node.kind != _TEST_OUTCOME or node.local_id in report.stale_outcomes:
+            continue
+        entry: dict[str, object] = {
+            "id": node.local_id,
+            "result": node.result.value,
+            "revision": node.revision,
+            "confirms": _confirmed_specification(scope.subgraph, node.local_id),
+        }
+        if node.local_id in report.excused_outcomes:
+            waiver = _excusing_waiver(scope.subgraph, node.local_id)
+            entry["waiver"] = {"id": waiver.local_id, "expiry": waiver.expiry.isoformat()}
+        outcomes.append(entry)
+    return {"outcomes": outcomes}

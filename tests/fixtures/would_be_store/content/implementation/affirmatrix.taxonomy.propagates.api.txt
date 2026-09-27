@@ -2,4 +2,9 @@ def propagates(edge_kind: str) -> bool:
     """Whether suspicion travels along an edge of this kind.
 
     :implements: SEG-SREQ-030
+
+    An undeclared kind raises rather than answering ``False``. A misspelling
+    that quietly answered "does not propagate" would switch off suspicion for a
+    whole class of edges and leave the graph looking healthier than it is,
+    which is the one failure mode this component must not have.
     """

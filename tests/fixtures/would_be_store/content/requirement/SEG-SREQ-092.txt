@@ -1,0 +1,3 @@
+The command-line interface shall have proof generate assemble and
+persist an evidence package for a requested scope when the gate finds
+it ready, and refuse with the gate's report otherwise.

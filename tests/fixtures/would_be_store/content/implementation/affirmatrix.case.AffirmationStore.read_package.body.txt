@@ -1,0 +1,6 @@
+        return MappingProxyType(
+            {
+                document_name: self.read_proof_document(snapshot_id, document_name)
+                for document_name in sorted(_layout.PROOF_DOCUMENT_SCHEMAS)
+            }
+        )

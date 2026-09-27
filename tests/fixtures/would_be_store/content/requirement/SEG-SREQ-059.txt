@@ -1,0 +1,2 @@
+The gate evaluator shall treat an excusing waiver as valid only when it has
+not expired and its recorded approver is authorised to grant it.

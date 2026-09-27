@@ -1,0 +1,16 @@
+    scope, report = check_readiness(
+        graph,
+        requested_ids,
+        snapshot_timestamp=snapshot_timestamp,
+        evaluation_date=evaluation_date,
+        current_revision=current_revision,
+    )
+    if report.blocked:
+        raise GenerationRefused(scope, report)
+    documents = {
+        DESIGN_CONSISTENCY_PROOF: _design_consistency_proof_document(scope, current_revision),
+        EXECUTION_COVERAGE_RECORD: _execution_coverage_record_document(scope, report),
+        COVERAGE_REPORT: coverage_report_document(report),
+        EVIDENCE_MANIFEST: _evidence_manifest_document(scope, current_revision),
+    }
+    return Package(scope=scope, coverage_report=report, documents=documents)

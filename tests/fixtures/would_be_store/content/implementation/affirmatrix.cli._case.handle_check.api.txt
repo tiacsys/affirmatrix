@@ -1,0 +1,10 @@
+def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Report the case's five judgements.
+
+    :implements: SEG-SREQ-071
+
+    Layout and schema set are read whether or not the case is otherwise
+    readable; record counts default to zero for a case that is not yet
+    self-describing rather than propagating that refusal, since a fresh
+    root reporting zero of everything is itself the honest report.
+    """

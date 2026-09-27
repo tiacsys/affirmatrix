@@ -1,0 +1,13 @@
+def truth_table_state(*, content_matches: bool, dependencies_active: bool) -> LinkState:
+    """The derived state of an affirmed edge, from its two axes.
+
+    :implements: SEG-SREQ-011
+    :implements: SEG-SREQ-012
+    :implements: SEG-SREQ-013
+    :implements: SEG-SREQ-014
+
+    ``content_matches`` is the recomputed edge hash against the stored one;
+    ``dependencies_active`` is the universal over the strong edges below the
+    edge's source endpoint, true when that set is empty — which is how the
+    recursion grounds out at endpoints nothing strong points into.
+    """

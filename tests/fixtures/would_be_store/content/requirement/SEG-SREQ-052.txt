@@ -1,0 +1,3 @@
+The proof generator shall mint every snapshot identifier using only
+characters that are valid in a file name on both POSIX and Windows
+filesystems.

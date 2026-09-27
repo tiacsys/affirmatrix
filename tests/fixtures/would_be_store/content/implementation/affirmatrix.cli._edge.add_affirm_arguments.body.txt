@@ -1,0 +1,5 @@
+    _selector.add_selector_arguments(parser)
+    parser.add_argument("--current", help="the producer supplying the current stream")
+    parser.add_argument("--role", required=True, help="the capacity the affirmation is made in")
+    parser.add_argument("--reason", required=True, help="the justification, may be empty")
+    parser.add_argument("--revision", help="record this revision as given, for every endpoint")

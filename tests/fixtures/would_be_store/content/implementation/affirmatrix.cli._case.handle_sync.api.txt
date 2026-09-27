@@ -1,0 +1,7 @@
+def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Write the derived stream case sync produces, from both record sources.
+
+    :implements: SEG-SREQ-072
+    :implements: SEG-SREQ-073
+    :implements: SEG-SREQ-074
+    """

@@ -1,0 +1,10 @@
+    return {
+        "snapshotId": scope.snapshot_id,
+        "requestedScope": sorted(scope.requested_ids),
+        "memberScope": sorted(scope.member_ids),
+        "total": scope.total,
+        "revision": current_revision,
+        "designConsistencyProof": f"{DESIGN_CONSISTENCY_PROOF}.jsonld",
+        "executionCoverageRecord": f"{EXECUTION_COVERAGE_RECORD}.jsonld",
+        "coverageReport": f"{COVERAGE_REPORT}.jsonld",
+    }

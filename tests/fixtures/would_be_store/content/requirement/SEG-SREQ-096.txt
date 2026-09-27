@@ -1,0 +1,3 @@
+The command-line interface shall exit with one of three statuses: 0 for
+the command's positive verdict, 1 for its negative verdict acted on, and
+2 when it could not judge the request at all.

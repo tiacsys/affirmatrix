@@ -1,0 +1,34 @@
+    relation = str(entry["seg:relation"])
+    if not relation.startswith(_PREFIX):
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose relation {relation!r} is not in the "
+            "case's vocabulary"
+        )
+    revisions = entry["seg:affirmedAt"]
+    if not isinstance(revisions, Mapping):
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, whose seg:affirmedAt is not the pair of "
+            "revisions the judgement was made at"
+        )
+    label = f"{document} holds {entry[_ID]}, whose"
+    return _reconstructed(
+        lambda: ReviewEvent(
+            from_id=_read_endpoint(entry, "seg:from", document),
+            to_id=_read_endpoint(entry, "seg:to", document),
+            kind=relation.removeprefix(_PREFIX),
+            from_node_hash=_read_digest(entry, "seg:fromNodeHash", label),
+            to_node_hash=_read_digest(entry, "seg:toNodeHash", label),
+            from_source_revision=str(revisions["seg:fromRevision"]),
+            to_source_revision=str(revisions["seg:toRevision"]),
+            from_content_anchors=_read_content_anchor_object(
+                entry, "seg:fromContentAnchors", document
+            ),
+            to_content_anchors=_read_content_anchor_object(
+                entry, "seg:toContentAnchors", document
+            ),
+            role=str(entry["seg:affirmingRole"]),
+            reason=str(entry["seg:reason"]),
+        ),
+        entry,
+        document,
+    )

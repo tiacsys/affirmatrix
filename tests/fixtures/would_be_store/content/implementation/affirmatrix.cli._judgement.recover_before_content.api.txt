@@ -1,0 +1,10 @@
+def recover_before_content(node: NodeRecord, revision: str, config: Config) -> bytes | None:
+    """The bytes an endpoint's anchor names at a revision, for display only.
+
+    :implements: SEG-SREQ-111
+
+    ``None`` when no repository stands behind the anchor, or the anchor
+    carries more than one path — before-content recovery is a single
+    ``git show``, and an endpoint with a location this adapter cannot
+    resolve to one repository and one path is not this function's to guess.
+    """

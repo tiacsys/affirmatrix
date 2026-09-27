@@ -1,0 +1,11 @@
+def _design_consistency_proof_document(scope: Scope, current_revision: str) -> Mapping[str, object]:
+    """The design consistency proof: what its own root recomputes from, and the root itself.
+
+    :implements: SEG-SREQ-037
+
+    Self-contained: an auditor holding only this document's fields — never
+    the graph that produced them — can sort the node manifest's hashes and
+    the design edges' tuples, rebuild the canonical metadata from the three
+    fields carried alongside them, and arrive at the same root
+    (SEG-SYS-005).
+    """

@@ -1,0 +1,10 @@
+def main(argv: Sequence[str] | None = None) -> int:
+    """Parse arguments, dispatch to the named verb's handler, and return its exit status.
+
+    :implements: SEG-SREQ-068
+
+    The one place a noun/verb pair resolves to a handler and the handler is
+    called; nothing here judges anything the library did not already decide.
+    Global options (``--case``, ``--config``) are read before the case is
+    opened; a verb's own options are its module's to add.
+    """

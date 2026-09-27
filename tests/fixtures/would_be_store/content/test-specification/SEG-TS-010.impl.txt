@@ -1,0 +1,13 @@
+    sreq, impl = requirement("SREQ-1"), implementation("pkg.fn")
+    derivation = drift.derive(
+        recorded=Source((sreq, impl), (affirmed("Implements", impl, sreq),)),
+        current=Source((impl,), (declared("Implements", "pkg.fn", "SREQ-1"),)),
+    )
+    assert state_of(derivation, "Implements", "pkg.fn", "SREQ-1") is LinkState.BROKEN
+
+    run = outcome("run-1/TS-1")
+    evidence_derivation = drift.derive(
+        recorded=Source((), ()),
+        current=Source((run,), (declared("Confirms", "run-1/TS-1", "TS-1"),)),
+    )
+    assert state_of(evidence_derivation, "Confirms", "run-1/TS-1", "TS-1") is LinkState.BROKEN

@@ -1,0 +1,5 @@
+def handle_init(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Create a case's layout and schema set, unaltered if already there.
+
+    :implements: SEG-SREQ-070
+    """

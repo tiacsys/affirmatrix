@@ -1,0 +1,25 @@
+def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
+    """One review event as a JSON-LD entry, at the position it was appended to.
+
+    :implements: SEG-SREQ-018
+
+    A review event carries nothing that identifies it — the same edge may be
+    affirmed more than once — so its identity is where it sits in the case's
+    sequence of events. That is available because events are only ever
+    appended.
+
+    The revisions inside ``seg:affirmedAt`` are named apart from the endpoint
+    fields rather than repeating ``seg:from`` and ``seg:to`` inside a nested
+    object. A term in the shared context is defined once for the whole
+    document, and the endpoint term is defined as holding an identifier — so
+    reusing the name here would tell a reader that a git revision is one, and
+    it would be resolved as such against the context's base.
+
+    Each endpoint's named content hashes travel under their own nested
+    object, ``seg:fromContentAnchors``/``seg:toContentAnchors``
+    (SEG-SREQ-127), paired the same ``Source``-suffix way a node's own
+    entry pairs them — nested rather than flattened alongside
+    ``seg:fromNodeHash``, because the two endpoints' hash-name sets would
+    otherwise share one flat namespace and a name common to both kinds
+    could not tell them apart.
+    """

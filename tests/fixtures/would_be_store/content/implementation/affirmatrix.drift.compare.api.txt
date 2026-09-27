@@ -1,0 +1,15 @@
+def compare(
+    edge: EdgeReference, *, current_from: NodeRecord, current_to: NodeRecord, event: ReviewEvent
+) -> Comparison:
+    """Compare an edge's two current endpoints against the event that last affirmed it.
+
+    :implements: SEG-SREQ-128
+
+    Reads the event's own per-hash digests and anchors — never the current
+    endpoint's recorded node record, which is a different question this
+    function does not ask. ``event`` must be the affirmation this edge was
+    judged under: composing a comparison against an event naming a different
+    edge would silently misattribute a judgement to content nobody bound it
+    to, so a mismatch raises :class:`DriftError` rather than comparing
+    anyway.
+    """

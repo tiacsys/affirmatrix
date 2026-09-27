@@ -1,0 +1,2 @@
+While the only edges graph status reports as not active are pending, the
+command-line interface shall exit with status 0, its positive verdict.

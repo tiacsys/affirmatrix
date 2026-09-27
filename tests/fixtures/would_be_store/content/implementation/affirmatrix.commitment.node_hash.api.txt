@@ -2,4 +2,14 @@ def node_hash(node_type: str, content_hashes: Mapping[str, bytes]) -> bytes:
     """Derive a node hash from the node's type and its named content hashes.
 
     :implements: SEG-SREQ-005
+
+    Binds the local type token and the content-hash field names, not only the
+    digests, so a Requirement and a Waiver covering byte-identical content
+    differ. Pairs are ordered by field name, which makes the result
+    reproducible from the record's own pairs without consulting the taxonomy
+    provider's declaration order.
+
+    The fold is uniform: a single-span node is a sequence of one, never its own
+    content hash passed through — the substitution the prototype allowed, where
+    a Requirement's content hash *was* its node hash.
     """

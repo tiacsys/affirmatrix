@@ -1,2 +1,10 @@
-Exactly the refines, verifies and implements kinds propagate suspicion; an
-undeclared kind raises rather than answering that it does not propagate.
+    """An unaffirmed edge builds as pending.
+
+    Building a graph from an edge record that carries no hash it was
+    affirmed against, but whose recorded state claims otherwise, yields a
+    built edge in the pending state — the state the record itself claims
+    is disregarded in favour of the absence of an affirmed hash.
+
+    :verifies: SEG-SREQ-016
+    :test-id: SEG-TS-008
+    """

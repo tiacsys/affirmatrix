@@ -1,0 +1,12 @@
+    requested = frozenset(requested_ids)
+    _check_requested(graph, requested)
+    reachable = _reachable_ids(graph, requested)
+    subgraph = graph.restricted_to(reachable)
+    members = subgraph.node_ids()
+    return Scope(
+        requested_ids=requested,
+        member_ids=members,
+        total=_is_total(graph, members),
+        snapshot_id=_mint_snapshot_id(subgraph, snapshot_timestamp),
+        subgraph=subgraph,
+    )

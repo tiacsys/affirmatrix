@@ -1,0 +1,23 @@
+    for part in parts:
+        if not part or part in {os.curdir, os.pardir}:
+            raise AffirmationStoreError(
+                f"{part!r} is not a name a path under the write root can be built from"
+            )
+        if any(separator in part for separator in _SEPARATORS):
+            raise AffirmationStoreError(
+                f"{part!r} contains a path separator, so it names more than one place"
+            )
+        if any(character in _WINDOWS_INVALID or ord(character) < 0x20 for character in part):
+            raise AffirmationStoreError(
+                f"{part!r} contains a character that is not valid in a file name on every "
+                "filesystem a case must be checkable out on"
+            )
+        if part.startswith("."):
+            raise AffirmationStoreError(f"{part!r} starts with a dot, which would hide it")
+    base = root.resolve()
+    candidate = root.joinpath(*parts).resolve()
+    if not candidate.is_relative_to(base):
+        raise AffirmationStoreError(
+            f"{candidate} resolves outside the write root {base}, and every write stays under it"
+        )
+    return candidate

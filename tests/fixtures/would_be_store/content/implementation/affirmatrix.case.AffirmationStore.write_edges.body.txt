@@ -1,0 +1,16 @@
+        schemas = self._prepared()
+        batch: dict[str, list[tuple[EdgeRecord, _documents.Entry]]] = {}
+        for record in records:
+            entry = _documents.edge_entry(record)
+            _validation.validate_entry(
+                schemas,
+                entry,
+                _layout.edge_schema(record.kind),
+                f"edge {record.from_id!r} -> {record.to_id!r}",
+            )
+            batch.setdefault(record.kind, []).append((record, entry))
+        self._check_demotions(batch, frozenset(demote))
+        for kind, pairs in batch.items():
+            self._rewrite(
+                _layout.edge_document(self.root, kind), [entry for _, entry in pairs]
+            )

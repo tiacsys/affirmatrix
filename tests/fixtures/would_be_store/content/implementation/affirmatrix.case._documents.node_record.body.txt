@@ -1,0 +1,41 @@
+    local_id = str(entry["seg:localId"])
+    minted = identity.node_iri(local_id)
+    if entry[_ID] != minted:
+        raise AffirmationStoreError(
+            f"{document} holds {entry[_ID]}, but its local identifier {local_id!r} mints "
+            f"{minted}; two spellings of one identity must agree"
+        )
+    content_anchors = _read_named_anchors(
+        entry, _NODE_FIXED_FIELDS, f"{document} holds {entry[_ID]}, whose"
+    )
+    result: TestResult | None = None
+    if _RESULT in entry:
+        try:
+            result = TestResult(str(entry[_RESULT]))
+        except ValueError as error:
+            raise AffirmationStoreError(
+                f"{document} holds {entry[_ID]}, whose {_RESULT} cannot be read back: {error}"
+            ) from error
+    expiry: date | None = None
+    if _EXPIRY in entry:
+        try:
+            expiry = date.fromisoformat(str(entry[_EXPIRY]))
+        except ValueError as error:
+            raise AffirmationStoreError(
+                f"{document} holds {entry[_ID]}, whose {_EXPIRY} cannot be read back: {error}"
+            ) from error
+    approver = str(entry[_APPROVER]) if _APPROVER in entry else None
+    revision = str(entry[_REVISION]) if _REVISION in entry else None
+    return _reconstructed(
+        lambda: NodeRecord(
+            local_id=local_id,
+            kind=kind,
+            result=result,
+            expiry=expiry,
+            approver=approver,
+            revision=revision,
+            content_anchors=content_anchors,
+        ),
+        entry,
+        document,
+    )

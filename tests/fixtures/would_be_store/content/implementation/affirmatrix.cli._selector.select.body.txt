@@ -1,0 +1,11 @@
+    subtree = _subtree_ids(graph, selector.below) if selector.below is not None else None
+    matched = [
+        edge
+        for edge in edges
+        if (selector.kind is None or edge.kind == selector.kind)
+        and (selector.from_id is None or edge.from_id == selector.from_id)
+        and (selector.to_id is None or edge.to_id == selector.to_id)
+        and (subtree is None or edge.from_id in subtree or edge.to_id in subtree)
+    ]
+    matched.sort(key=lambda edge: (edge.kind, edge.from_id, edge.to_id))
+    return matched

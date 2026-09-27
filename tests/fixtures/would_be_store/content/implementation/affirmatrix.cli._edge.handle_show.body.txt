@@ -1,0 +1,13 @@
+    built, error_status = _build(args, config, store)
+    if built is None:
+        return error_status
+    matched = _selector.select(built.edges, _selector.selector_from_args(args), built)
+    if not matched:
+        _outcome.render_refusal("the selector matched no edge", as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    rows = [_shown(built, edge, store, config, verbose=args.verbose) for edge in matched]
+    if args.json:
+        _outcome.render_json({"edges": rows})
+    else:
+        _print_shown(rows)
+    return _outcome.exit_for(_outcome.POSITIVE)

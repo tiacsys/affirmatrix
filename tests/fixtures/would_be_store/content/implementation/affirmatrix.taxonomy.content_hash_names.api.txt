@@ -2,4 +2,8 @@ def content_hash_names(node_kind: str) -> frozenset[str]:
     """The names of the content hashes a node of this kind carries.
 
     :implements: SEG-SREQ-032
+
+    This is the declaration a node hash is derived against (SEG-SREQ-005): the
+    names travel into the preimage paired with their digests, so what this
+    function returns is not merely descriptive.
     """

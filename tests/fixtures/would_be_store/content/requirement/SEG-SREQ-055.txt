@@ -1,0 +1,2 @@
+The record source shall supply, in every test outcome record, the result of
+the test execution that outcome records.

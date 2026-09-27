@@ -1,0 +1,5 @@
+    children = _refiners(graph, local_id)
+    if not all(child_satisfaction.get(child, False) for child in children):
+        return False
+    direct = graph.incoming(local_id, _VERIFIES) + graph.incoming(local_id, _IMPLEMENTS)
+    return all(_active(edge) for edge in direct)

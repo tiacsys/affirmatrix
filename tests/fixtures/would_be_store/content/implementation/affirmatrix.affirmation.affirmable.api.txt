@@ -1,0 +1,13 @@
+def affirmable(state: LinkState, kind: str) -> bool:
+    """Whether an edge of this kind, in this state, can be affirmed.
+
+    :implements: SEG-SREQ-027
+    :implements: SEG-SREQ-056
+
+    True exactly for a strong edge (one of :func:`taxonomy.propagating_edge_kinds`)
+    in one of the three states where a human judgement about the edge's own
+    content is what is missing. Active has nothing to affirm; transitive
+    suspicion clears by recomputation, never by signature; broken needs its
+    endpoint back first. An evidence edge is refused whatever its state:
+    machine-derived, and resolved by re-execution rather than by a signature.
+    """

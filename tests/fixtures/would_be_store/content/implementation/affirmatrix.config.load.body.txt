@@ -1,0 +1,8 @@
+    values = _read_file(path if path is not None else DEFAULT_CONFIG_PATH)
+    return Config(
+        case=case if case is not None else Path(_string(values, "case", str(DEFAULT_CASE))),
+        producer_root=_producer_root(values),
+        repositories=_repositories(values),
+        implementation=_optional_string(values, "implementation"),
+        roles=_roles(values),
+    )

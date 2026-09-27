@@ -1,0 +1,4 @@
+The command-line interface shall, for each affirmable edge a selection
+includes, record an affirmation under the given role and reason,
+writing the review event, the affirmed edge record, and both
+endpoints' current node records.

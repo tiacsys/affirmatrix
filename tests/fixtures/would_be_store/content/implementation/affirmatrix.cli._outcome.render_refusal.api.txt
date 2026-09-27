@@ -1,0 +1,9 @@
+def render_refusal(message: str, *, as_json: bool, stream: TextIO | None = None) -> None:
+    """Render a verb's refusal with the library's own report, not a bare status.
+
+    :implements: SEG-SREQ-097
+
+    ``message`` is text the library itself produced — a ``GraphError``'s
+    message, the recorder's reason per edge, ``GenerationRefused``'s
+    diagnostics rendered — never a rewording of it.
+    """

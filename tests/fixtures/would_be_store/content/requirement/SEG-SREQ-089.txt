@@ -1,0 +1,3 @@
+The command-line interface shall let the operator ask the proof gate
+about a scope's readiness and generate an evidence package for it, each
+as its own verb.

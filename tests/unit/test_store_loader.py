@@ -5,8 +5,9 @@ it must hash content verbatim, keep its reads inside the store, and refuse a
 malformed or misplaced store loudly rather than yielding a short record stream
 nobody notices. The would-be store is data: it must build, and it must still
 contain the uneven coverage the later workflows are exercised against — a
-subtree that comes out satisfied, one that cannot, and a specification nothing
-executed.
+subtree that comes out satisfied, and the real gaps a faithful transcription
+of the source tree leaves: requirements no definition marks, and requirements
+no specification verifies.
 
 Neither is a requirement subject. The loader is scaffolding that record
 production retires, so these are developer tests over a fixture, with no
@@ -373,8 +374,8 @@ def would_be_store() -> store.StoreLoader:
 
 def test_the_would_be_store_builds(would_be_store: store.StoreLoader) -> None:
     built = graph.build(would_be_store)
-    assert len(built.node_ids()) == 59 + 8 + 9 + 8
-    assert len(built.edges) == 48 + 10 + 9 + 8 + 9
+    assert len(built.node_ids()) == 139 + 79 + 10 + 10
+    assert len(built.edges) == 128 + 141 + 10 + 10 + 12
 
 
 def test_every_kind_in_the_store_is_one_the_vocabulary_declares(
@@ -408,17 +409,45 @@ def test_the_store_carries_the_uneven_coverage_the_workflows_need(
 ) -> None:
     """The gaps are data under test, not accidents of authoring.
 
-    Each of these is load bearing for a later item: a subtree that comes out
-    satisfied, one that cannot because its children have no implementation at
-    all, and a specification nothing executed.
+    A subtree that comes out satisfied is load bearing for a later item; the
+    two gap sets below are load bearing for the coverage report — the
+    difference between a partial and a total scope only shows if something is
+    genuinely missing. Neither set is invented for the test: it is what a
+    faithful transcription of the source tree at one commit actually leaves
+    uncovered.
     """
     built = graph.build(would_be_store)
-    covered = {edge.to_id for edge in built.edges if edge.kind in {"Implements", "Verifies"}}
+    software_requirements = {
+        node.local_id
+        for node in built.nodes_of_kind("Requirement")
+        if node.local_id.startswith("SEG-SREQ-")
+    }
+
+    marked = {edge.to_id for edge in built.edges if edge.kind == "Implements"}
     taxonomy_children = {"SEG-SREQ-029", "SEG-SREQ-030", "SEG-SREQ-031", "SEG-SREQ-032"}
-    assert taxonomy_children <= covered
-    assert {"SEG-SREQ-001", "SEG-SREQ-017"}.isdisjoint(covered)
-    confirmed = {edge.to_id for edge in built.edges if edge.kind == "Confirms"}
-    assert "SEG-TS-003" not in confirmed
+    assert taxonomy_children <= marked
+
+    unmarked = software_requirements - marked
+    assert unmarked == {
+        "SEG-SREQ-001",
+        "SEG-SREQ-053",
+        "SEG-SREQ-059",
+        "SEG-SREQ-066",
+        "SEG-SREQ-069",
+        "SEG-SREQ-076",
+        "SEG-SREQ-084",
+        "SEG-SREQ-089",
+        "SEG-SREQ-105",
+        "SEG-SREQ-114",
+        "SEG-SREQ-115",
+        "SEG-SREQ-116",
+        "SEG-SREQ-126",
+    }
+
+    verified = {edge.to_id for edge in built.edges if edge.kind == "Verifies"}
+    unverified = software_requirements - verified
+    assert len(unverified) == 118
+    assert taxonomy_children.isdisjoint(unverified)
 
 
 def test_every_requirement_in_the_store_is_a_requirement_of_this_repository(
@@ -435,7 +464,7 @@ def test_every_requirement_in_the_store_is_a_requirement_of_this_repository(
         (WOULD_BE_STORE / "nodes" / "requirements.toml").read_text(encoding="utf-8")
     )
     identifiers = set(manifest["nodes"])
-    assert len(identifiers) == 59
+    assert len(identifiers) == 139
     assert all(
         identifier.startswith(("SEG-SYS-", "SEG-SREQ-")) and identifier[-3:].isdigit()
         for identifier in identifiers
@@ -448,9 +477,10 @@ def test_every_realization_marks_the_requirement_its_specification_verifies(
     """The markers in the content must agree with the edges in the manifest.
 
     Two ways of saying the same thing sit in this store: an edge manifest
-    declaring ``SEG-TS-001 → SEG-SREQ-005``, and a docstring field inside the
-    hashed content saying which requirement that test verifies. Nothing forces
-    them to agree, and they are edited in different files, so the check is here.
+    declaring, say, ``SEG-TS-001 → SEG-SREQ-029``, and a docstring field
+    inside the hashed content saying which requirement that test verifies.
+    Nothing forces them to agree, and they are edited in different files, so
+    the check is here.
 
     ``:verifies:`` names the requirement, matching the direction of the
     ``Verifies`` edge; ``:test-id:`` names the specification the function
@@ -466,12 +496,12 @@ def test_every_realization_marks_the_requirement_its_specification_verifies(
     )
     specifications = WOULD_BE_STORE / "content" / "test-specification"
     marked = {}
-    for realization in sorted(specifications.glob("*.impl.txt")):
+    for realization in sorted(specifications.glob("*.spec.txt")):
         fields = dict(
             re.findall(r"^\s*:(verifies|test-id): (\S+)$", realization.read_text(), re.MULTILINE)
         )
         assert set(fields) == {"verifies", "test-id"}, realization.name
-        assert fields["test-id"] == realization.name.removesuffix(".impl.txt")
+        assert fields["test-id"] == realization.name.removesuffix(".spec.txt")
         marked[fields["test-id"]] = fields["verifies"]
     assert marked == declared
 

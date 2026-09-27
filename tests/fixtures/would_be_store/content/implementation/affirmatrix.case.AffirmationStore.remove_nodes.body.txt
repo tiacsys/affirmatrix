@@ -1,0 +1,3 @@
+        self._ensure_layout()
+        document = _layout.node_document(self.root, kind)
+        self._remove(document, {node_iri(local_id): local_id for local_id in local_ids})

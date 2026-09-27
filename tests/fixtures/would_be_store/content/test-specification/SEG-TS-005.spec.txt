@@ -1,2 +1,12 @@
-An edge that carries no hash it was affirmed against is reported as pending,
-whatever state its record claims.
+    """The design root seals the whole design set.
+
+    Computing a design root over a fixed set of node hashes, edge tuples,
+    and caller metadata, then reordering the node hashes and edges before
+    recomputing, yields the same root — the canonical sort absorbs input
+    order. Independently varying one node hash, one edge's endpoint or
+    type, or the metadata changes the root; no single member of the
+    design set can move without the root moving with it.
+
+    :verifies: SEG-SREQ-003
+    :test-id: SEG-TS-005
+    """

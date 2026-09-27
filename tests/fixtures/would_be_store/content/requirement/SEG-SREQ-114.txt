@@ -1,0 +1,3 @@
+The command-line interface shall leave every write it makes short of a
+repository or version-control act, so nothing it does becomes
+irreversible without the operator's own act.

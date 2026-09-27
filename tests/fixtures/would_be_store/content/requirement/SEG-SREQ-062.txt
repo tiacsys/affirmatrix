@@ -1,0 +1,3 @@
+The record source shall supply, in every test outcome record, the
+revision of the implementation repository the test execution ran
+against.

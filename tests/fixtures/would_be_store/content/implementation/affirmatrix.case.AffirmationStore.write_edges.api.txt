@@ -1,0 +1,17 @@
+    def write_edges(
+        self, records: Iterable[EdgeRecord], *, demote: Iterable[EdgeReference] = ()
+    ) -> None:
+        """Persist edge records, one document rewritten per kind touched.
+
+        :implements: SEG-SREQ-051
+
+        A record that would replace an incumbent carrying the hash it was
+        affirmed against with one carrying none is a demotion, and a demotion
+        happens only when ``demote`` names that edge. The stream itself is
+        never the request — a current stream, every edge pending, must not be
+        able to reset what the case says was affirmed — and naming is per
+        edge, never a flag over the write. A name that licenses nothing is
+        refused too: a request that silently did nothing would be
+        indistinguishable from one that worked. Either disagreement refuses
+        the whole batch before a byte lands, as validation already does.
+        """

@@ -1,0 +1,5 @@
+    requirement_ids = frozenset(node.local_id for node in graph.nodes_of_kind(_REQUIREMENT))
+    verdicts: dict[str, bool] = {}
+    for root_id in sorted(requirement_ids):
+        _judge_subtree(graph, root_id, requirement_ids, verdicts)
+    return Verdict(satisfaction=verdicts, discarded_outcomes=_discarded(graph))

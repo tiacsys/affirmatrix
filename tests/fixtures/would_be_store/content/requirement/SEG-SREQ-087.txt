@@ -1,0 +1,4 @@
+While an edge-affirm selection includes at least one affirmable edge,
+the command-line interface shall record an affirmation for each
+affirmable edge in it, list every other selected edge together with the
+reason it is not affirmable, and exit with status 0.

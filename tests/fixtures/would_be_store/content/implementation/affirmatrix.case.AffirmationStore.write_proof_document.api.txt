@@ -1,0 +1,19 @@
+    def write_proof_document(
+        self, snapshot_id: str, document_name: str, document: Mapping[str, object]
+    ) -> Path:
+        """Write one document of the evidence package sealed under a snapshot.
+
+        :implements: SEG-SREQ-019
+        :implements: SEG-SREQ-021
+        :implements: SEG-SREQ-022
+
+        The mechanism only: it validates, confines the path, and writes
+        atomically, exactly as every other write here does — but it does not
+        decide what a document contains. It refuses every document kind with
+        no schema registered for it, because a document with no schema cannot
+        be shown to be valid and writing it anyway would put an unvalidated
+        file in a case that claims all of them are.
+
+        Returns the path written, which is the one thing a caller cannot derive
+        for itself: the package directory is the store's to name.
+        """

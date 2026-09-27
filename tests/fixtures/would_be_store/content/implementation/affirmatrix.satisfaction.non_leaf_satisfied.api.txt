@@ -1,0 +1,16 @@
+def non_leaf_satisfied(
+    graph: Graph, local_id: str, child_satisfaction: Mapping[str, bool]
+) -> bool:
+    """The non-leaf rule: a requirement something refines is satisfied when,
+    and only when, every requirement refining it is satisfied and every
+    verifies or implements edge it carries is active, regardless of whether
+    the outcomes of the specifications those edges name have passed.
+
+    :implements: SEG-SREQ-007
+
+    The children's verdicts are taken as given, which is what keeps this a
+    predicate rather than a traversal. A refiner absent from those verdicts —
+    a node that is not a requirement, say — counts as unsatisfied, never as
+    skipped: a parent must not come out green because one of its declared
+    children could not be judged.
+    """

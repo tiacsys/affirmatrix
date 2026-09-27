@@ -1,0 +1,27 @@
+    built, error_status = _build(args, config, store)
+    if built is None:
+        return error_status
+    try:
+        gate_revision = _judgement.resolve_gate_revision(config, given=args.revision)
+    except _judgement.JudgementError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    try:
+        _, report = proof.check_readiness(
+            built,
+            args.scope,
+            snapshot_timestamp=_judgement.resolve_timestamp(args.timestamp),
+            evaluation_date=_judgement.resolve_evaluation_date(args.evaluation_date),
+            current_revision=gate_revision,
+        )
+    except proof.ScopeError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    document = proof.coverage_report_document(report)
+    if args.json:
+        _outcome.render_json(document)
+    else:
+        print(f"blocked: {report.blocked}")
+        for diagnostic in report.diagnostics:
+            print(f"  {diagnostic.severity.value}: {diagnostic.condition} ({diagnostic.subject})")
+    return _outcome.exit_for(_outcome.NEGATIVE if report.blocked else _outcome.POSITIVE)

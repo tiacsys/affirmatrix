@@ -1,0 +1,9 @@
+def select(edges: Iterable[EdgeRecord], selector: Selector, graph: Graph) -> list[EdgeRecord]:
+    """Every edge the selector's narrowing fields admit, in a stable order.
+
+    :implements: SEG-SREQ-100
+    :implements: SEG-SREQ-101
+
+    ``graph`` is consulted only when ``below`` narrows by subtree; the other
+    three fields are plain equality over the edge's own kind and endpoints.
+    """

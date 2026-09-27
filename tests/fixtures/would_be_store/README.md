@@ -19,10 +19,12 @@ Two consequences follow from holding content, and both are deliberate:
   hashes cover, which the graph never sees.
 - **Nothing here is synchronized with `src/`.** The implementation and
   test-specification entries are *about* the engine's own functions, because
-  self-hosting is where this is going, but their content is a hand-written,
-  deliberately abridged transcription — not a copy, and not kept in step with
-  the tree. Read it as a plausible span, never as the authority on what the
-  code says. The code is the authority on that.
+  self-hosting is where this is going, but their content is a verbatim
+  transcription taken at one named commit — not a copy that tracks the tree,
+  and not kept in step with it afterwards. This transcription was taken from
+  the tree at commit 678f72f. Read it as what the code said at that commit,
+  never as the authority on what it says now. The code is the authority on
+  that.
 
 ## Layout
 
@@ -52,11 +54,13 @@ manifest says which file covers which field, because identifiers such as
 
 Two keys are not content paths: a TestOutcome entry also carries
 `result = "passed"` — the recorded result of the execution, one of
-`passed`/`failed`/`error`/`skipped` — and `revision = "r1"` — the revision of
-the implementation repository the execution ran against. Both are record
-fields, not content: the content file remains the authority on what the run
-observed, a test asserts the two result spellings agree, and the revision's
-spelling is open (no format this store's fixture pins).
+`passed`/`failed`/`error`/`skipped` — and `revision = "678f72f5371c…"` — the
+revision of the implementation repository the execution ran against. Both are
+record fields, not content: the content file remains the authority on what the
+run observed, a test asserts the two result spellings agree, and the
+revision's spelling is open (no format this store's fixture pins — this one
+happens to be the full commit hash because that is what the run this fixture
+stands for was made against).
 
 **An edge manifest** groups pairs by edge kind, source first:
 
@@ -96,7 +100,7 @@ the affirmation store, which is the other record source — the recorded one.
 
 ## What the entries are, and where they came from
 
-**Requirements — translated.** 59 nodes and 48 `Refines` edges, hand-translated
+**Requirements — translated.** 139 nodes and 128 `Refines` edges, translated
 from the requirement specification's needs export: the entry id becomes the
 local identifier, its statement becomes the stored content, its refines links
 become edges. The stored content is the statement alone. Whether a requirement's
@@ -104,39 +108,83 @@ canonical content form should also cover its title is the requirements reader's
 question to answer, not this fixture's; hashing the statement is the choice that
 forecloses neither answer.
 
-**Implementations, test specifications, test outcomes — authored.** There is
-nothing to translate them from, so they are invented: 8 implementations, 9 test
-specifications, 8 outcomes from one run, and the `Implements`, `Verifies`,
-`Confirms` and `Witnesses` edges between them.
+**Implementations — found.** 79 nodes, one per function, method, or class in
+`src/affirmatrix/` whose docstring carries an `:implements:` field, found by
+walking the source tree at the named commit. The identity is the dotted path
+from the package root, class-qualified for a method (for example
+`affirmatrix.case.AffirmationStore.nodes`). A definition can carry more than
+one `:implements:` field, one per requirement it realizes, so the 79 nodes
+carry 141 `Implements` edges between them.
 
-Each test specification's `implHash` content is a pytest function carrying the
-two markers a verification test carries: `:verifies:` naming the requirement it
-demonstrates, and `:test-id:` naming the specification it realizes. So the same
-relation is stated twice in this store — once as a `Verifies` pair in
-`edges/coverage.toml`, once inside the hashed content — and a test asserts the
-two agree, because nothing else makes them.
+**Test specifications, test outcomes — found and run.** 10 nodes each: one
+test specification per pytest function under the verification suite carrying
+both a `:verifies:` and a `:test-id:` field, and one outcome per specification
+from that suite's run against the same commit. `Verifies` (10), `Confirms`
+(10), and `Witnesses` (12 — a specification can name more than one
+implementation, see below) complete the edges between them.
 
-The slice is uneven on purpose:
+**The span each content field covers is one rule, whole source lines, for all
+four hash fields a definition can carry:**
+
+- `apiHash` (Implementation) — the `def`/`class` line(s) through the line
+  holding the docstring's closing quotes.
+- `bodyHash` (Implementation) — the following lines through the end of the
+  block.
+- `specHash` (TestSpecification) — the docstring's opening-quote line through
+  its closing-quote line. A test function's `def` line belongs to neither of
+  its spans — the marker fields live in the docstring, not the name, so the
+  docstring is what the specification's identity and intent hash cover.
+- `implHash` (TestSpecification) — the following lines through the end of the
+  block.
+
+Every span is taken **verbatim**, line terminators staying with their lines —
+no re-flowing, no re-indenting. This is a fixture convention, stated here so
+the next transcription can repeat it exactly; it says nothing about the span
+rule an eventual content extractor would use.
+
+Because the marker fields live inside the hashed docstring, `implHash` never
+carries them — only `specHash` does. The `Verifies` edge each specification's
+marker states is also declared as a pair in `edges/coverage.toml`, so the same
+relation is stated twice in this store, and a test asserts the two agree,
+because nothing else makes them.
+
+**Witnesses is a fixture convention, not a record of what a run exercised.**
+No coverage tool produced it: an outcome witnesses every implementation whose
+`:implements:` field names the requirement its specification's `:verifies:`
+field names. Read it as "these are related", not as "this run touched that
+line".
+
+The coverage this slice carries is uneven, and reading it needs one more
+distinction than "covered" and "not":
 
 - The **taxonomy provider's** four requirements (SEG-SREQ-029, -030, -031, -032)
-  are covered completely, so SEG-SYS-009 has a subtree that can come out
-  satisfied.
-- The **commitment layer's** and **graph builder's** requirements are covered in
-  part. SEG-SYS-001 cannot be satisfied whatever this store says, because two of
-  its children (SEG-SREQ-001, SEG-SREQ-017) belong to components iteration 0
-  does not build.
-- **SEG-TS-003 has no outcome**, so a specification exists that nothing
-  executed — a coverage gap that is present because a report with nothing to
-  report proves nothing.
-- Everything else is uncovered, which is what makes the difference between a
-  partial and a total scope visible.
+  are covered by both an implementation and a specification, so SEG-SYS-009
+  has a subtree that can come out satisfied.
+- 13 software requirements carry no `:implements:` field anywhere in the tree.
+  Six of them (SEG-SREQ-069, -076, -084, -089, -105, -114) are non-leaf:
+  coverage for a non-leaf requirement never runs through a marker of its own,
+  it flows through the requirements refining it, so these six are absent from
+  the marker set by the convention itself — their absence says nothing about
+  whether their own subtree is covered (SEG-SREQ-114's own children,
+  SEG-SREQ-115 and -116, are two of the seven below). The other seven
+  (SEG-SREQ-001, -053, -059, -066, -115, -116, -126) are leaves with no marker
+  at all — genuine gaps. One of the seven has its own stated reason:
+  SEG-SREQ-059 names a check the code does not yet perform, and the source
+  says so where the function that half-realizes it lives, rather than
+  claiming the marker.
+- System-level requirements (`SEG-SYS-nnn`) never carry a direct
+  `:implements:` field or a specification's `:verifies:` field — coverage for
+  a non-leaf requirement always flows through the software requirements
+  refining it. Reading them as "uncovered" by the same test as a leaf would
+  count a structural fact as a gap.
+- Past the ten leaves the verification suite covers, every other software
+  requirement has no specification verifying it — the difference between a
+  partial and a total scope stays visible.
 
-Two identity conventions here are fixture conventions and nothing more. An
-implementation's identity is the dotted path of the function it stands for,
-because implementation identity is undecided and blocks the record-production
-slice rather than this one. A test specification's identity is a manual
-`SEG-TS-nnn` that does not yet correspond to any entry in the test
-specification document, which does not exist yet.
+Implementation identity is the dotted path of the function, method, or class
+carrying the marker — settled, not a placeholder. Test-specification identity
+is the manual `SEG-TS-nnn` each docstring states, independent of the test
+function's name and file location.
 
 ## Changing it
 

@@ -1,0 +1,4 @@
+    parser.add_argument("--kind", help="the edge kind to narrow to")
+    parser.add_argument("--from", dest="from_id", help="the source endpoint's identifier")
+    parser.add_argument("--to", dest="to_id", help="the target endpoint's identifier")
+    parser.add_argument("--below", help="the identifier whose refinement subtree narrows to")

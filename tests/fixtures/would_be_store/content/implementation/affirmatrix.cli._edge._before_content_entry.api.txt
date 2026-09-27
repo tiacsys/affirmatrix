@@ -1,0 +1,9 @@
+def _before_content_entry(node, revision: str, config: Config) -> dict[str, object]:
+    """The before-content an endpoint's anchor recovers at ``revision``, headed by it.
+
+    :implements: SEG-SREQ-111
+
+    Carries the revision alongside the recovered bytes (or ``None``, when
+    nothing could be recovered) so a renderer can name what was recovered
+    at without a second lookup.
+    """

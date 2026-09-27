@@ -1,0 +1,18 @@
+    if (event.kind, event.from_id, event.to_id) != (edge.kind, edge.from_id, edge.to_id):
+        raise DriftError(
+            f"the review event affirms {event.from_id!r} -> {event.to_id!r} ({event.kind}), "
+            f"not {edge.from_id!r} -> {edge.to_id!r} ({edge.kind}); a comparison cannot be "
+            "built against the wrong affirmation"
+        )
+    return Comparison(
+        from_hashes=_endpoint_comparison(
+            recorded=event.from_content_anchors,
+            current=current_from,
+            source_revision=event.from_source_revision,
+        ),
+        to_hashes=_endpoint_comparison(
+            recorded=event.to_content_anchors,
+            current=current_to,
+            source_revision=event.to_source_revision,
+        ),
+    )

@@ -1,6 +1,6 @@
     return digest_of(
         length_prefixed(utf8(EDGE_TAG))
         + edge_tuple(from_id, to_id, edge_type)
-        + length_prefixed(from_node_hash)
-        + length_prefixed(to_node_hash)
+        + length_prefixed(checked_digest(from_node_hash, "from_node_hash"))
+        + length_prefixed(checked_digest(to_node_hash, "to_node_hash"))
     )

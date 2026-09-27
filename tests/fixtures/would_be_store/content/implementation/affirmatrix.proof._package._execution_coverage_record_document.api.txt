@@ -1,0 +1,16 @@
+def _execution_coverage_record_document(
+    scope: Scope, report: gates.CoverageReport
+) -> Mapping[str, object]:
+    """The execution coverage record: fresh evidence only.
+
+    :implements: SEG-SREQ-040
+
+    A stale outcome — one the gate's own judgement named in
+    ``report.stale_outcomes`` — is silently absent here, exactly as it would
+    be if it had never been recorded; the coverage report is where staleness
+    is named, once, and this document does not repeat the telling. A
+    non-passing outcome the report reports validly excused carries its
+    waiver's identifier and a copy of the waiver's expiry — kept deliberately
+    so a later release check needs no graph walk — the waiver record itself
+    remains the single source of truth for that date.
+    """

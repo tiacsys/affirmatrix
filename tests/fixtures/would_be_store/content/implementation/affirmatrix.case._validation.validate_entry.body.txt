@@ -1,0 +1,8 @@
+    errors = sorted(schema_set.validator(schema_name).iter_errors(entry), key=_position)
+    if not errors:
+        return
+    first = errors[0]
+    where = f" at {first.json_path}" if first.json_path != "$" else ""
+    raise AffirmationStoreError(
+        f"{label} does not validate against {schema_name}{where}: {first.message}"
+    )
