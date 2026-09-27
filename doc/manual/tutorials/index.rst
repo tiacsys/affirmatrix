@@ -5,17 +5,17 @@ Learning-oriented, end to end. (Diátaxis: tutorials.)
 
 One running story — **affirmatrix proving itself**. You act as the
 maintainer of this repository and build its own safety evidence graph:
-extract the records, check the graph, affirm the edges, drift the content,
+sync the records, check the graph, affirm the edges, drift the content,
 watch the suspicion, seal a scope into a proof, and verify that proof from
 the other side of the table.
 
-.. warning::
+.. note::
 
-   The command-line interface shown across these pages **does not exist
-   yet**. The tutorials are written ahead of it, deliberately: each page
-   documents the target workflow and collects the design decisions it
-   forces, and the implementation follows the tutorials rather than the
-   other way around.
+   :doc:`installation` and :doc:`build-the-graph` document the command
+   line as built, against this repository's own case. The four pages that
+   follow them — affirming an edge, detecting drift, sealing a proof,
+   verifying it — still describe the target workflow, ahead of their own
+   rework; this note is removed once the last of them lands.
 
 .. toctree::
    :maxdepth: 1

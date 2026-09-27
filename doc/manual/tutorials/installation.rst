@@ -1,13 +1,6 @@
 Installation
 ============
 
-.. warning::
-
-   **Parts of this page do not work yet.** Installing the package is real;
-   the ``affirmatrix`` command is not — this tutorial series documents the
-   target workflow, and the command-line interface is being designed at
-   this surface before it is built.
-
 The tutorials that follow tell one running story: affirmatrix proving
 itself. You act as the maintainer of this very repository, building its
 safety evidence graph out of its own requirements, code, and tests —
@@ -24,7 +17,7 @@ Install the package
    $ python -m venv .venv
    $ .venv/bin/pip install -e .
    $ .venv/bin/affirmatrix --version
-   affirmatrix 0.1.0
+   affirmatrix 0.0.1.dev0
 
 Nothing here needs a registry, a service, or a daemon. affirmatrix is a
 command-line tool over files in git repositories — the heavyweight
@@ -63,30 +56,89 @@ than hidden behind the tool:
    $ git switch main
    $ git worktree add case case
 
-The tool never runs git (ADR-0008), so there is no ``affirmatrix init``
-that would do this invisibly. What the tool *can* do is tell you what it
-expects:
+The tool never runs git (ADR-0008, ADR-0009): there is no ``affirmatrix
+init`` that would do this invisibly. What the tool does once a worktree
+exists to write into is the subject of the next two sections.
+
+The configuration file
+----------------------
+
+Every command below reads ``affirmatrix.yaml``. This repository already
+commits one at its root:
+
+.. code-block:: yaml
+
+   case: ./case
+   producer:
+     root: ./tests/fixtures/would_be_store
+
+It names the case — ``./case``, the worktree just mounted — and the
+producer: the source the current stream is read from, the subject of
+:doc:`build-the-graph`. Nothing it carries ever enters a hash; changing
+the file changes what the tool reads, never what it proves (see
+:doc:`../explanation/architecture/command-line-interface`).
+
+Both paths are relative, and they resolve against the **working
+directory the command runs from**, not against the configuration file's
+own location. Every command shown across these tutorials therefore runs
+from the repository root, where the committed file makes them resolve —
+and every one of them flag-free. Run the same command from inside
+``case/``, where you will later go to commit, and the relative producer
+path no longer names anything from there — the command refuses for want
+of a producer.
+
+case init
+---------
+
+With the worktree mounted but nothing laid into it yet, ask what the tool
+finds there:
 
 .. code-block:: console
 
-   $ affirmatrix case doctor
-   case/            worktree of branch 'case'   ok
-   case/nodes/      empty                       ok (nothing recorded yet)
-   case/edges/      empty                       ok
-   case/events/     empty                       ok
-   case/proofs/     empty                       ok
-   affirmatrix.yaml not found — defaults in effect
+   $ affirmatrix case check
+   layout: (none)
+   missing schemas: coverage_report.schema.json, design_consistency_proof.schema.json, edge-calls.schema.json, edge-confirms.schema.json, edge-excuses.schema.json, edge-implements.schema.json, edge-refines.schema.json, edge-verifies.schema.json, edge-witnesses.schema.json, evidence_manifest.schema.json, execution_coverage_record.schema.json, implementation.schema.json, requirement.schema.json, review_event.schema.json, test_outcome.schema.json, test_specification.schema.json, waiver.schema.json
+   record counts: {'nodes': 0, 'edges': 0, 'reviewEvents': 0}
+   configuration found: True
+   producer readable: True
+   $ echo $?
+   1
 
-.. admonition:: Decisions this page forces
+No layout, every schema missing: nothing is there yet. ``case init`` lays
+the store's layout and schema set into the mounted worktree, and nothing
+else (:need:`SEG-SREQ-070`):
 
-   - The entry point is ``affirmatrix`` with ``<noun> <verb>`` commands;
-     is a short alias wanted, and who decides it?
-   - What does bare ``affirmatrix`` (no arguments) print?
-   - Is ``case doctor`` the right shape for "explain what you expect and
-     what you found", given that an ``init`` verb is ruled out by the
-     no-git policy?
-   - What belongs in ``affirmatrix.yaml``, and what are the defaults such
-     that the tutorials never need to show one?
+.. code-block:: console
 
-Next: :doc:`build-the-graph` extracts this repository's own records and
-runs the first consistency check.
+   $ affirmatrix case init
+   case initialized at case
+
+It is idempotent — run it again over a case that already carries the
+layout and schema set, and it changes neither, printing the same line.
+
+case check
+----------
+
+Ask again:
+
+.. code-block:: console
+
+   $ affirmatrix case check
+   layout: edges, events, nodes, proofs, schema
+   missing schemas: (none)
+   record counts: {'nodes': 0, 'edges': 0, 'reviewEvents': 0}
+   configuration found: True
+   producer readable: True
+   $ echo $?
+   0
+
+``case check`` reports five judgements about the case, not one verdict
+about its content: the layout it finds, its schema set — naming any
+schema missing rather than supplying one — its record counts, whether a
+configuration file was found or defaults are in effect, and whether the
+configured producer is readable (:need:`SEG-SREQ-071`). It exits 0 only
+while every declared schema is present and the producer is readable;
+every other outcome is 1.
+
+Next: :doc:`build-the-graph` syncs this repository's own records into the
+case and runs the first consistency check.
