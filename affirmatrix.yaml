@@ -1,0 +1,14 @@
+# affirmatrix configuration for this repository's own case.
+#
+# Invocation parameters only — where the case lives and where the current
+# stream's producer is found. Nothing here enters a hash; changing this file
+# changes what the tool reads, never what it proves. Every key has a default
+# (see affirmatrix.config), so the file states just what differs from them.
+
+case: ./case
+
+producer:
+  # Iteration zero has no extractor. The would-be store under tests/fixtures/
+  # stands in for it, holding this repository's own requirements, marked
+  # definitions, verification suite and its run, transcribed at one commit.
+  root: ./tests/fixtures/would_be_store

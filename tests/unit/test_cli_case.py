@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from affirmatrix import case, commitment
 from affirmatrix.cli import main
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
@@ -35,9 +37,10 @@ def test_case_init_on_an_existing_case_succeeds_unchanged(tmp_path: Path) -> Non
 
 
 def test_case_check_reports_layout_schemas_counts_config_and_producer(
-    tmp_path: Path, would_be_store_copy: Path, capsys
+    tmp_path: Path, would_be_store_copy: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """SEG-SREQ-071."""
+    monkeypatch.chdir(tmp_path)  # the conventional ./affirmatrix.yaml must not be found
     root = _case_root(tmp_path)
     main(["case", "init", "--case", str(root)])
     status = main(
