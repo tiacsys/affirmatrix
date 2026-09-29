@@ -11,9 +11,9 @@ the other side of the table.
 
 .. note::
 
-   :doc:`installation`, :doc:`build-the-graph` and :doc:`affirm-an-edge`
-   document the command line as built, against this repository's own case.
-   The three pages that follow them — detecting drift, sealing a proof,
+   :doc:`installation`, :doc:`build-the-graph`, :doc:`affirm-an-edge` and
+   :doc:`detect-drift` document the command line as built, against this
+   repository's own case. The two pages that follow them — sealing a proof,
    verifying it — still describe the target workflow, ahead of their own
    rework; this note is removed once the last of them lands.
 
