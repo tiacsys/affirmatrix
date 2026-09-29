@@ -57,3 +57,10 @@ Anchors
    The record source shall name, in every content anchor it supplies, the
    repository the anchored content was read from by that repository's
    configured name, never by a path.
+
+.. sreq:: Every content hash is supplied with an anchor
+   :id: SEG-SREQ-143
+   :refines: SEG-SYS-007
+
+   The record source shall supply, with every content hash it supplies, an
+   anchor from which the content the hash covers can be found again.

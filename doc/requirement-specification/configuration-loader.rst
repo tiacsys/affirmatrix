@@ -96,3 +96,72 @@ carried elsewhere and is no part of this component's own.
    Where the configuration file gives a relative path, the configuration
    loader shall resolve that path against the directory that holds the
    file.
+
+The producer
+------------
+
+The extraction adapters read a producer's exports, Doxygen output and run
+artifacts. The configuration loader carries where each of those lives and
+which repository their anchors name; every path is resolved as any other path
+in the file is.
+
+.. sreq:: The configuration loader carries where the producer's inputs are
+   :id: SEG-SREQ-191
+   :refines: SEG-SREQ-117
+
+   The configuration loader shall carry, for each stream of records the
+   producer supplies, the locations of the inputs that stream is read
+   from.
+
+.. sreq:: The producer's repository is named
+   :id: SEG-SREQ-192
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the name of the repository against
+   which the producer's anchors and paths are resolved.
+
+.. sreq:: The requirement export's location is carried
+   :id: SEG-SREQ-193
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the location of the requirement
+   export the requirements reader reads.
+
+.. sreq:: The Requirement types are carried
+   :id: SEG-SREQ-194
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the need types the requirements
+   reader treats as Requirements.
+
+.. sreq:: The test-specification inputs are carried
+   :id: SEG-SREQ-195
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the location of the test-case
+   export and of the Doxygen output that the content extractor reads for
+   test specifications.
+
+.. sreq:: The implementation inputs are carried
+   :id: SEG-SREQ-196
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the location of the implementation
+   export and of the Doxygen output that the content extractor reads for
+   implementations.
+
+.. sreq:: Each run's inputs are carried
+   :id: SEG-SREQ-197
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry, for each run to be extracted, the
+   location of the run artifact, the location of the record of the run's
+   full revision and the location of the record of the run's name.
+
+.. sreq:: The requirement source directory is carried
+   :id: SEG-SREQ-198
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the location of the requirement
+   document's source directory, against which a need's docname and doctype
+   resolve to the source file.

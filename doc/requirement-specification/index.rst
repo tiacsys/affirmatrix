@@ -16,7 +16,9 @@ subject, not by its parent, so refinement links cross pages freely.
    system-requirements
    taxonomy-provider
    record-source
+   requirements-reader
    content-extractor
+   outcome-extractor
    commitment-layer
    graph-builder
    satisfaction-evaluator
