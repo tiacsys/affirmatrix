@@ -243,8 +243,10 @@ Crosscutting concepts
 ---------------------
 
 **Identifiers.** A node's identifier inside the engine is case-local and
-stable: the requirement's own identifier, a definition's dotted path, a test
-outcome's run and specification identifiers joined by a slash. That string
+stable: the requirement's own identifier, the identifier of the implementation or
+test-case need where a need export supplies the node or a definition's dotted
+path where Python source does, a test outcome's run and specification
+identifiers joined by a slash. That string
 enters every hash preimage. Absolute IRIs are minted only when a record is
 serialized, by ``identity``, and are read back to case-local form when a record
 is read. A record therefore cannot disagree with its own hash about what it

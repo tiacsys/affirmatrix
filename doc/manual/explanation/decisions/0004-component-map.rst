@@ -4,7 +4,18 @@
 Status
 ------
 
-Accepted, 2026-07-25.
+Accepted, 2026-07-25. Amended 2026-09-29, as built:
+
+- The requirements reader is built (``sources.reqs``).
+- The content extractor carries two bindings of one principle -- Python
+  located by ``ast``, and C located by Doxygen (ADR-0011) -- under the one
+  module ``sources.content``. The outcome extractor reads run artifacts of more
+  than one format, a pytest run and a twister run, under the one module
+  ``sources.outcomes``. A binding or a format is not a component: neither gets
+  a row in the table, and requirement text names the content extractor and the
+  outcome extractor, never "the C extractor" or "the twister reader".
+- The store loader retires when the extractors serve this repository's own
+  case. The table and every other boundary below stand.
 
 Context
 -------

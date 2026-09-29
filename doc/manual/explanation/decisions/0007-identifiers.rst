@@ -4,7 +4,11 @@
 Status
 ------
 
-Accepted, 2026-07-25.
+Accepted, 2026-07-25. Amended 2026-09-29: the two identities this record left
+open or stated only for the repository's own tests -- an Implementation's and a
+TestSpecification's when a need export supplies the node -- are settled in the
+Amendment section below. Nothing else in the record changes: the other
+identities, the local type tokens, the IRI rule and the uniqueness rule stand.
 
 Context
 -------
@@ -95,3 +99,26 @@ Consequences
   that a function rename is not a meaningful change — which is false once
   the identifier is hashed. Settling it will want a requirement, not just a
   decision here.
+
+Amendment, 2026-09-29: identity of Implementations and TestSpecifications
+--------------------------------------------------------------------------
+
+When the structure of an Implementation or a TestSpecification is supplied by
+a need export (SEG-SREQ-153), its identity is not derived from the source:
+
+- An **Implementation's** identity is the identifier of its implementation
+  need, verbatim. The toolbox evidence fixture under ``tests/fixtures`` mints
+  ``IMPL-<symbol>`` for it, which is that producer's spelling and not a rule of
+  this tool. A renamed symbol is a new need and so a new
+  node. (SEG-SREQ-154.)
+- A **TestSpecification's** identity is the identifier of its test-case need,
+  verbatim: in that fixture the value of the test's ``@testid`` tag. The
+  ``SEG-TS-nnn`` form stated above is this repository's own spelling of the same
+  rule, where the test states it with the ``:test-id:`` marker. A renamed or
+  moved test function is not a new TestSpecification, because the function's
+  name is not its identity. (SEG-SREQ-155.)
+
+Neither identity is recomputed from the source; both are taken from the export.
+Both enter the ``edgeTuple`` of ADR-0005 as recorded. The
+record of an Implementation located in Python by ``ast`` is not touched by this
+amendment.
