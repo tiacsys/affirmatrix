@@ -56,8 +56,8 @@ Three things worth noticing before the next command:
   requirements because that is how many the specification's export held
   at the commit it was transcribed from.
 - The files under ``case/`` are **drafts**. ``case sync`` wrote them, but
-  nothing has been committed to the case lineage yet; the graph's real
-  state is its committed state, and so far you have committed nothing.
+  the graph's real state is its committed state: the layout was committed
+  on the previous page, and the records are drafts until the commit below.
 
 Check the graph
 ---------------
@@ -105,6 +105,20 @@ The same report, structured rather than rendered for a person to read:
 
 The exit code is the contract either way; ``--json`` only changes how the
 same verdict is rendered.
+
+Commit the records
+------------------
+
+Same shape as before — a store act, yours alone
+(:doc:`../explanation/decisions/0009-store-as-repository`):
+
+.. code-block:: console
+
+   $ git -C case add -A
+   $ git -C case commit -m "<your message>"
+
+It sits after the check: commit a graph you have checked, so the store act
+records a record set that builds.
 
 What a refusal looks like
 -------------------------

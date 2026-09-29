@@ -5,8 +5,9 @@ The tutorials that follow tell one running story: affirmatrix proving
 itself. You act as the maintainer of this very repository, building its
 safety evidence graph out of its own requirements, code, and tests —
 affirming the edges, drifting the content, watching the suspicion, and
-sealing a proof an outsider can check. Self-hosting is the project's
-long-term goal, so the tool's own case is the honest first example.
+sealing a proof that is meant, eventually, to be checkable by an outsider.
+Self-hosting is the project's long-term goal, so the tool's own case is
+the honest first example.
 
 Install the package
 -------------------
@@ -82,7 +83,7 @@ Both paths are relative, and they resolve against the **working
 directory the command runs from**, not against the configuration file's
 own location. Every command shown across these tutorials therefore runs
 from the repository root, where the committed file makes them resolve —
-and every one of them flag-free. Run the same command from inside
+and lets every one of them run flag-free. Run the same command from inside
 ``case/``, where you will later go to commit, and the relative producer
 path no longer names anything from there — the command refuses for want
 of a producer.
@@ -139,6 +140,21 @@ configuration file was found or defaults are in effect, and whether the
 configured producer is readable (:need:`SEG-SREQ-071`). It exits 0 only
 while every declared schema is present and the producer is readable;
 every other outcome is 1.
+
+Commit the layout
+-----------------
+
+What ``case init`` laid down is a draft: the graph's real state is its
+committed state, and nothing in ``case/`` has been committed yet. The first
+store act commits it, made by you in the case's own lineage
+(:doc:`../explanation/decisions/0009-store-as-repository`):
+
+.. code-block:: console
+
+   $ git -C case add -A
+   $ git -C case commit -m "<your message>"
+
+The message is yours; the tool neither drafts nor runs it.
 
 Next: :doc:`build-the-graph` syncs this repository's own records into the
 case and runs the first consistency check.
