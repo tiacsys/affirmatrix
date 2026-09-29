@@ -95,14 +95,12 @@ def outdated_pair() -> tuple[records.EdgeRecord, records.NodeRecord, records.Nod
 # --- what a composition carries ----------------------------------------------
 
 
-def test_the_event_binds_the_current_hashes_of_both_endpoints() -> None:
-    """The judgement is bound to what the reviewer judged today — the node
-    hashes of the *current* records, not the ones the edge was affirmed
-    against (SEG-SREQ-024)."""
+def test_the_event_carries_no_node_hashes() -> None:
+    """The event binds the endpoints through their named content hashes and
+    anchors (SEG-SREQ-127); only the edge record folds the node hashes."""
     edge, impl, sreq = outdated_pair()
     composed = affirmation.compose(edge, from_node=impl, to_node=sreq, **JUDGEMENT)
-    assert composed.event.from_node_hash == node_hash_of(impl)
-    assert composed.event.to_node_hash == node_hash_of(sreq)
+    assert (composed.event.from_node_hash, composed.event.to_node_hash) == (None, None)
 
 
 def test_the_event_carries_each_endpoints_named_content_hashes_verbatim() -> None:
@@ -168,9 +166,9 @@ def test_an_empty_role_or_revision_is_refused_by_the_vocabulary() -> None:
 
 
 def test_the_affirmed_edge_is_active_and_carries_the_recomputed_hash() -> None:
-    """The pair the operator hands to the store: the event, and the edge
-    record whose stored hash is the one the event's endpoint hashes fold to —
-    agreement by construction, not by discipline."""
+    """The edge record's stored hash folds the node hashes of the *current*
+    endpoint records, not the ones the edge was affirmed against
+    (SEG-SREQ-024)."""
     edge, impl, sreq = outdated_pair()
     composed = affirmation.compose(edge, from_node=impl, to_node=sreq, **JUDGEMENT)
     assert composed.edge.state is LinkState.ACTIVE
@@ -178,8 +176,8 @@ def test_the_affirmed_edge_is_active_and_carries_the_recomputed_hash() -> None:
         "pkg.fn",
         "SREQ-1",
         "Implements",
-        composed.event.from_node_hash,
-        composed.event.to_node_hash,
+        node_hash_of(impl),
+        node_hash_of(sreq),
     )
     assert (composed.edge.from_id, composed.edge.to_id, composed.edge.kind) == (
         edge.from_id,

@@ -661,8 +661,6 @@ def affirming_event(
         from_id=from_node.local_id,
         to_id=to_node.local_id,
         kind=kind,
-        from_node_hash=node_hash_of(from_node),
-        to_node_hash=node_hash_of(to_node),
         from_source_revision=from_source_revision,
         to_source_revision=to_source_revision,
         from_content_anchors=from_node.content_anchors,

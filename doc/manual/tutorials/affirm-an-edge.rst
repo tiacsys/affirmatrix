@@ -170,10 +170,10 @@ event, the affirmed edge record, and both endpoints' current node records
    $ ls case/events
    review_events.jsonld
 
-A review event is one entry of that file, and the shape is the point:
-your role and reason, the relation, both endpoints with their node hashes
-and every named content hash together with its anchor, and the revision
-for each endpoint. Abridged, the first of the fourteen reads:
+A review event is one entry of that file, and the shape is the point: your
+role and reason, the relation, both endpoints, every named content hash of
+each together with its anchor, and the revision for each endpoint. Abridged,
+the first of the fourteen reads:
 
 .. code-block:: json
 
@@ -206,6 +206,10 @@ for each endpoint. Abridged, the first of the fourteen reads:
        "seg:contentHashSource": { "…": "the same three fields, for the statement" }
      }
    }
+
+An event recorded after the composite node hash was dropped from the event
+omits the two ``NodeHash`` lines: the edge record's ``seg:edgeHash`` still
+folds those hashes, and the named hashes above are what the event binds.
 
 Nothing in it is content; everything in it is a hash or a reference. The
 statement you read is not stored — only the SHA-256 of its bytes, and a

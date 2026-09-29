@@ -195,6 +195,43 @@ def test_edge_affirm_a_mixed_selection_affirms_its_affirmable_members(
     assert any(True for _ in store.review_events())
 
 
+def test_edge_affirm_writes_an_event_without_node_hashes_and_an_edge_with_its_hash(
+    tmp_path: Path, would_be_store_copy: Path
+) -> None:
+    """SEG-SREQ-024, SEG-SREQ-127: the event binds through its named hashes; the edge folds both."""
+    root = _init(tmp_path)
+    status = main(
+        [
+            "edge",
+            "affirm",
+            "--case",
+            str(root),
+            "--current",
+            str(would_be_store_copy),
+            "--kind",
+            "Refines",
+            "--from",
+            "SEG-SREQ-001",
+            "--to",
+            "SEG-SYS-001",
+            "--role",
+            "SoftwareEngineer",
+            "--reason",
+            "seed",
+            "--revision",
+            REVISION,
+        ]
+    )
+    assert status == 0
+    store = case.AffirmationStore(root=root)
+    (event,) = store.review_events()
+    assert (event.from_node_hash, event.to_node_hash) == (None, None)
+    document = (root / "events" / "review_events.jsonld").read_text(encoding="utf-8")
+    assert "NodeHash" not in document
+    affirmed = next(edge for edge in store.edges() if edge.edge_hash is not None)
+    assert (affirmed.from_id, affirmed.to_id) == ("SEG-SREQ-001", "SEG-SYS-001")
+
+
 def test_edge_affirm_with_no_affirmable_member_is_a_refusal(
     tmp_path: Path, would_be_store_copy: Path
 ) -> None:

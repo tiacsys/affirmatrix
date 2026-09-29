@@ -113,19 +113,20 @@ def review_event(
     to_id: str = "SEG-SYS-007",
     reason: str = "reviewed together",
     role: str = "RequirementsEngineer",
+    node_hashes: bool = False,
 ) -> records.ReviewEvent:
     return records.ReviewEvent(
         from_id=from_id,
         to_id=to_id,
         kind="Refines",
-        from_node_hash=digest(from_id),
-        to_node_hash=digest(to_id),
         from_source_revision=REVISION,
         to_source_revision=LATER_REVISION,
         role=role,
         reason=reason,
         from_content_anchors={"contentHash": anchor(f"{from_id} content")},
         to_content_anchors={"contentHash": anchor(f"{to_id} content")},
+        from_node_hash=digest(from_id) if node_hashes else None,
+        to_node_hash=digest(to_id) if node_hashes else None,
     )
 
 
@@ -926,6 +927,38 @@ def test_a_review_event_records_each_endpoints_named_content_hashes(tmp_path: Pa
     assert entry["seg:toContentAnchors"]["seg:contentHash"] == records.hex_digest(
         digest("SEG-SYS-007 content")
     )
+
+
+def test_a_review_event_without_node_hashes_is_persisted_without_the_keys(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-127: a new event binds through its named hashes; no composite is written."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event()])
+    (entry,) = entries_of(store, "events", "review_events.jsonld")
+    assert "seg:fromNodeHash" not in entry
+    assert "seg:toNodeHash" not in entry
+
+
+def test_a_review_event_given_node_hashes_still_persists_them(tmp_path: Path) -> None:
+    """Nothing a caller supplied is dropped silently."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event(node_hashes=True)])
+    (entry,) = entries_of(store, "events", "review_events.jsonld")
+    assert entry["seg:fromNodeHash"] == records.hex_digest(digest("SEG-SREQ-018"))
+    assert entry["seg:toNodeHash"] == records.hex_digest(digest("SEG-SYS-007"))
+
+
+def test_the_packaged_review_event_schema_no_longer_requires_the_node_hashes() -> None:
+    schema = packaged_schema("review_event.schema.json")
+    assert "seg:fromNodeHash" not in schema["required"]
+    assert "seg:toNodeHash" not in schema["required"]
+
+
+def test_the_packaged_review_event_schema_still_declares_the_node_hash_properties() -> None:
+    """Events recorded with the composite must keep validating."""
+    properties = packaged_schema("review_event.schema.json")["properties"]
+    assert {"seg:fromNodeHash", "seg:toNodeHash"} <= set(properties)
 
 
 def test_a_field_declared_to_hold_an_identifier_only_ever_holds_one(tmp_path: Path) -> None:

@@ -370,7 +370,7 @@ def test_edge_states_cover_the_specified_vocabulary() -> None:
 # ── Review events ───────────────────────────────────────────────────────────
 
 
-def test_a_review_event_binds_both_endpoint_hashes_and_both_anchors() -> None:
+def test_a_review_event_given_node_hashes_carries_them() -> None:
     """SEG-SREQ-024 and SEG-SREQ-025 together: what was affirmed, and against what."""
     event = records.ReviewEvent(
         from_id="SEG-SREQ-001",
@@ -391,14 +391,45 @@ def test_a_review_event_binds_both_endpoint_hashes_and_both_anchors() -> None:
     assert event.to_source_revision == "b" * 40
 
 
+def test_a_review_event_needs_no_node_hashes() -> None:
+    """SEG-SREQ-127: the named content hashes and their anchors are the binding."""
+    event = records.ReviewEvent(
+        "a",
+        "b",
+        "Refines",
+        "a" * 40,
+        "b" * 40,
+        role="TestEngineer",
+        reason="x",
+        from_content_anchors=content_anchors(),
+        to_content_anchors=content_anchors(D2),
+    )
+    assert (event.from_node_hash, event.to_node_hash) == (None, None)
+
+
+def test_a_review_event_refuses_a_node_hash_that_is_not_a_digest() -> None:
+    """Optional means absent or valid: a hash that is given is still checked."""
+    with pytest.raises(ValueError, match="node hash"):
+        records.ReviewEvent(
+            "a",
+            "b",
+            "Refines",
+            "a" * 40,
+            "b" * 40,
+            role="TestEngineer",
+            reason="x",
+            from_content_anchors=content_anchors(),
+            to_content_anchors=content_anchors(D2),
+            from_node_hash=b"short",
+        )
+
+
 def test_a_review_event_carries_the_role_it_was_made_in() -> None:
     """SEG-SREQ-049: the capacity someone was acting in is part of the judgement."""
     event = records.ReviewEvent(
         "a",
         "b",
         "Refines",
-        D1,
-        D2,
         "a" * 40,
         "b" * 40,
         role="TestEngineer",
@@ -416,8 +447,6 @@ def test_a_review_event_requires_a_non_empty_role() -> None:
             "a",
             "b",
             "Refines",
-            D1,
-            D2,
             "a" * 40,
             "b" * 40,
             role="",
@@ -433,8 +462,6 @@ def test_a_role_is_a_free_string_not_a_closed_vocabulary() -> None:
         "a",
         "b",
         "Refines",
-        D1,
-        D2,
         "a" * 40,
         "b" * 40,
         role="acting deputy reviewer (annex F)",
@@ -452,8 +479,6 @@ def test_a_review_event_preserves_the_reason_verbatim() -> None:
         "a",
         "b",
         "Refines",
-        D1,
-        D2,
         "a" * 40,
         "b" * 40,
         role="SoftwareEngineer",
@@ -471,8 +496,6 @@ def test_a_review_event_requires_both_source_anchors() -> None:
             "a",
             "b",
             "Refines",
-            D1,
-            D2,
             "",
             "b" * 40,
             role="SoftwareEngineer",
@@ -485,8 +508,6 @@ def test_a_review_event_requires_both_source_anchors() -> None:
             "a",
             "b",
             "Refines",
-            D1,
-            D2,
             "a" * 40,
             "",
             role="SoftwareEngineer",
@@ -501,8 +522,6 @@ def test_a_review_event_is_immutable() -> None:
         "a",
         "b",
         "Refines",
-        D1,
-        D2,
         "a" * 40,
         "b" * 40,
         "SoftwareEngineer",
@@ -520,8 +539,6 @@ def test_a_review_event_accepts_an_empty_reason_but_not_a_missing_one() -> None:
         "a",
         "b",
         "Refines",
-        D1,
-        D2,
         "a" * 40,
         "b" * 40,
         role="SoftwareEngineer",
@@ -539,8 +556,6 @@ def test_a_review_event_requires_at_least_one_named_content_hash_per_endpoint() 
             "a",
             "b",
             "Refines",
-            D1,
-            D2,
             "a" * 40,
             "b" * 40,
             role="SoftwareEngineer",
@@ -553,8 +568,6 @@ def test_a_review_event_requires_at_least_one_named_content_hash_per_endpoint() 
             "a",
             "b",
             "Refines",
-            D1,
-            D2,
             "a" * 40,
             "b" * 40,
             role="SoftwareEngineer",
@@ -570,8 +583,6 @@ def test_a_review_events_content_anchors_are_immutable_and_equal_by_value() -> N
         "a",
         "b",
         "Refines",
-        D1,
-        D2,
         "a" * 40,
         "b" * 40,
         role="SoftwareEngineer",

@@ -133,10 +133,11 @@ def compose(
     anything :func:`affirmable` refuses is refused whole. ``from_node`` and
     ``to_node`` are the edge's *current* endpoint records — what the reviewer
     judged today — and the event binds their hashes, not the ones the edge
-    was last affirmed against, which would re-sign the past. Beside the two
-    composite node hashes, the event also carries each endpoint's own
-    ``content_anchors`` unchanged — every named content hash the endpoint
-    carries, each already paired with the anchor it was found at — so the
+    was last affirmed against, which would re-sign the past. Only the edge
+    record folds the two composite node hashes, into the hash it is affirmed
+    against; the event carries each endpoint's own ``content_anchors``
+    unchanged — every named content hash the endpoint carries, each already
+    paired with the anchor it was found at — so the
     finer, per-hash record a later comparison reads is exactly what the two
     node records already stated, never a second telling. The recorder
     derives those hashes from the records it was handed and originates
@@ -176,8 +177,6 @@ def compose(
             from_id=edge.from_id,
             to_id=edge.to_id,
             kind=edge.kind,
-            from_node_hash=from_node_hash,
-            to_node_hash=to_node_hash,
             from_source_revision=from_source_revision,
             to_source_revision=to_source_revision,
             from_content_anchors=from_node.content_anchors,

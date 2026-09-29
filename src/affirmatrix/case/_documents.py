@@ -261,19 +261,17 @@ def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
     Each endpoint's named content hashes travel under their own nested
     object, ``seg:fromContentAnchors``/``seg:toContentAnchors``
     (SEG-SREQ-127), paired the same ``Source``-suffix way a node's own
-    entry pairs them — nested rather than flattened alongside
-    ``seg:fromNodeHash``, because the two endpoints' hash-name sets would
+    entry pairs them — nested rather than flattened into the event's
+    own fields, because the two endpoints' hash-name sets would
     otherwise share one flat namespace and a name common to both kinds
     could not tell them apart.
     """
-    return {
+    entry = {
         _ID: identity.review_event_iri(ordinal),
         "type": "seg:ReviewEvent",
         "seg:from": identity.node_iri(event.from_id),
         "seg:to": identity.node_iri(event.to_id),
         "seg:relation": f"seg:{event.kind}",
-        "seg:fromNodeHash": hex_digest(event.from_node_hash),
-        "seg:toNodeHash": hex_digest(event.to_node_hash),
         "seg:fromContentAnchors": _anchor_fields(event.from_content_anchors),
         "seg:toContentAnchors": _anchor_fields(event.to_content_anchors),
         "seg:affirmedAt": {
@@ -283,6 +281,11 @@ def event_entry(event: ReviewEvent, ordinal: int) -> Entry:
         "seg:affirmingRole": event.role,
         "seg:reason": event.reason,
     }
+    if event.from_node_hash is not None:
+        entry["seg:fromNodeHash"] = hex_digest(event.from_node_hash)
+    if event.to_node_hash is not None:
+        entry["seg:toNodeHash"] = hex_digest(event.to_node_hash)
+    return entry
 
 
 def review_event_record(entry: Entry, document: Path) -> ReviewEvent:
@@ -313,8 +316,8 @@ def review_event_record(entry: Entry, document: Path) -> ReviewEvent:
             from_id=_read_endpoint(entry, "seg:from", document),
             to_id=_read_endpoint(entry, "seg:to", document),
             kind=relation.removeprefix(_PREFIX),
-            from_node_hash=_read_digest(entry, "seg:fromNodeHash", label),
-            to_node_hash=_read_digest(entry, "seg:toNodeHash", label),
+            from_node_hash=_read_optional_digest(entry, "seg:fromNodeHash", label),
+            to_node_hash=_read_optional_digest(entry, "seg:toNodeHash", label),
             from_source_revision=str(revisions["seg:fromRevision"]),
             to_source_revision=str(revisions["seg:toRevision"]),
             from_content_anchors=_read_content_anchor_object(
@@ -367,6 +370,16 @@ def _read_digest(container: Mapping[str, object], field: str, label: str) -> byt
         return digest_from_hex(str(container[field]))
     except ValueError as error:
         raise AffirmationStoreError(f"{label} {field} cannot be read back: {error}") from error
+
+
+def _read_optional_digest(
+    container: Mapping[str, object], field: str, label: str
+) -> bytes | None:
+    """One digest field back as raw bytes, or ``None`` when the entry has none.
+
+    Absent is a legitimate shape; present and malformed is still refused.
+    """
+    return _read_digest(container, field, label) if field in container else None
 
 
 def _read_named_anchors(

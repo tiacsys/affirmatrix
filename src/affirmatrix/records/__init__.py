@@ -323,15 +323,17 @@ class ReviewEvent:
     be reconstructed later — nothing else correlates a source revision to the
     moment someone accepted it — so it is captured here or lost.
 
-    Beside the composite hash, every named content hash of each endpoint
-    travels here too, together with the anchor it was found at, exactly as
-    they stood at judgement (SEG-SREQ-127). The composite is what the edge
-    hash binds and what the detector's content axis compares; the named map
-    is the finer record beside it, read by the per-hash comparison a suspect
-    detector builds from this event rather than from the endpoint's current
-    node record. Required and non-empty on both sides, the same
-    at-composition-or-not-at-all rule as the source revisions: an endpoint
-    with no named content hash to carry is not one this judgement could bind.
+    Every named content hash of each endpoint travels here, together with the
+    anchor it was found at, exactly as they stood at judgement (SEG-SREQ-127):
+    that is what the judgement binds, and what a suspect detector's per-hash
+    comparison reads rather than the endpoint's current node record. Required
+    and non-empty on both sides, the same at-composition-or-not-at-all rule as
+    the source revisions: an endpoint with no named content hash to carry is
+    not one this judgement could bind. The composite node hash of an endpoint
+    is not part of the event — only the edge record folds it, into the hash the
+    edge was affirmed against; ``from_node_hash`` and ``to_node_hash`` are
+    present only on an event recorded before that, read back as ``None`` when
+    absent, and are checked as digests whenever they are given.
 
     The role is the capacity the judgement was made in (SEG-SREQ-049): who and
     when come from the commit that introduces the record, but in-what-role is
@@ -350,14 +352,14 @@ class ReviewEvent:
     from_id: str
     to_id: str
     kind: str
-    from_node_hash: bytes
-    to_node_hash: bytes
     from_source_revision: str
     to_source_revision: str
     role: str
     reason: str
     from_content_anchors: Mapping[str, ContentAnchor] = field(kw_only=True)
     to_content_anchors: Mapping[str, ContentAnchor] = field(kw_only=True)
+    from_node_hash: bytes | None = field(default=None, kw_only=True)
+    to_node_hash: bytes | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         _require(self.from_id, "source identifier")
@@ -366,8 +368,10 @@ class ReviewEvent:
         _require(self.from_source_revision, "source revision for the source endpoint")
         _require(self.to_source_revision, "source revision for the target endpoint")
         _require(self.role, "role")
-        checked_digest(self.from_node_hash, f"{self.from_id} node hash")
-        checked_digest(self.to_node_hash, f"{self.to_id} node hash")
+        if self.from_node_hash is not None:
+            checked_digest(self.from_node_hash, f"{self.from_id} node hash")
+        if self.to_node_hash is not None:
+            checked_digest(self.to_node_hash, f"{self.to_id} node hash")
         for side, anchors in (
             ("source", self.from_content_anchors),
             ("target", self.to_content_anchors),

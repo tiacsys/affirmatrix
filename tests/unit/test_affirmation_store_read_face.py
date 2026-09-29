@@ -133,19 +133,20 @@ def review_event(
     kind: str = "Refines",
     reason: str = "reviewed together",
     role: str = "RequirementsEngineer",
+    node_hashes: bool = False,
 ) -> records.ReviewEvent:
     return records.ReviewEvent(
         from_id=from_id,
         to_id=to_id,
         kind=kind,
-        from_node_hash=digest(from_id),
-        to_node_hash=digest(to_id),
         from_source_revision=REVISION,
         to_source_revision=LATER_REVISION,
         role=role,
         reason=reason,
         from_content_anchors={"contentHash": anchor(f"{from_id} content")},
         to_content_anchors={"contentHash": anchor(f"{to_id} content")},
+        from_node_hash=digest(from_id) if node_hashes else None,
+        to_node_hash=digest(to_id) if node_hashes else None,
     )
 
 
@@ -316,6 +317,36 @@ def test_a_review_event_reads_back_with_its_role(tmp_path: Path) -> None:
     store.append_review_events([review_event(role="acting deputy reviewer (annex F)")])
     (read,) = store.review_events()
     assert read.role == "acting deputy reviewer (annex F)"
+
+
+def test_a_review_event_without_node_hashes_reads_back_with_none(tmp_path: Path) -> None:
+    """SEG-SREQ-127: absent is a legitimate shape."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event()])
+    (read,) = store.review_events()
+    assert (read.from_node_hash, read.to_node_hash) == (None, None)
+
+
+def test_an_event_recorded_with_node_hashes_still_reads_back(tmp_path: Path) -> None:
+    """An event written before the composite left the event is still read as written."""
+    store = make_case(tmp_path)
+    event = review_event(node_hashes=True)
+    store.append_review_events([event])
+    (read,) = store.review_events()
+    assert read == event
+    assert read.from_node_hash == digest("SEG-SREQ-020")
+
+
+def test_a_malformed_node_hash_in_a_recorded_event_is_still_refused(tmp_path: Path) -> None:
+    """Optional means absent or valid, never absent or anything."""
+    store = make_case(tmp_path)
+    store.append_review_events([review_event(node_hashes=True)])
+    document = store.root / "events" / "review_events.jsonld"
+    text = document.read_text(encoding="utf-8")
+    valid = records.hex_digest(digest("SEG-SREQ-020"))
+    document.write_text(text.replace(valid, valid.upper()), encoding="utf-8")
+    with pytest.raises(case.AffirmationStoreError):
+        list(store.review_events())
 
 
 def test_a_review_events_content_anchors_read_back_unchanged(tmp_path: Path) -> None:

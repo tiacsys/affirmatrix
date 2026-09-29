@@ -33,14 +33,16 @@ The pair exists because the store computes no hashes: it persists what it is
 handed, and the commitment layer is deliberately out of its reach. The
 affirmation's effect on the edge record therefore has to be composed *above*
 the store, and composing it beside the event means record and event cannot
-disagree about what was affirmed — both fold the same two node hashes. A
-workflow that affirms calls one component and hands the store both halves.
+disagree about what was affirmed — the event carries the endpoints' named
+content hashes and anchors, and the edge's hash folds the two node hashes
+computed from those same records. A workflow that affirms calls one component
+and hands the store both halves.
 
-Those are the *current* node hashes — what the reviewer judged today — never
-the hashes the edge was last affirmed against, which would re-sign the past.
-The recorder derives them from the endpoint records it is handed and
-originates nothing itself: every judgement field is the operator's, required,
-with no default. Even an empty reason must be given, never assumed.
+Those are the *current* records' hashes — what the reviewer judged today —
+never the hashes the edge was last affirmed against, which would re-sign the
+past. The recorder derives the edge's hash from the endpoint records it is
+handed and originates nothing itself: every judgement field is the operator's,
+required, with no default. Even an empty reason must be given, never assumed.
 
 What the recorder trusts, and what it refuses
 ---------------------------------------------

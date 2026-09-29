@@ -10,8 +10,6 @@
     "seg:from",
     "seg:to",
     "seg:relation",
-    "seg:fromNodeHash",
-    "seg:toNodeHash",
     "seg:fromContentAnchors",
     "seg:toContentAnchors",
     "seg:affirmedAt",
@@ -44,18 +42,20 @@
       "description": "The kind of the edge that was affirmed."
     },
     "seg:fromNodeHash": {
-      "$ref": "#/$defs/sha256"
+      "$ref": "#/$defs/sha256",
+      "description": "Optional. An event states each endpoint's hashes through its content anchors; an event recorded earlier also carries the composite node hash the edge hash folds. Absent or a valid digest, never anything else."
     },
     "seg:toNodeHash": {
-      "$ref": "#/$defs/sha256"
+      "$ref": "#/$defs/sha256",
+      "description": "Optional. An event states each endpoint's hashes through its content anchors; an event recorded earlier also carries the composite node hash the edge hash folds. Absent or a valid digest, never anything else."
     },
     "seg:fromContentAnchors": {
       "$ref": "#/$defs/contentAnchors",
-      "description": "Every named content hash the source endpoint carried at judgement, each paired with the anchor it was found at (SEG-SREQ-127) — the finer record beside seg:fromNodeHash, the composite the edge hash binds."
+      "description": "Every named content hash the source endpoint carried at judgement, each paired with the anchor it was found at (SEG-SREQ-127) — the record an event binds, and the one a per-hash comparison reads."
     },
     "seg:toContentAnchors": {
       "$ref": "#/$defs/contentAnchors",
-      "description": "Every named content hash the target endpoint carried at judgement, each paired with the anchor it was found at (SEG-SREQ-127) — the finer record beside seg:toNodeHash, the composite the edge hash binds."
+      "description": "Every named content hash the target endpoint carried at judgement, each paired with the anchor it was found at (SEG-SREQ-127) — the record an event binds, and the one a per-hash comparison reads."
     },
     "seg:affirmedAt": {
       "type": "object",
