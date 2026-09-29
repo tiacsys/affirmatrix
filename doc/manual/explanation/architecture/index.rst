@@ -1,19 +1,21 @@
 Architecture
 ============
 
-arc42-shaped architecture documentation (introduction, context, solution
-strategy, building blocks, crosscutting concepts) — to be populated as the
-engine lands.
+The overview is the page to read first: an arc42-shaped account of what the
+tool is for, what stands around it, how it is decomposed, what holds across
+every component, and what iteration 0 leaves as known limits. The pages after
+it cover single components, what the tool guarantees, and what is currently in
+scope to build.
 
-The engine's decomposition into components is ratified in the decision
+The engine's decomposition into components is recorded in the decision
 records: ADR-0004 maps the component vocabulary onto packages under
 ``src/affirmatrix``, and the per-module docstrings name the component each
-module realizes. The pages below cover what the tool guarantees and what is
-currently in scope to build.
+module realizes.
 
 .. toctree::
    :maxdepth: 1
 
+   overview
    guarantee-boundary
    case-store
    affirmation-store-write-face

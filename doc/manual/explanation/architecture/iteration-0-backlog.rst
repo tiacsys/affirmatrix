@@ -37,7 +37,7 @@ B2   Node-hash derivation                                       commitment layer
 B3   Two-sided edge hash                                        commitment layer        SEG-SREQ-002
 B4   Flat-sealed design root, caller-supplied metadata          commitment layer        SEG-SREQ-003
 B5   Persisted vocabulary and the record-source protocol        record source           SEG-SYS-001/007
-B6   The built-in safety-evidence graph type                    taxonomy provider       (SYS home pending)
+B6   The built-in safety-evidence graph type                    taxonomy provider       SEG-SYS-009
 B7   Records to the in-memory graph                             graph builder           SEG-SYS-001
 B8   Refines cycles and self-loops as graph-level errors        graph builder           SEG-SREQ-004
 B9   The would-be store dataset and its loader                  store loader            — (scaffolding)
@@ -50,7 +50,7 @@ B15  Gate 2, the proof gate, and its CoverageReport             gate evaluator  
 B16  Scope collection and the partial-vs-total signal           proof generator         SEG-SYS-005
 B17  The four proof documents                                   proof generator         SEG-SYS-005
 B18  Refuse to generate for a blocked scope                     proof generator         SEG-SYS-008
-B19  Minimal CLI over the three workflows                       command-line interface  (SYS home pending)
+B19  Minimal CLI over the three workflows                       command-line interface  SEG-SYS-010
 B20  Iteration architecture note; requirement gaps raised       —                       —
 ===  =========================================================  ======================  ======================
 

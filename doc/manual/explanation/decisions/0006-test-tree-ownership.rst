@@ -70,5 +70,7 @@ Consequences
 - The would-be store lands at ``tests/fixtures/would_be_store/``, exactly
   where the SWE brief says — the contradiction is removed by widening the
   SWE's scope, not by moving the fixture.
-- ``pyproject.toml`` remains unowned by any brief; it needs an owner
-  eventually (flagged, not decided here).
+- Amended 2026-09-29: ``pyproject.toml`` is owned by the maintainer who
+  decides on dependencies. A dependency or tool-configuration change is
+  such a decision, applied in whichever pass needs it; the file is in no
+  role's edit scope by default.

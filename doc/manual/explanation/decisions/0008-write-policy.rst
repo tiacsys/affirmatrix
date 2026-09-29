@@ -4,10 +4,11 @@
 Status
 ------
 
-Accepted, 2026-07-25. Narrowed by ADR-0010 (2026-09-16): the "never runs
-git" clause now binds the library and the affirmation store; the
-command-line adapter may perform the three read-only repository
-operations that record names. Every other clause stands.
+Accepted, 2026-07-25. Clarified by ADR-0010 (2026-09-16; reworded
+2026-09-29): the "never runs git" clause was always about writes and about
+keeping the library free of repository state. The command-line adapter's
+three read-only repository operations, which that record names, are within
+the clause, not an exception to it. Every other clause stands.
 
 Context
 -------

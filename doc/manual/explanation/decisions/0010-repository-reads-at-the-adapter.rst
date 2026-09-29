@@ -4,11 +4,11 @@
 Status
 ------
 
-Accepted, 2026-09-16. Narrows one clause of ADR-0008 — "the tool never runs
-git" — to the library and the affirmation store; the write policy of
-ADR-0008 and both stages of ADR-0009 stand unchanged. Whether the original
-clause was ever meant to cover reads is a question for the design review
-after iteration 0; this record takes the narrow reading now and says so.
+Accepted, 2026-09-16. Reads one clause of ADR-0008 — "the tool never runs
+git" — as binding the library and the affirmation store; the write policy of
+ADR-0008 and both stages of ADR-0009 stand unchanged. The review after
+iteration 0 (2026-09-29) confirmed the narrow reading: this record clarifies
+ADR-0008 rather than narrowing it.
 
 Context
 -------
