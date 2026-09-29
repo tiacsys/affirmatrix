@@ -32,24 +32,30 @@ Two hashes, two purposes
 
 :func:`~affirmatrix.proof.collect_scope` already calls
 :func:`affirmatrix.commitment.design_root` once, with an explicit empty
-``metadata``, to mint the scope's own snapshot identifier — a content
-fingerprint taken before any package exists. This module calls the same
-primitive a **second** time, with real metadata, to seal the package's
-design consistency proof. The two calls answer different questions over
-overlapping but distinct inputs (the fingerprint folds the whole induced
+``metadata``, to mint the scope's own snapshot identifier — a timestamp
+joined to a content fingerprint taken before any package exists. This module
+calls the same primitive a **second** time, with real metadata, to seal the
+package's design consistency proof. The two calls answer different questions
+over overlapping but distinct inputs (the fingerprint folds the whole induced
 subgraph, evidence included; the package root folds the design subset alone)
 and neither is derivable from the other. Conflating them would let a
 scope's evidence — an outcome re-run, a waiver granted — silently reseal a
 document whose claim is only ever about the design.
 
+The snapshot identifier therefore names a package and binds nothing: the
+design consistency proof carries it so a reader can locate the package, but
+it is not an input to the package root. Two packages over the same design
+set, scope and revision carry the same root, whatever instant they were
+generated at and whatever evidence the scope carried.
+
 The canonical metadata
 --------------------------
 
-The package root's metadata is RFC 8785 canonical JSON over exactly three
-fields: ``snapshotId`` (the scope's own minted identifier), ``scope`` (the
-requested requirement identifiers, sorted), and ``revision`` (the current
-revision the caller judged the scope against). All three are plain strings
-or an array of them — nothing here is ever a number — which is what lets
+The package root's metadata is RFC 8785 canonical JSON over exactly two
+fields: ``scope`` (the requested requirement identifiers, sorted) and
+``revision`` (the current revision the caller judged the scope against).
+Both are plain strings or an array of them — nothing here is ever a
+number — which is what lets
 the standard library's own JSON encoder stand in for RFC 8785: sorted keys,
 compact separators, and UTF-8 without escaping non-ASCII characters
 reproduce RFC 8785's canonical form for object member ordering and for
@@ -253,9 +259,9 @@ def persist(package: Package, store: AffirmationStore) -> Mapping[str, Path]:
     )
 
 
-def _canonical_metadata(*, snapshot_id: str, requested_ids: Iterable[str], revision: str) -> bytes:
-    """RFC 8785 canonical JSON over ``{snapshotId, scope, revision}`` — see the module docstring."""
-    payload = {"snapshotId": snapshot_id, "scope": sorted(requested_ids), "revision": revision}
+def _canonical_metadata(*, requested_ids: Iterable[str], revision: str) -> bytes:
+    """RFC 8785 canonical JSON over ``{scope, revision}`` — see the module docstring."""
+    payload = {"revision": revision, "scope": sorted(requested_ids)}
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
         "utf-8"
     )
@@ -283,9 +289,7 @@ def _design_edges(scope: Scope) -> list[EdgeRecord]:
 def _package_root(scope: Scope, current_revision: str) -> bytes:
     """The package's own sealed root — a second, distinct call to
     :func:`~affirmatrix.commitment.design_root`."""
-    metadata = _canonical_metadata(
-        snapshot_id=scope.snapshot_id, requested_ids=scope.requested_ids, revision=current_revision
-    )
+    metadata = _canonical_metadata(requested_ids=scope.requested_ids, revision=current_revision)
     design_nodes = _design_nodes(scope)
     node_hashes = (commitment.node_hash(node.kind, node.content_hashes) for node in design_nodes)
     edge_tuples = ((edge.from_id, edge.to_id, edge.kind) for edge in _design_edges(scope))
@@ -299,9 +303,13 @@ def _design_consistency_proof_document(scope: Scope, current_revision: str) -> M
 
     Self-contained: an auditor holding only this document's fields — never
     the graph that produced them — can sort the node manifest's hashes and
-    the design edges' tuples, rebuild the canonical metadata from the three
-    fields carried alongside them, and arrive at the same root
-    (SEG-SYS-005).
+    the design edges' tuples, rebuild the canonical metadata from the two
+    fields (``scope`` and ``revision``) carried alongside them, and arrive at
+    the same root (SEG-SYS-005). The ``snapshotId`` field names the package
+    so a reader can locate it and is not part of that recomputation: two
+    packages over the same design set, scope and revision carry the same
+    root, whatever instant they were generated at and whatever evidence the
+    scope carried.
     """
     node_manifest = [
         {

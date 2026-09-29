@@ -50,36 +50,42 @@ Two hashes, two purposes
 
 Scope collection already calls :func:`affirmatrix.commitment.design_root`
 once, with an explicit empty ``metadata``, to mint the scope's own snapshot
-identifier — a content fingerprint taken before any package exists, folded
-over the *whole* induced subgraph, evidence included. ``assemble`` calls the
-same primitive a **second**, entirely distinct time, with real metadata, to
-seal the design consistency proof — folded over the *design* subset of the
-same scope alone. The two calls answer different questions over
-overlapping but different inputs, and neither is derivable from the other:
-a scope's evidence changing — a test re-run, a waiver newly granted — mints
-a new snapshot identifier without touching the package's own root, because
-the root's claim is only ever about the design.
+identifier — a timestamp joined to a content fingerprint taken before any
+package exists, folded over the *whole* induced subgraph, evidence included.
+``assemble`` calls the same primitive a **second**, entirely distinct time,
+with real metadata, to seal the design consistency proof — folded over the
+*design* subset of the same scope alone. The two calls answer different
+questions over overlapping but different inputs, and neither is derivable
+from the other: a scope's evidence changing — a test re-run, a waiver newly
+granted — mints a new snapshot identifier without touching the package's own
+root, because the root's claim is only ever about the design.
 
 The canonical metadata the package root is folded with is RFC 8785 canonical
-JSON over exactly three fields:
+JSON over exactly two fields:
 
-* ``snapshotId`` — the scope's own minted identifier;
 * ``scope`` — the requested requirement identifiers, sorted;
 * ``revision`` — the current revision the caller judged the scope against.
 
-All three are plain strings or arrays of them, which is what lets the
+Both are plain strings or arrays of them, which is what lets the
 standard library's own JSON encoder stand in for RFC 8785 here — sorted
 keys, compact separators, UTF-8 without escaping non-ASCII characters. That
 substitution holds for object member ordering and for string, boolean and
 array values; it does **not** hold for RFC 8785's number formatting, which
 never applies today because no field in this payload is ever a number.
 
+The snapshot identifier is deliberately not one of the two. It names the
+package — the design consistency proof carries it so that a reader can
+locate the package — and binds nothing. The consequence is a reproducibility
+statement: two packages over the same design set, scope and revision carry
+the same root, whatever instant they were generated at and whatever
+evidence the scope carried.
+
 The design consistency proof: self-contained by construction
 ------------------------------------------------------------------
 
 A design consistency proof carries exactly what an auditor needs to
 recompute its own root without the graph that produced it (SEG-SYS-005):
-the three metadata fields above, a node manifest of every in-scope design
+the two metadata fields above, a node manifest of every in-scope design
 node's own identifier, kind and hash, the in-scope design edges as
 ⟨from, to, kind⟩ triples, and the root itself. "Design" is Requirement,
 TestSpecification and Implementation nodes and the Refines, Verifies and

@@ -140,7 +140,6 @@ def main() -> None:
     edge_tuples = ((e["from"], e["to"], e["kind"]) for e in design_proof["designEdges"])
     metadata = json.dumps(
         {
-            "snapshotId": design_proof["snapshotId"],
             "scope": design_proof["scope"],
             "revision": design_proof["revision"],
         },

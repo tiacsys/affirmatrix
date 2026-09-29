@@ -25,9 +25,12 @@ Recompute the root
 
 ``design_consistency_proof.jsonld`` carries a ``root``, and everything
 that root was sealed over: a hash for each of the fifteen design nodes,
-the fourteen design edges as ``(from, to, kind)`` triples, and the three
-metadata fields — ``snapshotId``, ``scope`` and ``revision``
-(:need:`SEG-SREQ-037`). The commitment is public and deterministic
+the fourteen design edges as ``(from, to, kind)`` triples, and the two
+metadata fields — ``scope`` and ``revision`` (:need:`SEG-SREQ-037`). The
+document also names itself with a ``snapshotId``, but the root does not
+bind it: two packages over the same design, scope and revision carry the
+same root, whatever instant they were generated at. The commitment is
+public and deterministic
 (:doc:`../explanation/decisions/0003-commitment-layer`), so a reader can
 seal the same material again and compare. Save this as
 ``recompute_root.py``:
@@ -44,7 +47,7 @@ seal the same material again and compare. Save this as
    proof = json.loads((package / "design_consistency_proof.jsonld").read_text())
 
    metadata = json.dumps(
-       {"snapshotId": proof["snapshotId"], "scope": proof["scope"], "revision": proof["revision"]},
+       {"scope": proof["scope"], "revision": proof["revision"]},
        sort_keys=True, separators=(",", ":"), ensure_ascii=False,
    ).encode("utf-8")
    node_hashes = [bytes.fromhex(node["hash"]) for node in proof["nodeManifest"]]
@@ -65,9 +68,9 @@ the case or the other three documents. Run it over the package:
 
 .. code-block:: console
 
-   $ python recompute_root.py case/proofs/20260929T120940Z-0fbcfe027e43
-   root in the package: c71e2a404a3b90d7c3d9b2922787ccd1f28c16cb99ce666a9b8a907a8d726346
-   root recomputed:     c71e2a404a3b90d7c3d9b2922787ccd1f28c16cb99ce666a9b8a907a8d726346
+   $ python recompute_root.py case/proofs/20260929T141432Z-0fbcfe027e43
+   root in the package: b0507720474d789ae992bb029b68f951c42ef9b8526cf4f7c2883e71382d09dd
+   root recomputed:     b0507720474d789ae992bb029b68f951c42ef9b8526cf4f7c2883e71382d09dd
    match
    $ echo $?
    0
@@ -85,16 +88,16 @@ one hexadecimal digit of one node hash in it:
 
 .. code-block:: console
 
-   $ cp -r case/proofs/20260929T120940Z-0fbcfe027e43 package-tampered
+   $ cp -r case/proofs/20260929T141432Z-0fbcfe027e43 package-tampered
    $ sed -i '77s/"c37bd47b/"037bd47b/' package-tampered/design_consistency_proof.jsonld
-   $ diff case/proofs/20260929T120940Z-0fbcfe027e43/design_consistency_proof.jsonld package-tampered/design_consistency_proof.jsonld
+   $ diff case/proofs/20260929T141432Z-0fbcfe027e43/design_consistency_proof.jsonld package-tampered/design_consistency_proof.jsonld
    77c77
    <       "hash": "c37bd47b3c56a5be57e91c9fe6aadb8d48e6508dbe0f56d3e30f5fcfbde05366",
    ---
    >       "hash": "037bd47b3c56a5be57e91c9fe6aadb8d48e6508dbe0f56d3e30f5fcfbde05366",
    $ python recompute_root.py package-tampered
-   root in the package: c71e2a404a3b90d7c3d9b2922787ccd1f28c16cb99ce666a9b8a907a8d726346
-   root recomputed:     9337b0a23b58bae2b9428f8d8c32034ceb37152e4155bc1332f720d85731cd6e
+   root in the package: b0507720474d789ae992bb029b68f951c42ef9b8526cf4f7c2883e71382d09dd
+   root recomputed:     b4bd655969a9eefa677658b76c8095e86481b46fc90dd9238aecd298ca7aed27
    MISMATCH
    $ echo $?
    1
@@ -117,7 +120,7 @@ refers to its siblings by file name and by nothing else:
 
 .. code-block:: console
 
-   $ grep -n Report case/proofs/20260929T120940Z-0fbcfe027e43/evidence_manifest.jsonld
+   $ grep -n Report case/proofs/20260929T141432Z-0fbcfe027e43/evidence_manifest.jsonld
    3:  "coverageReport": "coverage_report.jsonld",
 
 There is no digest beside the name (:need:`SEG-SREQ-038` speaks of the
@@ -128,11 +131,11 @@ check:
 
 .. code-block:: console
 
-   $ cp -r case/proofs/20260929T120940Z-0fbcfe027e43 package-sibling
+   $ cp -r case/proofs/20260929T141432Z-0fbcfe027e43 package-sibling
    $ sed -i 's/"blocked": false/"blocked": true/' package-sibling/coverage_report.jsonld
    $ python recompute_root.py package-sibling
-   root in the package: c71e2a404a3b90d7c3d9b2922787ccd1f28c16cb99ce666a9b8a907a8d726346
-   root recomputed:     c71e2a404a3b90d7c3d9b2922787ccd1f28c16cb99ce666a9b8a907a8d726346
+   root in the package: b0507720474d789ae992bb029b68f951c42ef9b8526cf4f7c2883e71382d09dd
+   root recomputed:     b0507720474d789ae992bb029b68f951c42ef9b8526cf4f7c2883e71382d09dd
    match
    $ echo $?
    0
@@ -149,11 +152,11 @@ reason and no revision an affirmation was made at:
 
 .. code-block:: console
 
-   $ grep -c -i -e affirmed -e reason -e role -e review case/proofs/20260929T120940Z-0fbcfe027e43/*.jsonld
-   case/proofs/20260929T120940Z-0fbcfe027e43/coverage_report.jsonld:0
-   case/proofs/20260929T120940Z-0fbcfe027e43/design_consistency_proof.jsonld:0
-   case/proofs/20260929T120940Z-0fbcfe027e43/evidence_manifest.jsonld:0
-   case/proofs/20260929T120940Z-0fbcfe027e43/execution_coverage_record.jsonld:0
+   $ grep -c -i -e affirmed -e reason -e role -e review case/proofs/20260929T141432Z-0fbcfe027e43/*.jsonld
+   case/proofs/20260929T141432Z-0fbcfe027e43/coverage_report.jsonld:0
+   case/proofs/20260929T141432Z-0fbcfe027e43/design_consistency_proof.jsonld:0
+   case/proofs/20260929T141432Z-0fbcfe027e43/evidence_manifest.jsonld:0
+   case/proofs/20260929T141432Z-0fbcfe027e43/execution_coverage_record.jsonld:0
 
 (The word ``affirmatrix`` does appear, in the names of the functions under
 test; that is why the pattern says ``affirmed``.) Who reviewed which edge,
@@ -180,12 +183,13 @@ says whether that scope is total (:need:`SEG-SREQ-039`):
 
 .. code-block:: console
 
-   $ grep -n -A2 'requestedScope\|"total"' case/proofs/20260929T120940Z-0fbcfe027e43/evidence_manifest.jsonld
+   $ grep -n -A2 'requestedScope\|"total"' case/proofs/20260929T141432Z-0fbcfe027e43/evidence_manifest.jsonld
    27:  "requestedScope": [
    28-    "SEG-SYS-009"
    29-  ],
    --
    32:  "total": false
+   33-}
 
 ``"total": false`` and one requested requirement: a partial proof that
 declares its partiality, so the claim you check is the claim it makes and

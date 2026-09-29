@@ -443,7 +443,6 @@ def test_the_design_consistency_proof_recomputes_its_own_root_from_its_own_conte
     # the commitment layer, and the standard library's own JSON encoder.
     metadata = json.dumps(
         {
-            "snapshotId": document["snapshotId"],
             "scope": document["scope"],
             "revision": document["revision"],
         },
@@ -612,29 +611,76 @@ def test_the_manifests_sibling_references_match_what_persist_actually_named(tmp_
 
 
 def test_canonical_metadata_is_stable_for_the_same_inputs() -> None:
-    first = _package._canonical_metadata(
-        snapshot_id="s1", requested_ids={"SREQ-1"}, revision=CURRENT_REVISION
-    )
-    second = _package._canonical_metadata(
-        snapshot_id="s1", requested_ids={"SREQ-1"}, revision=CURRENT_REVISION
-    )
+    first = _package._canonical_metadata(requested_ids={"SREQ-1"}, revision=CURRENT_REVISION)
+    second = _package._canonical_metadata(requested_ids={"SREQ-1"}, revision=CURRENT_REVISION)
     assert first == second
 
 
 def test_canonical_metadata_differs_when_the_current_revision_differs() -> None:
-    first = _package._canonical_metadata(snapshot_id="s1", requested_ids={"SREQ-1"}, revision="r1")
-    second = _package._canonical_metadata(snapshot_id="s1", requested_ids={"SREQ-1"}, revision="r2")
+    first = _package._canonical_metadata(requested_ids={"SREQ-1"}, revision="r1")
+    second = _package._canonical_metadata(requested_ids={"SREQ-1"}, revision="r2")
     assert first != second
 
 
 def test_canonical_metadata_differs_when_the_requested_scope_differs() -> None:
-    first = _package._canonical_metadata(
-        snapshot_id="s1", requested_ids={"SREQ-1"}, revision=CURRENT_REVISION
-    )
+    first = _package._canonical_metadata(requested_ids={"SREQ-1"}, revision=CURRENT_REVISION)
     second = _package._canonical_metadata(
-        snapshot_id="s1", requested_ids={"SREQ-1", "SREQ-2"}, revision=CURRENT_REVISION
+        requested_ids={"SREQ-1", "SREQ-2"}, revision=CURRENT_REVISION
     )
     assert first != second
+
+
+def test_the_canonical_metadata_names_the_scope_and_the_revision_alone() -> None:
+    metadata = _package._canonical_metadata(requested_ids={"SREQ-2", "SREQ-1"}, revision="r1")
+    assert metadata == b'{"revision":"r1","scope":["SREQ-1","SREQ-2"]}'
+
+
+def _assembled_at(nodes, edges, timestamp: datetime) -> _package.Package:
+    return proof.assemble(
+        graph.build(Source(nodes, edges)),
+        {"SREQ-1"},
+        snapshot_timestamp=timestamp,
+        evaluation_date=EVALUATION_DATE,
+        current_revision=CURRENT_REVISION,
+    )
+
+
+def _design_root(package: _package.Package) -> str:
+    return package.documents[proof.DESIGN_CONSISTENCY_PROOF]["root"]
+
+
+def test_two_packages_over_one_design_at_different_instants_carry_the_same_root() -> None:
+    nodes, edges = ready_fixture()
+    earlier = _assembled_at(nodes, edges, TIMESTAMP)
+    later = _assembled_at(nodes, edges, datetime(2026, 6, 2, 9, 30, 0, tzinfo=UTC))
+
+    assert _design_root(earlier) == _design_root(later)
+    assert earlier.scope.snapshot_id != later.scope.snapshot_id
+
+
+def test_changing_an_in_scope_outcome_never_changes_the_package_root() -> None:
+    nodes, edges = ready_fixture()
+    rerun = [
+        outcome("run-1/TS-1", seed="a second run") if n.kind == "TestOutcome" else n for n in nodes
+    ]
+
+    before = _assembled_at(nodes, edges, TIMESTAMP)
+    after = _assembled_at(rerun, edges, TIMESTAMP)
+
+    assert _design_root(before) == _design_root(after)
+    assert before.scope.snapshot_id != after.scope.snapshot_id
+
+
+def test_changing_a_design_node_changes_the_package_root() -> None:
+    nodes, edges = ready_fixture()
+    edited = [
+        implementation("pkg.fn", seed="edited") if n.kind == "Implementation" else n for n in nodes
+    ]
+
+    before = _assembled_at(nodes, edges, TIMESTAMP)
+    after = _assembled_at(edited, edges, TIMESTAMP)
+
+    assert _design_root(before) != _design_root(after)
 
 
 def test_the_snapshot_id_fingerprint_and_the_package_root_are_different_hashes() -> None:
