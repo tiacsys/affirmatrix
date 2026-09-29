@@ -73,7 +73,10 @@ def _canonical_digest(content: str, refines: list[str], title: str) -> bytes:
 
 
 def _digests(export: Path) -> dict[str, bytes]:
-    return {node.local_id: node.anchors["contentHash"].digest for node in _reader(export).nodes()}
+    return {
+        node.local_id: node.content_anchors["contentHash"].digest
+        for node in _reader(export).nodes()
+    }
 
 
 @pytest.mark.xfail(strict=True, reason="SEG-SREQ-145: the requirements reader is not built yet")
@@ -252,11 +255,11 @@ def test_a_requirements_anchor_names_its_source_file_and_its_need() -> None:
     assert len(nodes) == 29
     for node in nodes:
         need = needs[node.local_id]
-        anchor = node.anchors["contentHash"]
+        anchor = node.content_anchors["contentHash"]
         assert anchor.repository == "toolbox"
         assert anchor.path == f"doc/{need['docname']}{need['doctype']}"
         assert anchor.locator == f"need:{need['id']}"
-    paths = {node.local_id: node.anchors["contentHash"].path for node in nodes}
+    paths = {node.local_id: node.content_anchors["contentHash"].path for node in nodes}
     assert paths["SD-REQ-002"] == "doc/detailed.rst"
     assert paths["SD-TOP-001"] == "doc/top-level.rst"
 
