@@ -2,12 +2,13 @@ Configuration Loader
 =====================
 
 The configuration loader is the one seam between where content lives and
-everything that reads it: the case root, the map from a repository name to
-its path, and which of those repositories carries the revision a package's
+everything that reads it: the case root, the map from a repository name to its
+path, and which of those repositories carries the revision a package's
 readiness is judged against. It reads one file by default and needs none at
 all, because every parameter it carries has a default; a value given by its
 caller always wins over the file's own. Nothing it carries reaches a hash —
-source topology changes what the tool reads, never what the tool proves.
+source topology changes what the tool reads, never what the tool proves. A
+relative path in the file means the same thing from any working directory.
 What describes a case itself, rather than one run of the tool over it, is
 carried elsewhere and is no part of this component's own.
 
@@ -87,3 +88,11 @@ carried elsewhere and is no part of this component's own.
    The configuration loader shall supply no value it carries to the
    computation of a content hash, a node hash, an edge hash, or a design
    root.
+
+.. sreq:: A relative path resolves against the file's directory
+   :id: SEG-SREQ-135
+   :refines: SEG-SREQ-117
+
+   Where the configuration file gives a relative path, the configuration
+   loader shall resolve that path against the directory that holds the
+   file.

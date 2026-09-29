@@ -1,13 +1,14 @@
 Affirmation Store
 =================
 
-The affirmation store is the only component that persists graph data and
-the only one that reads it back. Its requirements govern what may be persisted
-— hashes and references, never the content those hashes cover — and the
+The affirmation store is the only component that persists graph data and the
+only one that reads it back. Its requirements govern what may be persisted —
+hashes and references, never the content those hashes cover — and the
 qualities that make persistence trustworthy: validated on write, faithful on
 read-back — and refused outright when faithful read-back is impossible —
 confined to one write root, never visible half-written, never silently
-removed, and never changed unless a change was asked for.
+removed, and never changed unless a change was asked for — including the
+case's own copy of the schemas.
 
 .. sreq:: Covered content is never persisted
    :id: SEG-SREQ-018
@@ -80,3 +81,18 @@ removed, and never changed unless a change was asked for.
    If a write would replace an edge record carrying the hash it was affirmed
    against with a record carrying no such hash, and demotion of that edge was
    not requested, then the affirmation store shall refuse the write.
+
+.. sreq:: A case's schema copy is rewritten from the packaged schemas on request
+   :id: SEG-SREQ-139
+   :refines: SEG-SYS-007
+
+   When the refresh of a case's schema copy is requested, the affirmation
+   store shall rewrite that copy from the packaged schemas and write
+   nothing else in the case.
+
+.. sreq:: A refresh reports each schema that differed
+   :id: SEG-SREQ-140
+   :refines: SEG-SYS-007
+
+   When the affirmation store refreshes a case's schema copy, it shall
+   report each schema whose copy differed from the packaged one.

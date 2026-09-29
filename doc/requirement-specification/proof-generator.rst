@@ -35,8 +35,18 @@ the refusal arrives with the gate's report attached.
    :id: SEG-SREQ-037
    :refines: SEG-SYS-005
 
-   The proof generator shall record in every evidence package the node hashes
-   needed to recompute that package's design root.
+   The proof generator shall record in every evidence package every input
+   from which that package's design root is recomputed: the node hashes and
+   the edges of its design set, the requested scope, and the revision the
+   scope was judged against.
+
+.. sreq:: A package's root is sealed over nothing but the design, scope and revision
+   :id: SEG-SREQ-133
+   :refines: SEG-SYS-005
+
+   The proof generator shall compute every evidence package's design root
+   over the node hashes and edges of its design set, the requested scope
+   and the revision, and over nothing else.
 
 .. sreq:: Packages state their scope
    :id: SEG-SREQ-038

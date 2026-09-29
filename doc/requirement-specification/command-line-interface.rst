@@ -21,13 +21,13 @@ write stays a draft until the operator commits it.
 Case
 ----
 
-.. sreq:: A case is brought into being, inspected, synced, and trimmed
+.. sreq:: A case is brought into being, inspected, synced, refreshed, and trimmed
    :id: SEG-SREQ-069
    :refines: SEG-SYS-010
 
    The command-line interface shall let the operator bring a case into
-   being, inspect it, mirror the current stream into it, and remove named
-   records from it, each as its own verb.
+   being, inspect it, mirror the current stream into it, refresh its
+   schema copy, and remove named records from it, each as its own verb.
 
 .. sreq:: case init creates a case
    :id: SEG-SREQ-070
@@ -61,6 +61,14 @@ Case
    The command-line interface shall never request the demotion of an edge
    when writing case sync's derived stream to the case.
 
+.. sreq:: An unbuildable current stream stops case sync without a write
+   :id: SEG-SREQ-136
+   :refines: SEG-SREQ-072
+
+   If case sync cannot build a graph from the current stream it is given,
+   then the command-line interface shall write nothing to the case and exit
+   with status 2, a request it could not judge.
+
 .. sreq:: Vanished edges are reported, not silently dropped
    :id: SEG-SREQ-074
    :refines: SEG-SREQ-072
@@ -73,7 +81,15 @@ Case
    :refines: SEG-SREQ-069
 
    The command-line interface shall remove, in response to case remove,
-   only the node and edge records its selector names.
+   only the edge records its selector names.
+
+.. sreq:: The schema copy is refreshed on request
+   :id: SEG-SREQ-141
+   :refines: SEG-SREQ-069
+
+   The command-line interface shall let the operator request the refresh of
+   a case's schema copy, rendering the differences the affirmation store
+   reports.
 
 Graph
 -----
@@ -139,6 +155,20 @@ Graph
    While graph status reports any edge as directly outdated, transitively
    suspect, doubly outdated, or broken, the command-line interface shall
    exit with status 1, its negative verdict.
+
+.. sreq:: graph status lists an edge that has vanished
+   :id: SEG-SREQ-137
+   :refines: SEG-SREQ-080
+
+   The command-line interface shall have graph status list, without a
+   state, every recorded edge that is absent from the current stream.
+
+.. sreq:: A vanished edge does not affect graph status's verdict
+   :id: SEG-SREQ-138
+   :refines: SEG-SREQ-080
+
+   The command-line interface shall leave a recorded edge that is absent
+   from the current stream out of graph status's verdict.
 
 Edge
 ----
@@ -324,8 +354,9 @@ Judgement inputs
    :refines: SEG-SYS-010
 
    The command-line interface shall supply every value a judgement depends
-   on — an affirmation's role, reason, and source revisions, and the
-   package gate's implementation revision — either as an explicit input, as
+   on — an affirmation's role, reason, and source revisions, the package
+   gate's implementation revision, and the current stream a comparison is
+   made against — either as an explicit input, as
    a value it discovers under one checked rule, or as a refusal when
    neither is available.
 
@@ -393,6 +424,14 @@ Judgement inputs
 
    Where a role vocabulary is configured, the command-line interface shall
    refuse an affirmation whose role lies outside it.
+
+.. sreq:: A comparison needs a current stream or a configured producer
+   :id: SEG-SREQ-142
+   :refines: SEG-SREQ-105
+
+   If a verb that derives from both record sources is given no current
+   stream and no producer is configured, then the command-line interface
+   shall exit with status 2, a request it could not judge.
 
 Draft posture
 -------------
