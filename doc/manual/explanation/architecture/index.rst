@@ -18,6 +18,7 @@ module realizes.
    overview
    guarantee-boundary
    case-store
+   requirements-reader
    affirmation-store-write-face
    affirmation-store-read-face
    drift-derivation

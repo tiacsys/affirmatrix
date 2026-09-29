@@ -79,7 +79,6 @@ def _digests(export: Path) -> dict[str, bytes]:
     }
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-145: the requirements reader is not built yet")
 def test_only_configured_need_types_become_requirements() -> None:
     """Only configured need types become Requirements.
 
@@ -102,7 +101,6 @@ def test_only_configured_need_types_become_requirements() -> None:
     assert not {key for key in plain if needs[key]["type"] == "top_requirement"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-146: the requirements reader is not built yet")
 def test_a_requirement_is_identified_by_its_need_identifier_verbatim() -> None:
     """A Requirement is identified by its need identifier, verbatim.
 
@@ -121,7 +119,6 @@ def test_a_requirement_is_identified_by_its_need_identifier_verbatim() -> None:
     assert b"SD-TOP-001" in ids
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-147: the requirements reader is not built yet")
 def test_a_requirements_content_hash_covers_its_authored_fields_only(tmp_path: Path) -> None:
     """A Requirement's content hash covers its authored fields and no others.
 
@@ -150,7 +147,6 @@ def test_a_requirements_content_hash_covers_its_authored_fields_only(tmp_path: P
     assert _digests(_variant(tmp_path, other_content, "content"))["SD-REQ-002"] != expected
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-148: the requirements reader is not built yet")
 def test_the_order_of_refines_links_does_not_change_the_content_hash(tmp_path: Path) -> None:
     """The order of a need's refines links does not change its content hash.
 
@@ -177,7 +173,6 @@ def test_the_order_of_refines_links_does_not_change_the_content_hash(tmp_path: P
     assert forward == reverse == expected
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-149: the requirements reader is not built yet")
 def test_refines_edges_come_from_declared_links_only(tmp_path: Path) -> None:
     """Refines edges come from declared refines links only.
 
@@ -207,7 +202,6 @@ def test_refines_edges_come_from_declared_links_only(tmp_path: Path) -> None:
     assert len(stale) == 22
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-150: the requirements reader is not built yet")
 def test_an_export_carrying_a_build_timestamp_is_refused(tmp_path: Path) -> None:
     """An export carrying a build timestamp is refused.
 
@@ -236,7 +230,6 @@ def test_an_export_carrying_a_build_timestamp_is_refused(tmp_path: Path) -> None
         _reader(_variant(tmp_path, stamp_top, "top"))
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-151: the requirements reader is not built yet")
 def test_a_requirements_anchor_names_its_source_file_and_its_need() -> None:
     """A Requirement's anchor names its repository, source file and need.
 
