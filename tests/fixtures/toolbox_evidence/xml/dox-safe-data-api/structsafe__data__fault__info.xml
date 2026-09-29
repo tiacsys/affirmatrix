@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="structsafe__data__fault__info" kind="struct" language="C++" prot="public">
+    <compoundname>safe_data_fault_info</compoundname>
+    <includes refid="safe__data_8h" local="no">safe_data/safe_data.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structsafe__data__fault__info_1aedfedb23e00931ad4307da34ab2033f0" prot="public" static="no" mutable="no">
+        <type>enum <ref refid="group__safe__data__diag__apis_1ga52ecdf754b20f11653a6e01a3d018adf" kindref="member">safe_data_fault_kind</ref></type>
+        <definition>enum safe_data_fault_kind safe_data_fault_info::kind</definition>
+        <argsstring></argsstring>
+        <name>kind</name>
+        <qualifiedname>safe_data_fault_info::kind</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Kind of integrity event being reported. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="132" column="26" bodyfile="include/safe_data/safe_data.h" bodystart="132" bodyend="-1"/>
+        <referencedby refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__fault__info_1a49fe55e0f58ac6b39da71efa016492cd" prot="public" static="no" mutable="no">
+        <type>const void *</type>
+        <definition>const void* safe_data_fault_info::payload</definition>
+        <argsstring></argsstring>
+        <name>payload</name>
+        <qualifiedname>safe_data_fault_info::payload</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Affected payload, or NULL when not applicable (e.g. lock timeout). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="134" column="12" bodyfile="include/safe_data/safe_data.h" bodystart="134" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" prot="public" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t safe_data_fault_info::len</definition>
+        <argsstring></argsstring>
+        <name>len</name>
+        <qualifiedname>safe_data_fault_info::len</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Payload size in bytes, 0 when not applicable. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="136" column="8" bodyfile="include/safe_data/safe_data.h" bodystart="136" bodyend="-1"/>
+        <referencedby refid="group__safe__data__core__apis_1gaeb1df317ad3fc576ec5ff67d6cd4f3d3" compoundref="safe__data_8c" startline="454" endline="472">safe_data_commit</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1gae355d680bd0bbcb20ca74d55bb584d4a" compoundref="safe__data_8c" startline="224" endline="237">safe_data_init</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" compoundref="safe__data_8c" startline="326" endline="352">safe_data_read</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" compoundref="safe__data_8c" startline="386" endline="451">safe_data_update</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" compoundref="safe__data_8c" startline="277" endline="288">safe_data_verify</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" compoundref="safe__data_8c" startline="290" endline="324">safe_data_verify_repair</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga8e7e3cfa5544a70471a2e8dca7fc35f9" compoundref="safe__data_8c" startline="354" endline="384">safe_data_write</referencedby>
+        <referencedby refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</referencedby>
+        <referencedby refid="safe__data_8c_1a7305bfd3372aa8a6ec8e91403c419dfe" compoundref="safe__data_8c" startline="242" endline="275">verify_quiet</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>Event descriptor passed to the registered fault handler. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/safe_data/safe_data.h" line="130" column="1" bodyfile="include/safe_data/safe_data.h" bodystart="130" bodyend="137"/>
+    <listofallmembers>
+      <member refid="structsafe__data__fault__info_1aedfedb23e00931ad4307da34ab2033f0" prot="public" virt="non-virtual"><scope>safe_data_fault_info</scope><name>kind</name></member>
+      <member refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" prot="public" virt="non-virtual"><scope>safe_data_fault_info</scope><name>len</name></member>
+      <member refid="structsafe__data__fault__info_1a49fe55e0f58ac6b39da71efa016492cd" prot="public" virt="non-virtual"><scope>safe_data_fault_info</scope><name>payload</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

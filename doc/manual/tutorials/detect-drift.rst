@@ -260,14 +260,17 @@ it found:
 A vanished edge is one the case holds and the current stream no longer
 does. Sync reports it and leaves it where it is (:need:`SEG-SREQ-074`): a
 sync that silently dropped what had been affirmed would be a way to lose a
-judgement without anyone deciding to. What ``graph status`` says about it
-is nothing at all:
+judgement without anyone deciding to. ``graph status`` shows it too — as
+a line with no state, because the current stream has said nothing that a
+state could be derived from (:need:`SEG-SREQ-137`) — and keeps it out of
+the verdict (:need:`SEG-SREQ-138`):
 
 .. code-block:: console
 
    $ affirmatrix graph status --case ./case-copy --current ./store-copy | grep '^SEG-TS-003 --'
+   SEG-TS-003 --[Verifies]--> SEG-SREQ-032  vanished from the current stream
    $ affirmatrix graph status --case ./case-copy --current ./store-copy | wc -l
-   300
+   301
    $ affirmatrix graph status --case ./case-copy --current ./store-copy | grep -c '(active)'
    13
    $ affirmatrix graph status --case ./case-copy --current ./store-copy > /dev/null; echo $?
@@ -277,10 +280,12 @@ is nothing at all:
    $ echo $?
    2
 
-The vanished edge is not in the listing — 300 lines, not 301, and one
-active edge fewer — and its absence does not turn the verdict. The report
-of the vanishing is ``case sync``'s; read it, because the status will not
-repeat it. Removal is your decision, and it is by name
+The vanished edge is listed last, outside the parentheses that hold a
+state: 301 lines, the 300 the current stream supplies and the one it does
+not, and one active edge fewer. Its listing does not turn the verdict,
+which reads only the edges that have a state. ``edge show`` does not
+select it, since it is no edge of the current stream. Removal is your
+decision, and it is by name
 (:need:`SEG-SREQ-075`), taking only what the selector names:
 
 .. code-block:: console

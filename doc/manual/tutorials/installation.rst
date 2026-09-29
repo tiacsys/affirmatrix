@@ -79,14 +79,15 @@ producer: the source the current stream is read from, the subject of
 the file changes what the tool reads, never what it proves (see
 :doc:`../explanation/architecture/command-line-interface`).
 
-Both paths are relative, and they resolve against the **working
-directory the command runs from**, not against the configuration file's
-own location. Every command shown across these tutorials therefore runs
-from the repository root, where the committed file makes them resolve —
-and lets every one of them run flag-free. Run the same command from inside
-``case/``, where you will later go to commit, and the relative producer
-path no longer names anything from there — the command refuses for want
-of a producer.
+Both paths are relative, and the values inside the file resolve against
+the **directory that holds the file**, not against the working directory
+(:need:`SEG-SREQ-135`). A bare ``affirmatrix`` still looks for
+``./affirmatrix.yaml`` in the working directory, so every command shown
+across these tutorials runs from the repository root, where the committed
+file is found — and runs flag-free. From any other directory — from
+inside ``case/``, where you will later go to commit, say — pass the file
+with ``--config``: ``affirmatrix --config <repository>/affirmatrix.yaml
+case check`` names the same case and the same producer from there.
 
 case init
 ---------
@@ -99,7 +100,7 @@ finds there:
    $ affirmatrix case check
    layout: (none)
    missing schemas: coverage_report.schema.json, design_consistency_proof.schema.json, edge-calls.schema.json, edge-confirms.schema.json, edge-excuses.schema.json, edge-implements.schema.json, edge-refines.schema.json, edge-verifies.schema.json, edge-witnesses.schema.json, evidence_manifest.schema.json, execution_coverage_record.schema.json, implementation.schema.json, requirement.schema.json, review_event.schema.json, test_outcome.schema.json, test_specification.schema.json, waiver.schema.json
-   record counts: {'nodes': 0, 'edges': 0, 'reviewEvents': 0}
+   record counts: nodes 0, edges 0, review events 0
    configuration found: True
    producer readable: True
    $ echo $?
@@ -127,7 +128,7 @@ Ask again:
    $ affirmatrix case check
    layout: edges, events, nodes, proofs, schema
    missing schemas: (none)
-   record counts: {'nodes': 0, 'edges': 0, 'reviewEvents': 0}
+   record counts: nodes 0, edges 0, review events 0
    configuration found: True
    producer readable: True
    $ echo $?

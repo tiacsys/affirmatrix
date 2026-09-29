@@ -13,7 +13,7 @@ from affirmatrix import affirmation, drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore
 from affirmatrix.cli import _judgement, _outcome, _selector
 from affirmatrix.config import Config
-from affirmatrix.records import EdgeReference, LinkState, hex_digest
+from affirmatrix.records import EdgeReference, LinkState
 from affirmatrix.sources.store import StoreError
 
 _RE_AFFIRMATION_TAGS = {
@@ -236,17 +236,11 @@ def _rendered_comparison(comparison, *, verbose: bool) -> list[dict[str, object]
                     "endpoint": side,
                     "name": item.name,
                     "status": item.status.value,
-                    "recorded": _display(item.recorded, verbose=verbose),
-                    "current": _display(item.current, verbose=verbose),
+                    "recorded": _outcome.anchor_display(item.recorded, verbose=verbose),
+                    "current": _outcome.anchor_display(item.current, verbose=verbose),
                 }
             )
     return rows
-
-
-def _display(anchor, *, verbose: bool) -> str | None:
-    if anchor is None:
-        return None
-    return _outcome.hash_display(hex_digest(anchor.digest), verbose=verbose)
 
 
 def _before_content_entry(node, revision: str, config: Config) -> dict[str, object]:

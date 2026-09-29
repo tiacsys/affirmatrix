@@ -15,6 +15,8 @@ import sys
 from collections.abc import Mapping
 from typing import TextIO
 
+from affirmatrix.records import hex_digest
+
 #: The command's positive verdict.
 POSITIVE = 0
 #: The command's negative verdict, acted on.
@@ -82,10 +84,24 @@ def hash_display(digest_hex: str, *, verbose: bool) -> str:
     return f"{digest_hex[:4]}…{digest_hex[-4:]}"
 
 
+def anchor_display(anchor, *, verbose: bool) -> str | None:
+    """A content anchor's digest as :func:`hash_display` shows it, or nothing for no anchor."""
+    if anchor is None:
+        return None
+    return hash_display(hex_digest(anchor.digest), verbose=verbose)
+
+
+def counts_display(counts: Mapping[str, int]) -> str:
+    """Named counts as words — ``nodes 0, edges 0`` — in the order given, or ``(none)``."""
+    return ", ".join(f"{name} {count}" for name, count in counts.items()) or "(none)"
+
+
 __all__ = [
     "INDETERMINATE",
     "NEGATIVE",
     "POSITIVE",
+    "anchor_display",
+    "counts_display",
     "exit_for",
     "hash_display",
     "render_json",

@@ -61,9 +61,10 @@ fresh root is seeded with them. Thereafter the store validates against the copy
 **in the case**, not the copy in the package, so the tool and someone auditing
 the directory with ordinary tooling reach the same verdict by construction.
 
-A file the case already has is never written over — not compared, not
-refreshed. Replacing a case's schemas would be a store act, and the tool takes
-none unbidden. It also means a write touches nothing the write was not about,
+A write never touches a schema file the case already has — it neither
+compares nor refreshes it. Replacing a case's schemas is a store act the tool
+takes only on request, through ``case refresh``, which reports what differed.
+Not writing over it also means a write touches nothing the write was not about,
 which matters because the review surface for the whole store is a maintainer
 reading the diff.
 

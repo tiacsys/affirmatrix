@@ -1,9 +1,11 @@
-"""The case noun: bring a case into being, inspect it, sync it, and trim it (SEG-SREQ-069).
+"""The case noun: create, inspect, sync, refresh the schema copy of, and trim a case (SEG-SREQ-069).
 
-Four verbs, one write root: ``init`` creates the layout and schema set
+Five verbs, one write root: ``init`` creates the layout and schema set
 without altering an existing one; ``check`` reports five judgements about
 what is there; ``sync`` writes the derived stream a producer and the case
-together imply; ``remove`` trims exactly what its selector names.
+together imply; ``refresh`` rewrites the case's schema copy from the packaged
+schemas and names what differed; ``remove`` trims exactly what its selector
+names.
 """
 
 from __future__ import annotations
@@ -66,7 +68,12 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     else:
         print(f"layout: {', '.join(layout) or '(none)'}")
         print(f"missing schemas: {', '.join(missing_schemas) or '(none)'}")
-        print(f"record counts: {counts}")
+        shown = {
+            "nodes": counts["nodes"],
+            "edges": counts["edges"],
+            "review events": counts["reviewEvents"],
+        }
+        print(f"record counts: {_outcome.counts_display(shown)}")
         print(f"configuration found: {config_found}")
         print(f"producer readable: {producer_readable}")
     healthy = not missing_schemas and producer_readable
@@ -79,6 +86,10 @@ def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStor
     :implements: SEG-SREQ-072
     :implements: SEG-SREQ-073
     :implements: SEG-SREQ-074
+    :implements: SEG-SREQ-136
+
+    A current stream that cannot be built stops the sync before any write,
+    exit 2.
     """
     try:
         current = _judgement.resolve_current(args.current, config)
@@ -93,6 +104,30 @@ def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStor
     print(f"synced {store.root}")
     for edge in derivation.vanished:
         print(f"vanished: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+    return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def handle_refresh(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Rewrite the case's schema copy from the packaged schemas, and say what differed.
+
+    :implements: SEG-SREQ-141
+
+    A refresh that changed something is a store act done, not a negative
+    verdict, so both outcomes exit 0; the working tree shows the operator what
+    to commit. A root that is not a case is a request it could not judge.
+    """
+    try:
+        refreshed = store.refresh_schemas()
+    except AffirmationStoreError as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    if args.json:
+        _outcome.render_json({"refreshed": list(refreshed)})
+    else:
+        for name in refreshed:
+            print(f"refreshed: {name}")
+        if not refreshed:
+            print("schema copy up to date")
     return _outcome.exit_for(_outcome.POSITIVE)
 
 
@@ -158,6 +193,7 @@ __all__ = [
     "add_sync_arguments",
     "handle_check",
     "handle_init",
+    "handle_refresh",
     "handle_remove",
     "handle_sync",
 ]

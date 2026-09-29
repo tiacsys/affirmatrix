@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="group__safe__data__apis" kind="group">
+    <compoundname>safe_data_apis</compoundname>
+    <title>Safe Data API</title>
+    <innergroup refid="group__safe__data__core__apis">Type-Erased Core</innergroup>
+    <innergroup refid="group__safe__data__diag__apis">Diagnostics and Fault Handling</innergroup>
+    <innergroup refid="group__safe__data__container__apis">Containers and Typed Access</innergroup>
+    <briefdescription>
+<para>CRC-protected (optionally redundant) data containers with integrity guaranteed by construction. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>A safe container bundles a user payload with an integrity tag (CRC), an optional inverted shadow copy, and a per-container mutex. All access goes through operations that hold the lock across the whole read-modify-write and reseal the tag automatically, so a stale tag or a torn update cannot happen by construction. <simplesect kind="since"><para>0.1 </para>
+</simplesect>
+<simplesect kind="version"><para>0.2 </para>
+</simplesect>
+</para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

@@ -147,9 +147,10 @@ def resolve_gate_revision(config: Config, *, given: str | None) -> str:
 def resolve_current(current: str | None, config: Config) -> RecordSource:
     """The producer supplying the current stream: given, configured, or refused.
 
-    A two-stream verb's own precondition, not a numbered requirement's own
-    claim: the requirement pages leave it to the interface, and it is what
-    those pages' "a producer" presupposes wherever they speak of one.
+    :implements: SEG-SREQ-142
+
+    A verb deriving from both record sources refuses, as a request it could
+    not judge, when it is given no current stream and none is configured.
     ``current`` overrides the configured producer root when given; absent
     both, or naming a root that is not a would-be store, the request cannot
     be judged — both read as the same "could not judge" refusal to every

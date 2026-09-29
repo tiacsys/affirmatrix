@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="dir_516c2dea066c3fccf3a386315b61ad08" kind="dir">
+    <compoundname>tests/safe_data/src</compoundname>
+    <innerfile refid="main_8c">main.c</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tests/safe_data/src/"/>
+  </compounddef>
+</doxygen>

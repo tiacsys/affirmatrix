@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 from affirmatrix import case, commitment
 from affirmatrix.cli import main
-from affirmatrix.records import EdgeRecord, LinkState
+from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
 from affirmatrix.sources.store import StoreLoader
 
 
@@ -178,3 +181,122 @@ def test_graph_status_verbose_adds_the_per_hash_comparison(
     assert text_status == 0
     text_out = capsys.readouterr().out
     assert "→" in text_out  # recorded → current, finding 2
+
+
+def _case_with_a_vanished_edge(tmp_path: Path) -> Path:
+    root = tmp_path / "case"
+    store = case.AffirmationStore(root=root)
+    store.initialize()
+    anchor = ContentAnchor(digest=b"0" * 32, repository="r", path="p", locator="file")
+    store.write_nodes(
+        [
+            NodeRecord("SEG-GONE-1", "Requirement", {"contentHash": anchor}),
+            NodeRecord("SEG-GONE-2", "Requirement", {"contentHash": anchor}),
+        ]
+    )
+    store.write_edges(
+        [
+            EdgeRecord(
+                from_id="SEG-GONE-1",
+                to_id="SEG-GONE-2",
+                kind="Refines",
+                state=LinkState.ACTIVE,
+                edge_hash=b"1" * 32,
+            )
+        ]
+    )
+    return root
+
+
+def _status_lines(root: Path, current: Path, capsys, *extra: str) -> tuple[int, list[str]]:
+    capsys.readouterr()
+    status = main(["graph", "status", "--case", str(root), "--current", str(current), *extra])
+    return status, capsys.readouterr().out.splitlines()
+
+
+def test_graph_status_lists_a_vanished_edge_without_a_state(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-137: the row names the edge and says it vanished, with no parenthesised state."""
+    root = _case_with_a_vanished_edge(tmp_path)
+    _, lines = _status_lines(root, would_be_store_copy, capsys)
+    row = [line for line in lines if line.startswith("SEG-GONE-1 --")]
+    assert row == ["SEG-GONE-1 --[Refines]--> SEG-GONE-2  vanished from the current stream"]
+
+
+def test_graph_status_json_row_of_a_vanished_edge_has_no_state_key(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-137."""
+    root = _case_with_a_vanished_edge(tmp_path)
+    _, lines = _status_lines(root, would_be_store_copy, capsys, "--json")
+    rows = json.loads("\n".join(lines))["edges"]
+    vanished = [row for row in rows if row["from"] == "SEG-GONE-1"]
+    assert vanished == [{"from": "SEG-GONE-1", "to": "SEG-GONE-2", "kind": "Refines"}]
+
+
+def test_graph_status_lists_vanished_edges_after_every_derived_edge(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-137: the vanished rows come last, so a leading slice of the listing is unchanged."""
+    root = _case_with_a_vanished_edge(tmp_path)
+    _, lines = _status_lines(root, would_be_store_copy, capsys)
+    assert lines[-1].startswith("SEG-GONE-1 --")
+    assert all("(" in line for line in lines[:-1])
+
+
+def test_graph_status_pending_count_ignores_a_vanished_edge(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-137: no state, so the vanished row is in no state's count."""
+    root = _case_with_a_vanished_edge(tmp_path)
+    _, lines = _status_lines(root, would_be_store_copy, capsys)
+    assert not [line for line in lines if "SEG-GONE" in line and "(" in line]
+
+
+def test_graph_status_verdict_is_positive_when_only_a_vanished_edge_was_recorded_active(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-138: a vanished edge stays out of the verdict."""
+    root = _case_with_a_vanished_edge(tmp_path)
+    status, _ = _status_lines(root, would_be_store_copy, capsys)
+    assert status == 0
+
+
+def test_graph_status_verbose_gives_a_vanished_edge_no_comparison(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-137."""
+    root = _case_with_a_vanished_edge(tmp_path)
+    _, lines = _status_lines(root, would_be_store_copy, capsys, "--json", "-v")
+    rows = json.loads("\n".join(lines))["edges"]
+    assert "comparison" not in next(row for row in rows if row["from"] == "SEG-GONE-1")
+
+
+def test_graph_status_without_a_producer_cannot_be_judged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SEG-SREQ-142: no current stream given and none configured is a request it could not judge."""
+    monkeypatch.chdir(tmp_path)
+    root = tmp_path / "case"
+    case.AffirmationStore(root=root).initialize()
+    assert main(["graph", "status", "--case", str(root)]) == 2
+
+
+def test_graph_check_renders_counts_by_kind_as_words(
+    would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-077: the counts read as words, not as a Python literal."""
+    main(["graph", "check", "--current", str(would_be_store_copy)])
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0].startswith("nodes by kind: Implementation ")
+    assert lines[1].startswith("edges by kind: ")
+    assert "{" not in lines[0] + lines[1]
+
+
+def test_graph_check_json_keeps_the_by_kind_mappings(would_be_store_copy: Path, capsys) -> None:
+    """SEG-SREQ-077: the structured rendering is unchanged."""
+    main(["graph", "check", "--current", str(would_be_store_copy), "--json"])
+    report = json.loads(capsys.readouterr().out)
+    assert isinstance(report["nodesByKind"], dict)
+    assert isinstance(report["edgesByKind"], dict)

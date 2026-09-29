@@ -1,0 +1,301 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="group__safe__data__diag__apis" kind="group">
+    <compoundname>safe_data_diag_apis</compoundname>
+    <title>Diagnostics and Fault Handling</title>
+    <innerclass refid="structsafe__data__fault__info" prot="public">safe_data_fault_info</innerclass>
+    <innerclass refid="structsafe__data__stats" prot="public">safe_data_stats</innerclass>
+    <sectiondef kind="enum">
+      <memberdef kind="enum" id="group__safe__data__diag__apis_1ga52ecdf754b20f11653a6e01a3d018adf" prot="public" static="no" strong="no">
+        <type></type>
+        <name>safe_data_fault_kind</name>
+        <enumvalue id="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa49ae1298de9f012a2c2ffe79cc8e2cf6" prot="public">
+          <name>SAFE_DATA_FAULT_KIND_UNRECOVERABLE</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>Corruption detected, no redundant copy could vouch for the data. </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa80eb45f35d22f6ef676794b4537514fa" prot="public">
+          <name>SAFE_DATA_FAULT_KIND_RECOVERED_TAG</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>Stored tag was stale/corrupt; payload+shadow consistent, resealed. </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa6895e8b209fe8afb0641382f18c9fa14" prot="public">
+          <name>SAFE_DATA_FAULT_KIND_RECOVERED_PAYLOAD</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>Payload was corrupt; restored from the shadow copy. </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa653cb077246ba485bd1f3ed90f8295f8" prot="public">
+          <name>SAFE_DATA_FAULT_KIND_LOCK_TIMEOUT</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>A container lock could not be acquired within the configured bound. </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa92d1691bb9efe6dd1ae932ce26ba29d4" prot="public">
+          <name>SAFE_DATA_FAULT_KIND_OVERWRITTEN</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>Pre-write check found the old contents corrupt (observe-only). </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa79e05564a044a402ae5f3b06eeb31c53" prot="public">
+          <name>SAFE_DATA_FAULT_KIND_MUTATOR_CLAMPED</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>A mutator returned a positive value (contract violation, clamped). </para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Kind of integrity event reported to the fault handler / statistics. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="114" column="1" bodyfile="include/safe_data/safe_data.h" bodystart="114" bodyend="127"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="group__safe__data__diag__apis_1ga2d0829e314a14bb1bf85d61129cc2c85" prot="public" static="no">
+        <type>void(*</type>
+        <definition>typedef void(* safe_data_fault_cb_t) (const struct safe_data_fault_info *info)</definition>
+        <argsstring>)(const struct safe_data_fault_info *info)</argsstring>
+        <name>safe_data_fault_cb_t</name>
+        <briefdescription>
+<para>Fault/diagnostic event callback. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>May be invoked while the affected container&apos;s lock is held: the handler must not block and must not access any safe container (AoU: record the event, set a flag/semaphore for a monitor thread, or drive the safe state).</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>info</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Event descriptor (kind, affected payload, size). Only valid for the duration of the call; copy what you need. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="149" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="149" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="group__safe__data__diag__apis_1gaf59812adbd045cc7780afb28bb754bf5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_fault_handler_register</definition>
+        <argsstring>(safe_data_fault_cb_t cb)</argsstring>
+        <name>safe_data_fault_handler_register</name>
+        <param>
+          <type><ref refid="group__safe__data__diag__apis_1ga2d0829e314a14bb1bf85d61129cc2c85" kindref="member">safe_data_fault_cb_t</ref></type>
+          <declname>cb</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-013"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Register the fault handler callback. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>When registered, the callback receives ALL integrity events (recoveries, timeouts, overwritten-corrupt, clamped returns), independent of the configured CONFIG_SAFE_DATA_FAULT_* reaction - which still governs the control-flow response to an unrecoverable fault (return vs panic).</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>cb</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Handler, or NULL to unregister. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success, -EALREADY if a (different) handler is registered. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="164" column="5" bodyfile="src/safe_data.c" bodystart="97" bodyend="105" declfile="include/safe_data/safe_data.h" declline="164" declcolumn="5"/>
+        <references refid="safe__data_8c_1a308bb2c268bea2c2c76d972e5248b47d" compoundref="safe__data_8c" startline="95">fault_cb</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__diag__apis_1gab454e6c41f97ba955486dc6acb2b0c42" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void safe_data_fault_handler</definition>
+        <argsstring>(const void *payload, size_t len)</argsstring>
+        <name>safe_data_fault_handler</name>
+        <param>
+          <type>const void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+<para>Legacy user-overridable (weak) fault handler. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Called for <emphasis>unrecoverable</emphasis> faults when CONFIG_SAFE_DATA_FAULT_HANDLER is selected and no callback is registered via <ref refid="group__safe__data__diag__apis_1gaf59812adbd045cc7780afb28bb754bf5" kindref="member">safe_data_fault_handler_register()</ref> (the registered callback takes precedence). The default implementation logs and returns. The same execution-context constraints apply as for <ref refid="group__safe__data__diag__apis_1ga2d0829e314a14bb1bf85d61129cc2c85" kindref="member">safe_data_fault_cb_t</ref>.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to the payload whose integrity check failed. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="178" column="6" bodyfile="src/safe_data.c" bodystart="90" bodyend="93" declfile="include/safe_data/safe_data.h" declline="178" declcolumn="6"/>
+        <referencedby refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_stats_get</definition>
+        <argsstring>(struct safe_data_stats *out)</argsstring>
+        <name>safe_data_stats_get</name>
+        <param>
+          <type>struct <ref refid="structsafe__data__stats" kindref="compound">safe_data_stats</ref> *</type>
+          <declname>out</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-012"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Snapshot the global statistics. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination for the counter snapshot. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success, -EINVAL on NULL, -ENOTSUP without CONFIG_SAFE_DATA_STATS. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="204" column="5" bodyfile="src/safe_data.c" bodystart="112" bodyend="132" declfile="include/safe_data/safe_data.h" declline="204" declcolumn="5"/>
+        <references refid="structsafe__data__stats_1a941b654192d345e3a647e20cf0e33ffb" compoundref="safe__data_8h" startline="189">safe_data_stats::lock_timeouts</references>
+        <references refid="structsafe__data__stats_1adf3493c7eebff36a99f3d0b54815beb6" compoundref="safe__data_8h" startline="193">safe_data_stats::mutator_clamped</references>
+        <references refid="structsafe__data__stats_1a7145d90e304e934d98e0d76d308100b9" compoundref="safe__data_8h" startline="191">safe_data_stats::overwritten</references>
+        <references refid="structsafe__data__stats_1ab97abc65ee372d8a5c267545c9a6a66a" compoundref="safe__data_8h" startline="185">safe_data_stats::recovered_payload</references>
+        <references refid="structsafe__data__stats_1a9cf78e4590fa1d75f9d6d683834c1b89" compoundref="safe__data_8h" startline="183">safe_data_stats::recovered_tag</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa653cb077246ba485bd1f3ed90f8295f8" compoundref="safe__data_8h" startline="122">SAFE_DATA_FAULT_KIND_LOCK_TIMEOUT</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa79e05564a044a402ae5f3b06eeb31c53" compoundref="safe__data_8h" startline="126">SAFE_DATA_FAULT_KIND_MUTATOR_CLAMPED</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa92d1691bb9efe6dd1ae932ce26ba29d4" compoundref="safe__data_8h" startline="124">SAFE_DATA_FAULT_KIND_OVERWRITTEN</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa6895e8b209fe8afb0641382f18c9fa14" compoundref="safe__data_8h" startline="120">SAFE_DATA_FAULT_KIND_RECOVERED_PAYLOAD</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa80eb45f35d22f6ef676794b4537514fa" compoundref="safe__data_8h" startline="118">SAFE_DATA_FAULT_KIND_RECOVERED_TAG</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa49ae1298de9f012a2c2ffe79cc8e2cf6" compoundref="safe__data_8h" startline="116">SAFE_DATA_FAULT_KIND_UNRECOVERABLE</references>
+        <references refid="safe__data_8c_1ad605243db69227486b98628f192ed5da" compoundref="safe__data_8c" startline="110">stat_counters</references>
+        <references refid="structsafe__data__stats_1a4e817ce4977242b0f8fdf52de3fef139" compoundref="safe__data_8h" startline="187">safe_data_stats::unrecoverable</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__diag__apis_1ga8c94f9038a08f2b8b4016af401a20fc6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void safe_data_stats_reset</definition>
+        <argsstring>(void)</argsstring>
+        <name>safe_data_stats_reset</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+<para>Reset all statistics counters to zero. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="207" column="6" bodyfile="src/safe_data.c" bodystart="134" bodyend="139" declfile="include/safe_data/safe_data.h" declline="207" declcolumn="6"/>
+        <references refid="safe__data_8c_1ad605243db69227486b98628f192ed5da" compoundref="safe__data_8c" startline="110">stat_counters</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__diag__apis_1gadee7fa4b7d5afaef9b625d4bc2c4a1b3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_selftest</definition>
+        <argsstring>(void)</argsstring>
+        <name>safe_data_selftest</name>
+        <param>
+          <type>void</type>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-017"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Self-test of the integrity mechanism itself. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Runs a known-answer test of the configured CRC backend and a seal/corrupt/detect(/recover) round trip on a scratch container, without invoking the configured fault reaction and without polluting the statistics.</para>
+<para><simplesect kind="return"><para>0 if the mechanism is healthy, -EFAULT if any step fails.</para>
+</simplesect>
+<xrefsect id="kconfig_depends_1_kconfig_depends000001"><xreftitle>Depends on</xreftitle><xrefdescription><para>defined(CONFIG_SAFE_DATA_SELFTEST) </para>
+</xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="222" column="5" bodyfile="src/safe_data.c" bodystart="490" bodyend="546" declfile="include/safe_data/safe_data.h" declline="222" declcolumn="5"/>
+        <references refid="safe__data_8c_1aa1803b6a3595f38f6b615cb7ba117010" compoundref="safe__data_8c" startline="159">event_mute</references>
+        <references refid="safe__data_8c_1a14a9485f7129db30f9e2365550525853" compoundref="safe__data_8c" startline="487">SAFE_DATA_KAT_EXPECTED</references>
+        <references refid="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" compoundref="safe__data_8h" startline="83">SAFE_DATA_RECOVERED</references>
+        <references refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" compoundref="safe__data_8c" startline="290" endline="324">safe_data_verify_repair</references>
+        <references refid="safe__data_8c_1a8c021819f40a0624760fd2bac4f9eec1" compoundref="safe__data_8c" startline="45" endline="48">safe_tag</references>
+        <references refid="safe__data_8c_1a7305bfd3372aa8a6ec8e91403c419dfe" compoundref="safe__data_8c" startline="242" endline="275">verify_quiet</references>
+        <referencedby refid="safe__data_8c_1a112dc498dc354549d9f7b1779723f873" compoundref="safe__data_8c" startline="556" endline="567">safe_data_boot_selftest</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__diag__apis_1ga57136221e2d494b50ffc15c5069b8f7c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_selftest_result</definition>
+        <argsstring>(void)</argsstring>
+        <name>safe_data_selftest_result</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+<para>Result of the boot-time self-test (CONFIG_SAFE_DATA_SELFTEST_BOOT). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>0 healthy, -EFAULT failed, -EAGAIN not run (yet).</para>
+</simplesect>
+<xrefsect id="kconfig_depends_1_kconfig_depends000002"><xreftitle>Depends on</xreftitle><xrefdescription><para>defined(CONFIG_SAFE_DATA_SELFTEST) </para>
+</xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="230" column="5" bodyfile="src/safe_data.c" bodystart="551" bodyend="554" declfile="include/safe_data/safe_data.h" declline="230" declcolumn="5"/>
+        <references refid="safe__data_8c_1a9903b4803ce21ab335734d62159b51ff" compoundref="safe__data_8c" startline="549">boot_selftest_result</references>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>Integrity-event reporting: fault handler, statistics, self-test. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>The observability interface a health monitor hooks into. Every integrity event (recovery, unrecoverable corruption, lock timeout, overwritten contents, clamped mutator return) is reported exactly once per detection. </para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="structsafe__data__stats" kind="struct" language="C++" prot="public">
+    <compoundname>safe_data_stats</compoundname>
+    <includes refid="safe__data_8h" local="no">safe_data/safe_data.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structsafe__data__stats_1a9cf78e4590fa1d75f9d6d683834c1b89" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t safe_data_stats::recovered_tag</definition>
+        <argsstring></argsstring>
+        <name>recovered_tag</name>
+        <qualifiedname>safe_data_stats::recovered_tag</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Stale/corrupt stored tag repaired by resealing (data was intact). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="183" column="10" bodyfile="include/safe_data/safe_data.h" bodystart="183" bodyend="-1"/>
+        <referencedby refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" compoundref="safe__data_8c" startline="112" endline="132">safe_data_stats_get</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__stats_1ab97abc65ee372d8a5c267545c9a6a66a" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t safe_data_stats::recovered_payload</definition>
+        <argsstring></argsstring>
+        <name>recovered_payload</name>
+        <qualifiedname>safe_data_stats::recovered_payload</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Corrupt payload restored from the shadow copy. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="185" column="10" bodyfile="include/safe_data/safe_data.h" bodystart="185" bodyend="-1"/>
+        <referencedby refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" compoundref="safe__data_8c" startline="112" endline="132">safe_data_stats_get</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__stats_1a4e817ce4977242b0f8fdf52de3fef139" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t safe_data_stats::unrecoverable</definition>
+        <argsstring></argsstring>
+        <name>unrecoverable</name>
+        <qualifiedname>safe_data_stats::unrecoverable</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Unrecoverable corruption detections. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="187" column="10" bodyfile="include/safe_data/safe_data.h" bodystart="187" bodyend="-1"/>
+        <referencedby refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" compoundref="safe__data_8c" startline="112" endline="132">safe_data_stats_get</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__stats_1a941b654192d345e3a647e20cf0e33ffb" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t safe_data_stats::lock_timeouts</definition>
+        <argsstring></argsstring>
+        <name>lock_timeouts</name>
+        <qualifiedname>safe_data_stats::lock_timeouts</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Lock acquisitions that hit CONFIG_SAFE_DATA_LOCK_TIMEOUT_MS. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="189" column="10" bodyfile="include/safe_data/safe_data.h" bodystart="189" bodyend="-1"/>
+        <referencedby refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" compoundref="safe__data_8c" startline="112" endline="132">safe_data_stats_get</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__stats_1a7145d90e304e934d98e0d76d308100b9" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t safe_data_stats::overwritten</definition>
+        <argsstring></argsstring>
+        <name>overwritten</name>
+        <qualifiedname>safe_data_stats::overwritten</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Corrupt old contents observed (and replaced) by a write. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="191" column="10" bodyfile="include/safe_data/safe_data.h" bodystart="191" bodyend="-1"/>
+        <referencedby refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" compoundref="safe__data_8c" startline="112" endline="132">safe_data_stats_get</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="structsafe__data__stats_1adf3493c7eebff36a99f3d0b54815beb6" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t safe_data_stats::mutator_clamped</definition>
+        <argsstring></argsstring>
+        <name>mutator_clamped</name>
+        <qualifiedname>safe_data_stats::mutator_clamped</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Positive mutator return values clamped to -EINVAL. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="193" column="10" bodyfile="include/safe_data/safe_data.h" bodystart="193" bodyend="-1"/>
+        <referencedby refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" compoundref="safe__data_8c" startline="112" endline="132">safe_data_stats_get</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>Global fault/recovery statistics (CONFIG_SAFE_DATA_STATS). </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/safe_data/safe_data.h" line="181" column="1" bodyfile="include/safe_data/safe_data.h" bodystart="181" bodyend="194"/>
+    <listofallmembers>
+      <member refid="structsafe__data__stats_1a941b654192d345e3a647e20cf0e33ffb" prot="public" virt="non-virtual"><scope>safe_data_stats</scope><name>lock_timeouts</name></member>
+      <member refid="structsafe__data__stats_1adf3493c7eebff36a99f3d0b54815beb6" prot="public" virt="non-virtual"><scope>safe_data_stats</scope><name>mutator_clamped</name></member>
+      <member refid="structsafe__data__stats_1a7145d90e304e934d98e0d76d308100b9" prot="public" virt="non-virtual"><scope>safe_data_stats</scope><name>overwritten</name></member>
+      <member refid="structsafe__data__stats_1ab97abc65ee372d8a5c267545c9a6a66a" prot="public" virt="non-virtual"><scope>safe_data_stats</scope><name>recovered_payload</name></member>
+      <member refid="structsafe__data__stats_1a9cf78e4590fa1d75f9d6d683834c1b89" prot="public" virt="non-virtual"><scope>safe_data_stats</scope><name>recovered_tag</name></member>
+      <member refid="structsafe__data__stats_1a4e817ce4977242b0f8fdf52de3fef139" prot="public" virt="non-virtual"><scope>safe_data_stats</scope><name>unrecoverable</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="test_obsolete" kind="page">
+    <compoundname>test_obsolete</compoundname>
+    <title>Obsolete Test Cases</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><variablelist>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga5c68e87269a52acae345c5e6546a526f" kindref="member">test_write_reseals</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="test_obsolete_1_test_obsolete000001"/> </para>
+</listitem>
+</variablelist>
+</para>
+    </detaileddescription>
+    <location file="test_obsolete"/>
+  </compounddef>
+</doxygen>

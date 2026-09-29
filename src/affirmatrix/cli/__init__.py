@@ -6,7 +6,7 @@ and no logic buried in command handlers, so a later interface — a web API, a
 review UI, a terminal UI — is another thin adapter over the same core rather
 than a second implementation of the same rules.
 
-Ten commands over four nouns: ``case init|check|sync|remove``,
+Eleven commands over four nouns: ``case init|check|sync|refresh|remove``,
 ``graph check|status``, ``edge show|affirm``, ``proof check|generate``. Every
 verb's outcome is the library's alone to decide (SEG-SREQ-068); this package
 renders that outcome and does no judgement of its own. One shared outcome
@@ -114,6 +114,10 @@ def _build_parser() -> argparse.ArgumentParser:
     sync_verb = case_verbs.add_parser("sync", parents=[globals_])
     _case.add_sync_arguments(sync_verb)
     sync_verb.set_defaults(handler=_case.handle_sync, json=False)
+
+    refresh_verb = case_verbs.add_parser("refresh", parents=[globals_])
+    _add_json(refresh_verb)
+    refresh_verb.set_defaults(handler=_case.handle_refresh)
 
     remove_verb = case_verbs.add_parser("remove", parents=[globals_])
     _case.add_remove_arguments(remove_verb)

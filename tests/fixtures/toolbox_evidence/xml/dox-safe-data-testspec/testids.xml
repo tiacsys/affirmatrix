@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="testids" kind="page">
+    <compoundname>testids</compoundname>
+    <title>Test IDs</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><variablelist>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga5f7531f9f7160986103c65a27e818ce0" kindref="member">test_commit_reseals_external_write</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000009"/> TC_SAFE_DATA_COMMIT_RESEALS_EXTERNAL_WRITE</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga147549439a2551b44676b636c8d1320b" kindref="member">test_concurrent_access_is_serialised</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000013"/> TC_SAFE_DATA_CONCURRENT_ACCESS_IS_SERIALISED</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga1aa530087f0fc0668cf846fb41220eb2" kindref="member">test_detects_corruption</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000007"/> TC_SAFE_DATA_DETECTS_CORRUPTION</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga2922b4bbaf847eccc26f4732a1836ee8" kindref="member">test_double_fault_unrecoverable</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000011"/> TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga79b76f168b941350a8cf6319474037b2" kindref="member">test_fault_handler_events</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000016"/> TC_SAFE_DATA_FAULT_HANDLER_EVENTS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gae55f6906f3e0f23cfce1987b1402dcac" kindref="member">test_init_and_verify</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000001"/> TC_SAFE_DATA_INIT_AND_VERIFY</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gada2bf52c35a16ccdbc55a315af0ffde9" kindref="member">test_lock_timeout_is_bounded_and_reported</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000019"/> TC_SAFE_DATA_LOCK_TIMEOUT_IS_BOUNDED_AND_REPORTED</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga798956ba248b65c68f5d49a0c8d63a0b" kindref="member">test_null_args</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000012"/> TC_SAFE_DATA_NULL_ARGS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga7f5ee866205c157f284b8cddd1df733c" kindref="member">test_read_roundtrip</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000002"/> TC_SAFE_DATA_READ_ROUNDTRIP</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga3f85bb0775dce304dbf00a712a54896b" kindref="member">test_section_scope</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000006"/> TC_SAFE_DATA_SECTION_SCOPE</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga58409145190167c31bb10e1e89cafffc" kindref="member">test_selftest</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000014"/> TC_SAFE_DATA_SELFTEST</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" kindref="member">test_stale_tag_recovers</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000010"/> TC_SAFE_DATA_STALE_TAG_RECOVERS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gae736dcfeadc44bbadef9a8cecb217df9" kindref="member">test_stats_count_events</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000015"/> TC_SAFE_DATA_STATS_COUNT_EVENTS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga8accdf3b41c892d614c2ff40d2cd1b6e" kindref="member">test_update_abort_keeps_integrity</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000005"/> TC_SAFE_DATA_UPDATE_ABORT_KEEPS_INTEGRITY</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga21a7a26ee6df4663d818734e2372a72e" kindref="member">test_update_clamps_positive_mutator_return</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000017"/> TC_SAFE_DATA_UPDATE_CLAMPS_POSITIVE_MUTATOR_RETURN</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gac032958aa2b97cbda5eb6163dcb22013" kindref="member">test_update_commits</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000004"/> TC_SAFE_DATA_UPDATE_COMMITS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga23a749d09e9ffd5cad209e73d3ee59b1" kindref="member">test_verify_repair_fixes_in_place</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000008"/> TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gacd295aa8e39452735df6800a973e841b" kindref="member">test_write_observes_overwritten_corruption</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000018"/> TC_SAFE_DATA_WRITE_OBSERVES_OVERWRITTEN_CORRUPTION</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga5c68e87269a52acae345c5e6546a526f" kindref="member">test_write_reseals</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="testids_1_testids000003"/> TC_SAFE_DATA_WRITE_RESEALS</para>
+<para></para>
+<para></para>
+</listitem>
+</variablelist>
+</para>
+    </detaileddescription>
+    <location file="testids"/>
+  </compounddef>
+</doxygen>

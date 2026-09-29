@@ -65,8 +65,8 @@ Check the graph
 .. code-block:: console
 
    $ affirmatrix graph check
-   nodes by kind: {'Implementation': 79, 'Requirement': 139, 'TestOutcome': 10, 'TestSpecification': 10}
-   edges by kind: {'Confirms': 10, 'Implements': 141, 'Refines': 128, 'Verifies': 10, 'Witnesses': 12}
+   nodes by kind: Implementation 79, Requirement 139, TestOutcome 10, TestSpecification 10
+   edges by kind: Confirms 10, Implements 141, Refines 128, Verifies 10, Witnesses 12
    pending: 301
    $ echo $?
    0

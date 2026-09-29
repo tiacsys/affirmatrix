@@ -12,8 +12,8 @@ loader's keys, and a few facts an operator needs that the requirement text
 does not spell out on its own: the hex-shaped revision, the repository-name
 lookup miss, and the two different scopes a cleanliness check can have.
 
-Ten commands, one dispatch entry
------------------------------------
+Eleven commands, one dispatch entry
+-------------------------------------
 
 ``affirmatrix <noun> <verb>``, parsed and dispatched by
 :func:`affirmatrix.cli.main`:
@@ -28,6 +28,7 @@ Noun          Verb                Library call
 ``case``      ``sync``            :func:`~affirmatrix.drift.derive`, then
                                    :meth:`~affirmatrix.case.AffirmationStore.write_nodes` /
                                    :meth:`~affirmatrix.case.AffirmationStore.write_edges`
+``case``      ``refresh``         :meth:`~affirmatrix.case.AffirmationStore.refresh_schemas`
 ``case``      ``remove``          :meth:`~affirmatrix.case.AffirmationStore.remove_edges`
 ``graph``     ``check``           :func:`affirmatrix.graph.build`
 ``graph``     ``status``          :func:`~affirmatrix.drift.derive`

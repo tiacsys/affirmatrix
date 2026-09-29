@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.16.1" xml:lang="en-US">
+  <compound refid="structcc__payload" kind="struct"><name>cc_payload</name>
+    <member refid="structcc__payload_1a749d2e73da641010fe0c5313ef26be52" kind="variable"><name>seq</name></member>
+    <member refid="structcc__payload_1a100f186ca62fa5ba8fe292634f47c34a" kind="variable"><name>a</name></member>
+    <member refid="structcc__payload_1a80ba0e27ea3c045478d7929b73cff843" kind="variable"><name>b</name></member>
+    <member refid="structcc__payload_1af41d6817a0478b65d2161f485e765d5a" kind="variable"><name>sum</name></member>
+  </compound>
+  <compound refid="structpayload" kind="struct"><name>payload</name>
+    <member refid="structpayload_1a85f33fcced567b3b89f0be30165924b9" kind="variable"><name>a</name></member>
+    <member refid="structpayload_1a74e3e562ca7c80773d27e9ac8cb600bb" kind="variable"><name>b</name></member>
+    <member refid="structpayload_1a3df31d2960c181490f8991608287b568" kind="variable"><name>c</name></member>
+  </compound>
+  <compound refid="groups_8dox" kind="file"><name>groups.dox</name>
+  </compound>
+  <compound refid="mainpage_8md" kind="file"><name>mainpage.md</name>
+  </compound>
+  <compound refid="main_8c" kind="file"><name>main.c</name>
+    <member refid="main_8c_1a1147a2a3b8060721af3ae0907a76a50e" kind="define"><name>CC_ITERS</name></member>
+    <member refid="main_8c_1a8380cf78dcd186e90dd2b5dc3412766e" kind="variable"><name>sp</name></member>
+    <member refid="main_8c_1a4ba26a9a5a7a6f417b9d9bbfef928249" kind="variable"><name>cc</name></member>
+    <member refid="main_8c_1ad26ccb6ab6eab163bfc6eeb042598fc4" kind="variable"><name>cc_breaks</name></member>
+    <member refid="main_8c_1ab97fb93d963e872f6d3831c222327368" kind="variable"><name>cc_reads</name></member>
+    <member refid="main_8c_1aae9d1d4be6e26fba2c9908f4f2f42dfe" kind="variable"><name>cc_prod</name></member>
+    <member refid="main_8c_1a9bc38a4135ff366c3b534d8c34cf1f74" kind="variable"><name>cc_cons</name></member>
+    <member refid="main_8c_1af1856a895199ecceb19ecf4de4b40b76" kind="variable"><name>cb_count</name></member>
+    <member refid="main_8c_1ae65b4f0c498abfdd46cac9d3caf8ad6a" kind="variable"><name>cb_last</name></member>
+    <member refid="main_8c_1a0e3174ce36915146e52e0b1121837641" kind="function"><name>SAFE_CONTAINER_DEFINE</name></member>
+    <member refid="main_8c_1a89cdee43f6689f6bc036cc2efd78601e" kind="function"><name>reset_to</name></member>
+    <member refid="group__safe__data_1gae55f6906f3e0f23cfce1987b1402dcac" kind="function"><name>test_init_and_verify</name></member>
+    <member refid="group__safe__data_1ga7f5ee866205c157f284b8cddd1df733c" kind="function"><name>test_read_roundtrip</name></member>
+    <member refid="group__safe__data_1ga5c68e87269a52acae345c5e6546a526f" kind="function"><name>test_write_reseals</name></member>
+    <member refid="main_8c_1ab63fc82b4a984824050fc83f8d6ed505" kind="function"><name>mut_add</name></member>
+    <member refid="main_8c_1ac97eb0852378bdd5724dcf886a1bb0c7" kind="function"><name>mut_abort</name></member>
+    <member refid="group__safe__data_1gac032958aa2b97cbda5eb6163dcb22013" kind="function"><name>test_update_commits</name></member>
+    <member refid="group__safe__data_1ga8accdf3b41c892d614c2ff40d2cd1b6e" kind="function"><name>test_update_abort_keeps_integrity</name></member>
+    <member refid="group__safe__data_1ga3f85bb0775dce304dbf00a712a54896b" kind="function"><name>test_section_scope</name></member>
+    <member refid="group__safe__data_1ga1aa530087f0fc0668cf846fb41220eb2" kind="function"><name>test_detects_corruption</name></member>
+    <member refid="group__safe__data_1ga23a749d09e9ffd5cad209e73d3ee59b1" kind="function"><name>test_verify_repair_fixes_in_place</name></member>
+    <member refid="group__safe__data_1ga5f7531f9f7160986103c65a27e818ce0" kind="function"><name>test_commit_reseals_external_write</name></member>
+    <member refid="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" kind="function"><name>test_stale_tag_recovers</name></member>
+    <member refid="group__safe__data_1ga2922b4bbaf847eccc26f4732a1836ee8" kind="function"><name>test_double_fault_unrecoverable</name></member>
+    <member refid="group__safe__data_1ga798956ba248b65c68f5d49a0c8d63a0b" kind="function"><name>test_null_args</name></member>
+    <member refid="main_8c_1a860944a07a75a0e1731c21072a2e62b2" kind="function"><name>SAFE_CONTAINER_DEFINE</name></member>
+    <member refid="main_8c_1afe897fce68af8369fd6ca01898df47e6" kind="function"><name>cc_advance</name></member>
+    <member refid="main_8c_1aaba395f241fdd6f2dc20302552ed09fb" kind="function"><name>K_THREAD_STACK_DEFINE</name></member>
+    <member refid="main_8c_1afcb465e8d9909251c488c1510c23cc33" kind="function"><name>K_THREAD_STACK_DEFINE</name></member>
+    <member refid="main_8c_1ad1e179e4bb1d25e8646128a17abdc7b1" kind="function"><name>cc_producer</name></member>
+    <member refid="main_8c_1ab7292b60b48194b7dc4d1550ecedda42" kind="function"><name>cc_consumer</name></member>
+    <member refid="group__safe__data_1ga147549439a2551b44676b636c8d1320b" kind="function"><name>test_concurrent_access_is_serialised</name></member>
+    <member refid="group__safe__data_1ga58409145190167c31bb10e1e89cafffc" kind="function"><name>test_selftest</name></member>
+    <member refid="group__safe__data_1gae736dcfeadc44bbadef9a8cecb217df9" kind="function"><name>test_stats_count_events</name></member>
+    <member refid="main_8c_1abf484cd86bd2b69c30f24c921e87eea2" kind="function"><name>fault_event_cb</name></member>
+    <member refid="main_8c_1a2af670360ae28533f4761ba2d9e401f8" kind="function"><name>fault_event_cb_other</name></member>
+    <member refid="group__safe__data_1ga79b76f168b941350a8cf6319474037b2" kind="function"><name>test_fault_handler_events</name></member>
+    <member refid="main_8c_1a211cf35b0a521278a9befded025d11ef" kind="function"><name>mut_positive</name></member>
+    <member refid="group__safe__data_1ga21a7a26ee6df4663d818734e2372a72e" kind="function"><name>test_update_clamps_positive_mutator_return</name></member>
+    <member refid="group__safe__data_1gacd295aa8e39452735df6800a973e841b" kind="function"><name>test_write_observes_overwritten_corruption</name></member>
+    <member refid="group__safe__data_1gada2bf52c35a16ccdbc55a315af0ffde9" kind="function"><name>test_lock_timeout_is_bounded_and_reported</name></member>
+  </compound>
+  <compound refid="group__all__tests" kind="group"><name>all_tests</name>
+  </compound>
+  <compound refid="group__safe__data__tests" kind="group"><name>safe_data_tests</name>
+  </compound>
+  <compound refid="group__safe__data__module" kind="group"><name>safe_data_module</name>
+  </compound>
+  <compound refid="group__safe__data" kind="group"><name>safe_data</name>
+    <member refid="group__safe__data_1gae55f6906f3e0f23cfce1987b1402dcac" kind="function"><name>test_init_and_verify</name></member>
+    <member refid="group__safe__data_1ga7f5ee866205c157f284b8cddd1df733c" kind="function"><name>test_read_roundtrip</name></member>
+    <member refid="group__safe__data_1ga5c68e87269a52acae345c5e6546a526f" kind="function"><name>test_write_reseals</name></member>
+    <member refid="group__safe__data_1gac032958aa2b97cbda5eb6163dcb22013" kind="function"><name>test_update_commits</name></member>
+    <member refid="group__safe__data_1ga8accdf3b41c892d614c2ff40d2cd1b6e" kind="function"><name>test_update_abort_keeps_integrity</name></member>
+    <member refid="group__safe__data_1ga3f85bb0775dce304dbf00a712a54896b" kind="function"><name>test_section_scope</name></member>
+    <member refid="group__safe__data_1ga1aa530087f0fc0668cf846fb41220eb2" kind="function"><name>test_detects_corruption</name></member>
+    <member refid="group__safe__data_1ga23a749d09e9ffd5cad209e73d3ee59b1" kind="function"><name>test_verify_repair_fixes_in_place</name></member>
+    <member refid="group__safe__data_1ga5f7531f9f7160986103c65a27e818ce0" kind="function"><name>test_commit_reseals_external_write</name></member>
+    <member refid="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" kind="function"><name>test_stale_tag_recovers</name></member>
+    <member refid="group__safe__data_1ga2922b4bbaf847eccc26f4732a1836ee8" kind="function"><name>test_double_fault_unrecoverable</name></member>
+    <member refid="group__safe__data_1ga798956ba248b65c68f5d49a0c8d63a0b" kind="function"><name>test_null_args</name></member>
+    <member refid="group__safe__data_1ga147549439a2551b44676b636c8d1320b" kind="function"><name>test_concurrent_access_is_serialised</name></member>
+    <member refid="group__safe__data_1ga58409145190167c31bb10e1e89cafffc" kind="function"><name>test_selftest</name></member>
+    <member refid="group__safe__data_1gae736dcfeadc44bbadef9a8cecb217df9" kind="function"><name>test_stats_count_events</name></member>
+    <member refid="group__safe__data_1ga79b76f168b941350a8cf6319474037b2" kind="function"><name>test_fault_handler_events</name></member>
+    <member refid="group__safe__data_1ga21a7a26ee6df4663d818734e2372a72e" kind="function"><name>test_update_clamps_positive_mutator_return</name></member>
+    <member refid="group__safe__data_1gacd295aa8e39452735df6800a973e841b" kind="function"><name>test_write_observes_overwritten_corruption</name></member>
+    <member refid="group__safe__data_1gada2bf52c35a16ccdbc55a315af0ffde9" kind="function"><name>test_lock_timeout_is_bounded_and_reported</name></member>
+  </compound>
+  <compound refid="testids" kind="page"><name>testids</name>
+  </compound>
+  <compound refid="test_active" kind="page"><name>test_active</name>
+  </compound>
+  <compound refid="test_obsolete" kind="page"><name>test_obsolete</name>
+  </compound>
+  <compound refid="kconfig_depends" kind="page"><name>kconfig_depends</name>
+  </compound>
+  <compound refid="test_draft" kind="page"><name>test_draft</name>
+  </compound>
+  <compound refid="dir_e68e8157741866f444e17edd764ebbae" kind="dir"><name>doc</name>
+  </compound>
+  <compound refid="dir_36f15a76b34aab76fd15ad9ec0b06ea0" kind="dir"><name>doc/dox</name>
+  </compound>
+  <compound refid="dir_1e0f5ceba949e962a7050f5d33b91a90" kind="dir"><name>doc/dox/safe-data-testspec</name>
+  </compound>
+  <compound refid="dir_fedca9b4fa26b36bb6ca8beca44f1c12" kind="dir"><name>tests/safe_data</name>
+  </compound>
+  <compound refid="dir_516c2dea066c3fccf3a386315b61ad08" kind="dir"><name>tests/safe_data/src</name>
+  </compound>
+  <compound refid="dir_59425e443f801f1f2fd8bbe4959a3ccf" kind="dir"><name>tests</name>
+  </compound>
+  <compound refid="indexpage" kind="page"><name>index</name>
+  </compound>
+</doxygenindex>

@@ -1,4 +1,4 @@
-"""The configuration loader (SEG-SREQ-117…126).
+"""The configuration loader (SEG-SREQ-117…126, 135, 191…198).
 
 Every parameter defaults when the file is absent (or empty); a caller's
 value (the command line's own ``--case``) overrides the file's; a
@@ -43,7 +43,7 @@ def test_configuration_is_read_from_a_given_file(tmp_path: Path) -> None:
     path = tmp_path / "custom.yaml"
     path.write_text("case: ./elsewhere\n", encoding="utf-8")
     loaded = config.load(path)
-    assert loaded.case == Path("./elsewhere")
+    assert loaded.case == tmp_path / "elsewhere"
 
 
 def test_configuration_defaults_to_the_conventional_path(tmp_path: Path, monkeypatch) -> None:
@@ -90,7 +90,7 @@ def test_the_producer_location_is_carried(tmp_path: Path) -> None:
         "producer:\n  root: ./tests/fixtures/would_be_store\n", encoding="utf-8"
     )
     loaded = config.load(path)
-    assert loaded.producer_root == Path("./tests/fixtures/would_be_store")
+    assert loaded.producer_root == tmp_path / "tests/fixtures/would_be_store"
 
 
 def test_the_producer_location_defaults_to_none(tmp_path: Path) -> None:
@@ -121,7 +121,7 @@ def test_comments_and_blank_lines_are_ignored(tmp_path: Path) -> None:
     path = tmp_path / "affirmatrix.yaml"
     path.write_text("# a comment\n\ncase: ./case-two  # trailing comment\n", encoding="utf-8")
     loaded = config.load(path)
-    assert loaded.case == Path("./case-two")
+    assert loaded.case == tmp_path / "case-two"
 
 
 def test_the_multi_stream_layout_is_a_supported_configuration(tmp_path: Path) -> None:
@@ -145,6 +145,210 @@ def test_the_multi_stream_layout_is_a_supported_configuration(tmp_path: Path) ->
     assert loaded.repository("requirements") == Path("/repos/reqs")
     assert loaded.repository("tests") == Path("/repos/tests")
     assert loaded.implementation_repository() == Path("/repos/impl")
+
+
+# ── Relative paths resolve against the file's directory ────────────────────
+
+
+def _write(path: Path, text: str) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_a_relative_case_resolves_against_the_files_directory(tmp_path: Path) -> None:
+    """SEG-SREQ-135."""
+    path = _write(tmp_path / "repo" / "affirmatrix.yaml", "case: ./the-case\n")
+    assert config.load(path).case == tmp_path / "repo" / "the-case"
+
+
+def test_a_relative_producer_root_resolves_against_the_files_directory(tmp_path: Path) -> None:
+    """SEG-SREQ-135."""
+    path = _write(tmp_path / "repo" / "affirmatrix.yaml", "producer:\n  root: ./store\n")
+    assert config.load(path).producer_root == tmp_path / "repo" / "store"
+
+
+def test_a_relative_repository_path_resolves_against_the_files_directory(tmp_path: Path) -> None:
+    """SEG-SREQ-135."""
+    path = _write(tmp_path / "repo" / "affirmatrix.yaml", "repositories:\n  impl: ../impl\n")
+    assert config.load(path).repository("impl") == tmp_path / "repo" / ".." / "impl"
+
+
+def test_an_absolute_path_in_the_file_is_carried_unchanged(tmp_path: Path) -> None:
+    """SEG-SREQ-135."""
+    path = _write(tmp_path / "repo" / "affirmatrix.yaml", "case: /an/absolute/case\n")
+    assert config.load(path).case == Path("/an/absolute/case")
+
+
+def test_a_file_in_a_subdirectory_yields_the_same_paths_from_any_working_directory(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """SEG-SREQ-135."""
+    path = _write(
+        tmp_path / "repo" / "affirmatrix.yaml", "case: ./case\nproducer:\n  root: ./store\n"
+    )
+    (tmp_path / "one").mkdir()
+    (tmp_path / "two").mkdir()
+    monkeypatch.chdir(tmp_path / "one")
+    from_one = config.load(path)
+    monkeypatch.chdir(tmp_path / "two")
+    assert config.load(path) == from_one
+
+
+def test_the_defaults_of_an_absent_file_stay_relative_to_the_working_directory(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-135."""
+    assert config.load(tmp_path / "sub" / "absent.yaml").case == Path("case")
+
+
+def test_a_file_lacking_a_case_key_defaults_the_case_against_the_working_directory(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-135: a default is the loader's, not a path the file gives."""
+    path = _write(tmp_path / "repo" / "affirmatrix.yaml", "roles: [A]\n")
+    assert config.load(path).case == Path("case")
+
+
+def test_a_callers_case_is_not_resolved_against_the_files_directory(tmp_path: Path) -> None:
+    """SEG-SREQ-135."""
+    path = _write(tmp_path / "repo" / "affirmatrix.yaml", "case: ./from-file\n")
+    assert config.load(path, case=Path("mine")).case == Path("mine")
+
+
+# ── The producer's reader inputs ───────────────────────────────────────────
+
+_PRODUCER = """\
+producer:
+  root: ./store
+  repository: sample-repo
+  requirements:
+    export: needs/needs.json
+    types: [sreq, sys]
+    source: doc
+  specifications:
+    export: twister/testcases.json
+    doxygen: xml/tests
+  implementations:
+    export: needs/impl.json
+    doxygen: xml/src
+  outcomes:
+    - {artifact: run1/report.json, revision: run1/rev, name: run1/name}
+    - {artifact: run2/report.json, revision: run2/rev, name: run2/name}
+"""
+
+
+def _producer(tmp_path: Path, text: str = _PRODUCER) -> config.ProducerConfig | None:
+    return config.load(_write(tmp_path / "repo" / "affirmatrix.yaml", text)).producer
+
+
+def test_a_configuration_without_a_producer_block_carries_no_producer(tmp_path: Path) -> None:
+    """SEG-SREQ-191."""
+    assert _producer(tmp_path, "case: ./case\n") is None
+
+
+def test_a_producer_block_naming_only_a_root_carries_no_producer(tmp_path: Path) -> None:
+    """SEG-SREQ-191: ``root`` is the store loader's key and configures no reader."""
+    assert _producer(tmp_path, "producer:\n  root: ./store\n") is None
+
+
+def test_a_producer_root_is_still_carried_beside_the_new_keys(tmp_path: Path) -> None:
+    """SEG-SREQ-191."""
+    loaded = config.load(_write(tmp_path / "repo" / "affirmatrix.yaml", _PRODUCER))
+    assert loaded.producer_root == tmp_path / "repo" / "store"
+
+
+def test_the_producers_repository_name_is_carried(tmp_path: Path) -> None:
+    """SEG-SREQ-192."""
+    producer = _producer(tmp_path)
+    assert producer is not None and producer.repository == "sample-repo"
+
+
+def test_the_requirement_export_location_is_carried(tmp_path: Path) -> None:
+    """SEG-SREQ-193."""
+    producer = _producer(tmp_path)
+    assert producer is not None and producer.requirements is not None
+    assert producer.requirements.export == tmp_path / "repo" / "needs/needs.json"
+
+
+def test_the_requirement_types_are_carried_as_a_set(tmp_path: Path) -> None:
+    """SEG-SREQ-194."""
+    producer = _producer(tmp_path)
+    assert producer is not None and producer.requirements is not None
+    assert producer.requirements.types == frozenset({"sreq", "sys"})
+
+
+def test_the_requirement_source_directory_is_carried(tmp_path: Path) -> None:
+    """SEG-SREQ-198."""
+    producer = _producer(tmp_path)
+    assert producer is not None and producer.requirements is not None
+    assert producer.requirements.source == tmp_path / "repo" / "doc"
+
+
+def test_the_test_specification_export_and_doxygen_locations_are_carried(tmp_path: Path) -> None:
+    """SEG-SREQ-195."""
+    producer = _producer(tmp_path)
+    assert producer is not None and producer.specifications is not None
+    assert producer.specifications == config.SpecificationInputs(
+        export=tmp_path / "repo" / "twister/testcases.json",
+        doxygen=tmp_path / "repo" / "xml/tests",
+    )
+
+
+def test_the_implementation_export_and_doxygen_locations_are_carried(tmp_path: Path) -> None:
+    """SEG-SREQ-196."""
+    producer = _producer(tmp_path)
+    assert producer is not None and producer.implementations is not None
+    assert producer.implementations == config.ImplementationInputs(
+        export=tmp_path / "repo" / "needs/impl.json",
+        doxygen=tmp_path / "repo" / "xml/src",
+    )
+
+
+def test_each_runs_three_locations_are_carried_in_file_order(tmp_path: Path) -> None:
+    """SEG-SREQ-197."""
+    producer = _producer(tmp_path)
+    assert producer is not None
+    base = tmp_path / "repo"
+    assert producer.outcomes == (
+        config.RunInputs(base / "run1/report.json", base / "run1/rev", base / "run1/name"),
+        config.RunInputs(base / "run2/report.json", base / "run2/rev", base / "run2/name"),
+    )
+
+
+def test_no_runs_configured_carries_an_empty_tuple(tmp_path: Path) -> None:
+    """SEG-SREQ-197."""
+    producer = _producer(tmp_path, "producer:\n  repository: sample-repo\n")
+    assert producer is not None and producer.outcomes == ()
+
+
+def test_a_reader_block_not_configured_is_none(tmp_path: Path) -> None:
+    """SEG-SREQ-191."""
+    producer = _producer(tmp_path, "producer:\n  repository: sample-repo\n")
+    assert producer is not None
+    assert (producer.requirements, producer.specifications, producer.implementations) == (
+        None,
+        None,
+        None,
+    )
+
+
+def test_an_absolute_producer_path_is_carried_unchanged(tmp_path: Path) -> None:
+    """SEG-SREQ-135, SEG-SREQ-195."""
+    producer = _producer(
+        tmp_path,
+        "producer:\n  specifications:\n    export: /abs/t.json\n    doxygen: /abs/xml\n",
+    )
+    assert producer is not None and producer.specifications is not None
+    assert producer.specifications.export == Path("/abs/t.json")
+
+
+def test_producer_configuration_is_immutable(tmp_path: Path) -> None:
+    """SEG-SREQ-191."""
+    producer = _producer(tmp_path)
+    assert producer is not None
+    with pytest.raises(AttributeError):
+        producer.repository = "other"  # type: ignore[misc]
 
 
 # ── Refusals: a file that exists but cannot be made sense of ───────────────
@@ -197,3 +401,43 @@ def test_malformed_yaml_is_a_refusal(tmp_path: Path) -> None:
     path.write_text("case: [unterminated\n", encoding="utf-8")
     with pytest.raises(config.ConfigError):
         config.load(path)
+
+
+def test_a_requirements_block_missing_its_source_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.requirements\.source"):
+        _producer(
+            tmp_path, "producer:\n  requirements:\n    export: e.json\n    types: [sreq]\n"
+        )
+
+
+def test_requirement_types_that_are_not_strings_are_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.requirements\.types"):
+        _producer(
+            tmp_path,
+            "producer:\n  requirements:\n    export: e\n    types: [1]\n    source: s\n",
+        )
+
+
+def test_outcomes_that_are_not_a_list_are_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.outcomes"):
+        _producer(tmp_path, "producer:\n  outcomes: nope\n")
+
+
+def test_an_outcome_missing_its_name_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.outcomes\[0\]\.name"):
+        _producer(tmp_path, "producer:\n  outcomes:\n    - {artifact: a, revision: r}\n")
+
+
+def test_a_producer_sub_block_that_is_not_a_mapping_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.specifications"):
+        _producer(tmp_path, "producer:\n  specifications: nope\n")
+
+
+def test_a_producer_path_that_is_not_a_string_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.implementations\.doxygen"):
+        _producer(tmp_path, "producer:\n  implementations:\n    export: e\n    doxygen: 3\n")
+
+
+def test_a_producer_repository_that_is_not_a_string_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.repository"):
+        _producer(tmp_path, "producer:\n  repository: [a]\n")

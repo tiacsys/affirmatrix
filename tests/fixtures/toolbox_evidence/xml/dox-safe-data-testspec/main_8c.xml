@@ -1,0 +1,447 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="main_8c" kind="file" language="C++">
+    <compoundname>main.c</compoundname>
+    <includes local="no">zephyr/ztest.h</includes>
+    <includes local="no">string.h</includes>
+    <includes local="no">safe_data/safe_data.h</includes>
+    <incdepgraph>
+      <node id="4">
+        <label>safe_data/safe_data.h</label>
+        <link refid="safe__data_8h.html" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag"/>
+      </node>
+      <node id="1">
+        <label>tests/safe_data/src/main.c</label>
+        <link refid="main_8c"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>string.h</label>
+      </node>
+      <node id="2">
+        <label>zephyr/ztest.h</label>
+      </node>
+    </incdepgraph>
+    <innerclass refid="structpayload" prot="public">payload</innerclass>
+    <innerclass refid="structcc__payload" prot="public">cc_payload</innerclass>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="main_8c_1a1147a2a3b8060721af3ae0907a76a50e" prot="public" static="no">
+        <name>CC_ITERS</name>
+        <initializer>1000</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="432" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="432" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="var">
+      <memberdef kind="variable" id="main_8c_1a8380cf78dcd186e90dd2b5dc3412766e" prot="public" static="yes" mutable="no">
+        <type>struct safe_payload</type>
+        <definition>struct safe_payload sp</definition>
+        <argsstring></argsstring>
+        <name>sp</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="23" column="26" bodyfile="tests/safe_data/src/main.c" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1a4ba26a9a5a7a6f417b9d9bbfef928249" prot="public" static="yes" mutable="no">
+        <type>struct safe_cc</type>
+        <definition>struct safe_cc cc</definition>
+        <argsstring></argsstring>
+        <name>cc</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="430" column="21" bodyfile="tests/safe_data/src/main.c" bodystart="430" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1ad26ccb6ab6eab163bfc6eeb042598fc4" prot="public" static="yes" mutable="no">
+        <type>atomic_t</type>
+        <definition>atomic_t cc_breaks</definition>
+        <argsstring></argsstring>
+        <name>cc_breaks</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="434" column="17" bodyfile="tests/safe_data/src/main.c" bodystart="434" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1ab97fb93d963e872f6d3831c222327368" prot="public" static="yes" mutable="no">
+        <type>atomic_t</type>
+        <definition>atomic_t cc_reads</definition>
+        <argsstring></argsstring>
+        <name>cc_reads</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="435" column="17" bodyfile="tests/safe_data/src/main.c" bodystart="435" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1aae9d1d4be6e26fba2c9908f4f2f42dfe" prot="public" static="yes" mutable="no">
+        <type>struct k_thread</type>
+        <definition>struct k_thread cc_prod</definition>
+        <argsstring></argsstring>
+        <name>cc_prod</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="454" column="22" bodyfile="tests/safe_data/src/main.c" bodystart="454" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1a9bc38a4135ff366c3b534d8c34cf1f74" prot="public" static="yes" mutable="no">
+        <type>struct k_thread</type>
+        <definition>struct k_thread cc_cons</definition>
+        <argsstring></argsstring>
+        <name>cc_cons</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="455" column="22" bodyfile="tests/safe_data/src/main.c" bodystart="455" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1af1856a895199ecceb19ecf4de4b40b76" prot="public" static="yes" mutable="no">
+        <type>atomic_t</type>
+        <definition>atomic_t cb_count</definition>
+        <argsstring></argsstring>
+        <name>cb_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="596" column="17" bodyfile="tests/safe_data/src/main.c" bodystart="596" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="main_8c_1ae65b4f0c498abfdd46cac9d3caf8ad6a" prot="public" static="yes" mutable="no">
+        <type>struct <ref refid="structsafe__data__fault__info" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag">safe_data_fault_info</ref></type>
+        <definition>struct safe_data_fault_info cb_last</definition>
+        <argsstring></argsstring>
+        <name>cb_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="597" column="34" bodyfile="tests/safe_data/src/main.c" bodystart="597" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="main_8c_1a0e3174ce36915146e52e0b1121837641" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>SAFE_CONTAINER_DEFINE</definition>
+        <argsstring>(safe_payload, struct payload)</argsstring>
+        <name>SAFE_CONTAINER_DEFINE</name>
+        <param>
+          <type>safe_payload</type>
+        </param>
+        <param>
+          <type>struct <ref refid="structpayload" kindref="compound">payload</ref></type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="21" column="1" declfile="tests/safe_data/src/main.c" declline="21" declcolumn="1"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1a89cdee43f6689f6bc036cc2efd78601e" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void reset_to</definition>
+        <argsstring>(uint32_t a, uint16_t b, uint8_t c)</argsstring>
+        <name>reset_to</name>
+        <param>
+          <type>uint32_t</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>uint16_t</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>uint8_t</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="25" column="13" bodyfile="tests/safe_data/src/main.c" bodystart="25" bodyend="31"/>
+      </memberdef>
+      <member refid="group__safe__data_1gae55f6906f3e0f23cfce1987b1402dcac" kind="function"><name>test_init_and_verify</name></member>
+      <member refid="group__safe__data_1ga7f5ee866205c157f284b8cddd1df733c" kind="function"><name>test_read_roundtrip</name></member>
+      <member refid="group__safe__data_1ga5c68e87269a52acae345c5e6546a526f" kind="function"><name>test_write_reseals</name></member>
+      <memberdef kind="function" id="main_8c_1ab63fc82b4a984824050fc83f8d6ed505" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>static int mut_add</definition>
+        <argsstring>(void *payload, void *user)</argsstring>
+        <name>mut_add</name>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>user</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="98" column="12" bodyfile="tests/safe_data/src/main.c" bodystart="98" bodyend="104"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1ac97eb0852378bdd5724dcf886a1bb0c7" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>static int mut_abort</definition>
+        <argsstring>(void *payload, void *user)</argsstring>
+        <name>mut_abort</name>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>user</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="106" column="12" bodyfile="tests/safe_data/src/main.c" bodystart="106" bodyend="113"/>
+      </memberdef>
+      <member refid="group__safe__data_1gac032958aa2b97cbda5eb6163dcb22013" kind="function"><name>test_update_commits</name></member>
+      <member refid="group__safe__data_1ga8accdf3b41c892d614c2ff40d2cd1b6e" kind="function"><name>test_update_abort_keeps_integrity</name></member>
+      <member refid="group__safe__data_1ga3f85bb0775dce304dbf00a712a54896b" kind="function"><name>test_section_scope</name></member>
+      <member refid="group__safe__data_1ga1aa530087f0fc0668cf846fb41220eb2" kind="function"><name>test_detects_corruption</name></member>
+      <member refid="group__safe__data_1ga23a749d09e9ffd5cad209e73d3ee59b1" kind="function"><name>test_verify_repair_fixes_in_place</name></member>
+      <member refid="group__safe__data_1ga5f7531f9f7160986103c65a27e818ce0" kind="function"><name>test_commit_reseals_external_write</name></member>
+      <member refid="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" kind="function"><name>test_stale_tag_recovers</name></member>
+      <member refid="group__safe__data_1ga2922b4bbaf847eccc26f4732a1836ee8" kind="function"><name>test_double_fault_unrecoverable</name></member>
+      <member refid="group__safe__data_1ga798956ba248b65c68f5d49a0c8d63a0b" kind="function"><name>test_null_args</name></member>
+      <memberdef kind="function" id="main_8c_1a860944a07a75a0e1731c21072a2e62b2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>SAFE_CONTAINER_DEFINE</definition>
+        <argsstring>(safe_cc, struct cc_payload)</argsstring>
+        <name>SAFE_CONTAINER_DEFINE</name>
+        <param>
+          <type>safe_cc</type>
+        </param>
+        <param>
+          <type>struct <ref refid="structcc__payload" kindref="compound">cc_payload</ref></type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="429" column="1" declfile="tests/safe_data/src/main.c" declline="429" declcolumn="1"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1afe897fce68af8369fd6ca01898df47e6" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>static int cc_advance</definition>
+        <argsstring>(void *payload, void *user)</argsstring>
+        <name>cc_advance</name>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>user</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="437" column="12" bodyfile="tests/safe_data/src/main.c" bodystart="437" bodyend="450"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1aaba395f241fdd6f2dc20302552ed09fb" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>static</type>
+        <definition>static K_THREAD_STACK_DEFINE</definition>
+        <argsstring>(cc_prod_stack, 2048)</argsstring>
+        <name>K_THREAD_STACK_DEFINE</name>
+        <param>
+          <type>cc_prod_stack</type>
+        </param>
+        <param>
+          <type>2048</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="452" column="8" declfile="tests/safe_data/src/main.c" declline="452" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1afcb465e8d9909251c488c1510c23cc33" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>static</type>
+        <definition>static K_THREAD_STACK_DEFINE</definition>
+        <argsstring>(cc_cons_stack, 2048)</argsstring>
+        <name>K_THREAD_STACK_DEFINE</name>
+        <param>
+          <type>cc_cons_stack</type>
+        </param>
+        <param>
+          <type>2048</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="453" column="8" declfile="tests/safe_data/src/main.c" declline="453" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1ad1e179e4bb1d25e8646128a17abdc7b1" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void cc_producer</definition>
+        <argsstring>(void *a, void *b, void *c)</argsstring>
+        <name>cc_producer</name>
+        <param>
+          <type>void *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="457" column="13" bodyfile="tests/safe_data/src/main.c" bodystart="457" bodyend="465"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1ab7292b60b48194b7dc4d1550ecedda42" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void cc_consumer</definition>
+        <argsstring>(void *a, void *b, void *c)</argsstring>
+        <name>cc_consumer</name>
+        <param>
+          <type>void *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="467" column="13" bodyfile="tests/safe_data/src/main.c" bodystart="467" bodyend="482"/>
+      </memberdef>
+      <member refid="group__safe__data_1ga147549439a2551b44676b636c8d1320b" kind="function"><name>test_concurrent_access_is_serialised</name></member>
+      <member refid="group__safe__data_1ga58409145190167c31bb10e1e89cafffc" kind="function"><name>test_selftest</name></member>
+      <member refid="group__safe__data_1gae736dcfeadc44bbadef9a8cecb217df9" kind="function"><name>test_stats_count_events</name></member>
+      <memberdef kind="function" id="main_8c_1abf484cd86bd2b69c30f24c921e87eea2" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void fault_event_cb</definition>
+        <argsstring>(const struct safe_data_fault_info *info)</argsstring>
+        <name>fault_event_cb</name>
+        <param>
+          <type>const struct <ref refid="structsafe__data__fault__info" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag">safe_data_fault_info</ref> *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="599" column="13" bodyfile="tests/safe_data/src/main.c" bodystart="599" bodyend="603"/>
+      </memberdef>
+      <memberdef kind="function" id="main_8c_1a2af670360ae28533f4761ba2d9e401f8" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void fault_event_cb_other</definition>
+        <argsstring>(const struct safe_data_fault_info *info)</argsstring>
+        <name>fault_event_cb_other</name>
+        <param>
+          <type>const struct <ref refid="structsafe__data__fault__info" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag">safe_data_fault_info</ref> *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="605" column="13" bodyfile="tests/safe_data/src/main.c" bodystart="605" bodyend="608"/>
+      </memberdef>
+      <member refid="group__safe__data_1ga79b76f168b941350a8cf6319474037b2" kind="function"><name>test_fault_handler_events</name></member>
+      <memberdef kind="function" id="main_8c_1a211cf35b0a521278a9befded025d11ef" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>static int mut_positive</definition>
+        <argsstring>(void *payload, void *user)</argsstring>
+        <name>mut_positive</name>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>user</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="659" column="12" bodyfile="tests/safe_data/src/main.c" bodystart="659" bodyend="666"/>
+      </memberdef>
+      <member refid="group__safe__data_1ga21a7a26ee6df4663d818734e2372a72e" kind="function"><name>test_update_clamps_positive_mutator_return</name></member>
+      <member refid="group__safe__data_1gacd295aa8e39452735df6800a973e841b" kind="function"><name>test_write_observes_overwritten_corruption</name></member>
+      <member refid="group__safe__data_1gada2bf52c35a16ccdbc55a315af0ffde9" kind="function"><name>test_lock_timeout_is_bounded_and_reported</name></member>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tests/safe_data/src/main.c"/>
+  </compounddef>
+</doxygen>

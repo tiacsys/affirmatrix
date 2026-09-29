@@ -48,3 +48,23 @@ def test_hash_display_truncates_unless_verbose() -> None:
     digest = "abcd" + "0" * 56 + "ef12"
     assert _outcome.hash_display(digest, verbose=False) == "abcd…ef12"
     assert _outcome.hash_display(digest, verbose=True) == digest
+
+
+def test_counts_display_joins_name_and_count_pairs() -> None:
+    assert _outcome.counts_display({"nodes": 3, "review events": 0}) == "nodes 3, review events 0"
+
+
+def test_counts_display_of_no_counts_says_none() -> None:
+    assert _outcome.counts_display({}) == "(none)"
+
+
+def test_anchor_display_of_no_anchor_is_none() -> None:
+    assert _outcome.anchor_display(None, verbose=False) is None
+
+
+def test_anchor_display_truncates_unless_verbose() -> None:
+    from affirmatrix.records import ContentAnchor
+
+    anchor = ContentAnchor(bytes.fromhex("abcd" + "00" * 28 + "ef12"), "r", "p", "file")
+    assert _outcome.anchor_display(anchor, verbose=False) == "abcd…ef12"
+    assert _outcome.anchor_display(anchor, verbose=True) == anchor.digest.hex()

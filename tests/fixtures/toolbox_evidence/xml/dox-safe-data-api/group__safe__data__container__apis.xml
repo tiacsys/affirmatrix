@@ -1,0 +1,366 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="group__safe__data__container__apis" kind="group">
+    <compoundname>safe_data_container_apis</compoundname>
+    <title>Containers and Typed Access</title>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" prot="public" static="no">
+        <name>SAFE_CONTAINER_DEFINE</name>
+        <param><defname>_container_name</defname></param>
+        <param><defname>_payload_type</defname></param>
+        <initializer>struct _container_name {                                               \
+    BUILD_ASSERT(sizeof(_payload_type) &gt; 0,                        \
+             &quot;safe_data: zero-size payload&quot;);                  \
+    BUILD_ASSERT(sizeof(_payload_type) &lt;= Z_SAFE_DATA_MAX_PAYLOAD, \
+             &quot;safe_data: <ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref> too large for the configured&quot; \
+             &quot; integrity tag (see Z_SAFE_DATA_MAX_PAYLOAD)&quot;);  \
+    Z_SAFE_CONTAINER_BODY(_payload_type)                           \
+}</initializer>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-019"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Declare a CRC-protected container type wrapping <computeroutput>_payload_type</computeroutput>. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Generates a struct with an optional mutex (only when CONFIG_SAFE_DATA_LOCKING, the default), an integrity tag, an optional redundant shadow copy (only when CONFIG_SAFE_DATA_REDUNDANT), and the user payload.</para>
+<para>Rejects zero-size payloads and payloads exceeding the size bound of the configured tag (CRC-8: 16 bytes, CRC-16: 256 bytes) at compile time.</para>
+<para>Usage: <programlisting><codeline><highlight class="normal">SAFE_CONTAINER_DEFINE(safe_config,<sp/>struct<sp/>system_config);</highlight></codeline>
+<codeline><highlight class="normal">static<sp/>struct<sp/>safe_config<sp/>cfg;</highlight></codeline>
+</programlisting></para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_container_name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the generated struct type. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_payload_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Complete type of the protected payload. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="498" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="498" bodyend="506"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1gac0a8a11450337c5ded961fc47bb9a0c0" prot="public" static="no">
+        <name>SAFE_CONTAINER_DEFINE_UNCHECKED</name>
+        <param><defname>_container_name</defname></param>
+        <param><defname>_payload_type</defname></param>
+        <initializer>struct _container_name {                                               \
+    BUILD_ASSERT(sizeof(_payload_type) &gt; 0,                        \
+             &quot;safe_data: zero-size payload&quot;);                  \
+    Z_SAFE_CONTAINER_BODY(_payload_type)                           \
+}</initializer>
+        <briefdescription>
+<para>As SAFE_CONTAINER_DEFINE but without the tag-strength size bound. For documented deviations only. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_container_name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the generated struct type. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_payload_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Complete type of the protected payload. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="515" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="515" bodyend="520"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga3c8b6136d72cedd0d4cf96ab158a24f8" prot="public" static="no">
+        <name>SAFE_INIT</name>
+        <param><defname>_c</defname></param>
+        <initializer><ref refid="group__safe__data__core__apis_1gae355d680bd0bbcb20ca74d55bb584d4a" kindref="member">safe_data_init</ref>(_SAFE_LOCK(_c), &amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>),  \
+           &amp;(_c)-&gt;_crc, _SAFE_SHADOW(_c))</initializer>
+        <briefdescription>
+<para>Initialise and seal a container. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="see"><para><ref refid="group__safe__data__core__apis_1gae355d680bd0bbcb20ca74d55bb584d4a" kindref="member">safe_data_init</ref> </para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>As <ref refid="group__safe__data__core__apis_1gae355d680bd0bbcb20ca74d55bb584d4a" kindref="member">safe_data_init()</ref>. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="537" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="537" bodyend="539"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga4883c14acf21eeaf0683ad02ee756eb2" prot="public" static="no">
+        <name>SAFE_VERIFY</name>
+        <param><defname>_c</defname></param>
+        <initializer><ref refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" kindref="member">safe_data_verify</ref>(&amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>), (_c)-&gt;_crc,    \
+         _SAFE_SHADOW(_c))</initializer>
+        <briefdescription>
+<para>Verify integrity only (pure, never modifies the payload). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="see"><para><ref refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" kindref="member">safe_data_verify</ref> </para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>As <ref refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" kindref="member">safe_data_verify()</ref>. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="547" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="547" bodyend="549"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga20b85f35ef0dd25ec1f32818bfc6f613" prot="public" static="no">
+        <name>SAFE_READ</name>
+        <param><defname>_c</defname></param>
+        <param><defname>_out_ptr</defname></param>
+        <initializer><ref refid="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" kindref="member">safe_data_read</ref>(_SAFE_LOCK(_c), &amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>),  \
+           &amp;(_c)-&gt;_crc, _SAFE_SHADOW(_c), (_out_ptr))</initializer>
+        <briefdescription>
+<para>Validated copy out into <computeroutput>_out_ptr</computeroutput>. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="see"><para><ref refid="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" kindref="member">safe_data_read</ref> </para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_out_ptr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination buffer of at least sizeof(payload) bytes. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>As <ref refid="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" kindref="member">safe_data_read()</ref>. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="557" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="557" bodyend="559"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1gae6b082f0286e0cd05c1509f73ffaeec2" prot="public" static="no">
+        <name>SAFE_WRITE</name>
+        <param><defname>_c</defname></param>
+        <param><defname>_in_ptr</defname></param>
+        <initializer><ref refid="group__safe__data__core__apis_1ga8e7e3cfa5544a70471a2e8dca7fc35f9" kindref="member">safe_data_write</ref>(_SAFE_LOCK(_c), &amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>), \
+        &amp;(_c)-&gt;_crc, _SAFE_SHADOW(_c), (_in_ptr))</initializer>
+        <briefdescription>
+<para>Validated copy in from <computeroutput>_in_ptr</computeroutput> + reseal. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="see"><para><ref refid="group__safe__data__core__apis_1ga8e7e3cfa5544a70471a2e8dca7fc35f9" kindref="member">safe_data_write</ref> </para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_in_ptr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Source buffer of at least sizeof(payload) bytes. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>As <ref refid="group__safe__data__core__apis_1ga8e7e3cfa5544a70471a2e8dca7fc35f9" kindref="member">safe_data_write()</ref>. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="567" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="567" bodyend="569"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga8e7e35fe3c39ac028c21f85fb3b8c1cd" prot="public" static="no">
+        <name>SAFE_UPDATE</name>
+        <param><defname>_c</defname></param>
+        <param><defname>_fn</defname></param>
+        <param><defname>_user</defname></param>
+        <initializer><ref refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" kindref="member">safe_data_update</ref>(_SAFE_LOCK(_c), &amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>),\
+         &amp;(_c)-&gt;_crc, _SAFE_SHADOW(_c), (_fn), (_user))</initializer>
+        <briefdescription>
+<para>Atomic read-modify-write via callback. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="see"><para><ref refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" kindref="member">safe_data_update</ref> </para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_fn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Mutator of type <ref refid="group__safe__data__core__apis_1ga3c770b1d01f6dc639227675746e109ce" kindref="member">safe_data_mutator_t</ref>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_user</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Opaque context forwarded to <computeroutput>_fn</computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>As <ref refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" kindref="member">safe_data_update()</ref>. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="578" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="578" bodyend="580"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga12ad5dc864d048968014b783b7bdcafe" prot="public" static="no">
+        <name>SAFE_COMMIT</name>
+        <param><defname>_c</defname></param>
+        <initializer><ref refid="group__safe__data__core__apis_1gaeb1df317ad3fc576ec5ff67d6cd4f3d3" kindref="member">safe_data_commit</ref>(_SAFE_LOCK(_c), &amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>,                       \
+         sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>), &amp;(_c)-&gt;_crc, _SAFE_SHADOW(_c))</initializer>
+        <briefdescription>
+<para>Reseal after an explicit external modification. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="see"><para><ref refid="group__safe__data__core__apis_1gaeb1df317ad3fc576ec5ff67d6cd4f3d3" kindref="member">safe_data_commit</ref> </para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>As <ref refid="group__safe__data__core__apis_1gaeb1df317ad3fc576ec5ff67d6cd4f3d3" kindref="member">safe_data_commit()</ref>.</para>
+</simplesect>
+<xrefsect id="kconfig_depends_1_kconfig_depends000004"><xreftitle>Depends on</xreftitle><xrefdescription><para>defined(CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT) </para>
+</xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="590" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="590" bodyend="592"/>
+      </memberdef>
+      <memberdef kind="define" id="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" prot="public" static="no">
+        <name>SAFE_SECTION</name>
+        <param><defname>_c</defname></param>
+        <param><defname>_pvar</defname></param>
+        <initializer>for (int _sd_st = ((z_safe_lock(_SAFE_LOCK(_c)) == 0)                  \
+           ? <ref refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" kindref="member">safe_data_verify_repair</ref>(&amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>,           \
+                    sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>), (_c)-&gt;_crc, \
+                    _SAFE_SHADOW(_c))                  \
+           : (z_safe_data_lock_failed(), -ETIMEDOUT));         \
+     /* enter on valid (0) or recovered (-EAGAIN) */                   \
+     ({ bool _ok = (_sd_st == 0 || _sd_st == <ref refid="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" kindref="member">SAFE_DATA_RECOVERED</ref>);     \
+    if (!_ok &amp;&amp; _sd_st != -ETIMEDOUT) {                            \
+        z_safe_unlock(_SAFE_LOCK(_c));                         \
+    }                                                              \
+    _ok; });                                                       \
+     z_safe_data_seal(&amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>),           \
+              &amp;(_c)-&gt;_crc, _SAFE_SHADOW(_c)),                  \
+     z_safe_unlock(_SAFE_LOCK(_c)), _sd_st = 1)                        \
+    for (__typeof__((_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>) *_pvar = &amp;(_c)-&gt;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>;        \
+         _pvar != NULL; _pvar = NULL)</initializer>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-021"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Scoped lock + verify ... reseal + unlock around a block. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Inside the block, <computeroutput>_pvar</computeroutput> is a typed pointer to the (verified) payload and may be used with plain C syntax. On normal exit the integrity tag is resealed and the lock released. This is the ergonomic, leak-free replacement for the original &quot;checkout pointer / remember to update&quot; pattern.</para>
+<para>The block is entered only if the pre-check passes (or the data was recovered from the shadow copy). On an unrecoverable fault the block is skipped and the lock is released; the configured fault action has already run inside <ref refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" kindref="member">safe_data_verify()</ref>.</para>
+<para><programlisting><codeline><highlight class="normal">SAFE_SECTION(&amp;cfg,<sp/>p)<sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>p-&gt;temperature<sp/>=<sp/>90;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>p-&gt;fan_enabled<sp/>=<sp/>(p-&gt;temperature<sp/>&gt;<sp/>85);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+<para><simplesect kind="note"><para>Do not <computeroutput>return</computeroutput>/<computeroutput>break</computeroutput>/<computeroutput>goto</computeroutput> out of the block: that would skip the reseal+unlock. <computeroutput>continue</computeroutput> is fine (it exits the block normally).</para>
+</simplesect>
+<simplesect kind="note"><para>Uses GNU C extensions (statement expressions, <bold>typeof</bold>) and hides control flow in a macro - only available with CONFIG_SAFE_DATA_GNU_EXTENSIONS (off at the Strict level). SAFE_UPDATE gives the same atomicity guarantee in standard C.</para>
+</simplesect>
+The block is also skipped (and the lock-timeout event reported) when the container lock cannot be acquired within CONFIG_SAFE_DATA_LOCK_TIMEOUT_MS.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>_c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to a container declared with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>_pvar</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the typed payload-pointer variable scoped to the block.</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<xrefsect id="kconfig_depends_1_kconfig_depends000005"><xreftitle>Depends on</xreftitle><xrefdescription><para>defined(CONFIG_SAFE_DATA_GNU_EXTENSIONS) </para>
+</xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="633" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="633" bodyend="649"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>Typed container definition and access macros - the primary API. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>Declare a container type with <ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE()</ref>, then access it exclusively through the SAFE_* operations; they derive the type-erased arguments at compile time and forward to <ref refid="group__safe__data__core__apis" kindref="compound">Type-Erased Core</ref>. </para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

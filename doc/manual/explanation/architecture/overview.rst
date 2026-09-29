@@ -174,7 +174,7 @@ detail.
      - Source topology and role vocabulary from one YAML file.
    * - command-line interface
      - ``cli``
-     - Ten commands over four nouns; renders outcomes, decides none. See
+     - Eleven commands over four nouns; renders outcomes, decides none. See
        :doc:`command-line-interface`.
 
 Three modules are shared internals, not components, and never a requirement's
@@ -343,7 +343,8 @@ takes an explicit revision.
   the one check an outsider can make and the two they cannot.
 - **A case's schema copy is seeded once.** The store writes the schemas into a
   fresh case and validates against that copy thereafter; it never writes over a
-  schema the case already has, so replacing one is a deliberate act on the case.
+  schema the case already has; it is refreshed only on request, by ``case refresh``,
+  which reports what differed, so replacing one is a deliberate act on the case.
 
 **The swap ahead.** When the extractors replace the would-be store, the records
 change in kind and the case must follow. Real spans replace the fixture's whole

@@ -36,7 +36,9 @@ A case is self-describing. The store seeds a fresh root with the schemas and
 the shared JSON-LD context it carries as package data, and thereafter validates
 against the copy in the case rather than the copy in the package, so the tool
 and an auditor reading the same directory reach the same verdict. It never
-writes over a schema a case already has.
+writes over a schema a case already has, except through
+:meth:`AffirmationStore.refresh_schemas`, which a maintainer requests and then
+commits as a store act.
 
 **The read face, as built.** The same class presents the case back as a record
 source: ``nodes()`` and ``edges()`` satisfy the protocol structurally and
@@ -442,6 +444,35 @@ class AffirmationStore:
                 for document_name in sorted(_layout.PROOF_DOCUMENT_SCHEMAS)
             }
         )
+
+    def refresh_schemas(self) -> tuple[str, ...]:
+        """Rewrite the case's schema copy from the packaged schemas, naming what differed.
+
+        :implements: SEG-SREQ-139
+        :implements: SEG-SREQ-140
+
+        Every schema the package carries whose copy in the case differs in
+        bytes, or is missing, is rewritten and its name returned, in file-name
+        order; nothing else in the case is written — not a record, not the
+        context, not a schema file the package does not carry. Bytes are what
+        is compared, never parsed content: the copy an auditor reads is bytes,
+        so a copy differing only in formatting counts as differing. A root
+        that is not a directory is refused before anything is created, so a
+        mistyped path cannot mint a case.
+        """
+        if not self.root.is_dir():
+            raise AffirmationStoreError(
+                f"{self.root} is not a case: there is no directory to refresh a schema copy in"
+            )
+        directory = _layout.schema_directory(self.root)
+        refreshed = []
+        for source in _packaged_schemas():
+            payload = source.read_bytes()
+            target = directory / source.name
+            if not target.exists() or target.read_bytes() != payload:
+                _atomic.replace_file(target, payload)
+                refreshed.append(source.name)
+        return tuple(refreshed)
 
     def _ensure_layout(self) -> None:
         """Create the case's directories and seed the files it is missing.

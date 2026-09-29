@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="kconfig_depends" kind="page">
+    <compoundname>kconfig_depends</compoundname>
+    <title>Kconfig dependencies</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><variablelist>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga5f7531f9f7160986103c65a27e818ce0" kindref="member">test_commit_reseals_external_write</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000003"/> CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga2922b4bbaf847eccc26f4732a1836ee8" kindref="member">test_double_fault_unrecoverable</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000005"/> CONFIG_SAFE_DATA_REDUNDANT</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gada2bf52c35a16ccdbc55a315af0ffde9" kindref="member">test_lock_timeout_is_bounded_and_reported</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000009"/> CONFIG_SAFE_DATA_LOCK_TIMEOUT_MS &gt; 0 </para>
+<para></para>
+<para>CONFIG_SAFE_DATA_LOCKING</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga3f85bb0775dce304dbf00a712a54896b" kindref="member">test_section_scope</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000001"/> CONFIG_SAFE_DATA_GNU_EXTENSIONS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga58409145190167c31bb10e1e89cafffc" kindref="member">test_selftest</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000006"/> CONFIG_SAFE_DATA_SELFTEST</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" kindref="member">test_stale_tag_recovers</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000004"/> CONFIG_SAFE_DATA_REDUNDANT</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gae736dcfeadc44bbadef9a8cecb217df9" kindref="member">test_stats_count_events</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000007"/> CONFIG_SAFE_DATA_STATS</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1ga23a749d09e9ffd5cad209e73d3ee59b1" kindref="member">test_verify_repair_fixes_in_place</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000002"/> CONFIG_SAFE_DATA_REDUNDANT</para>
+<para></para>
+<para></para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data_1gacd295aa8e39452735df6800a973e841b" kindref="member">test_write_observes_overwritten_corruption</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000008"/> CONFIG_SAFE_DATA_WRITE_CHECKS_OLD </para>
+<para></para>
+<para>CONFIG_SAFE_DATA_STATS</para>
+<para></para>
+<para></para>
+</listitem>
+</variablelist>
+</para>
+    </detaileddescription>
+    <location file="kconfig_depends"/>
+  </compounddef>
+</doxygen>

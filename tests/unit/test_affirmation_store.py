@@ -218,6 +218,80 @@ def test_a_schema_the_case_already_carries_is_never_written_over(tmp_path: Path)
     assert json.loads(target.read_text(encoding="utf-8"))["title"] == "this case's own wording"
 
 
+def _tree(root: Path) -> dict[Path, bytes]:
+    return {path.relative_to(root): path.read_bytes() for path in files_under(root)}
+
+
+def test_refresh_schemas_reports_and_rewrites_a_stale_copy(tmp_path: Path) -> None:
+    """SEG-SREQ-139, SEG-SREQ-140: a copy differing from the package is rewritten and named."""
+    store = make_case(tmp_path)
+    store.initialize()
+    target = store.root / "schema" / "requirement.schema.json"
+    target.write_text("{}\n", encoding="utf-8")
+    assert store.refresh_schemas() == ("requirement.schema.json",)
+    assert target.read_bytes() == (PACKAGED / "schema" / "requirement.schema.json").read_bytes()
+
+
+def test_refresh_schemas_reports_and_restores_a_missing_copy(tmp_path: Path) -> None:
+    """SEG-SREQ-139, SEG-SREQ-140: a copy the case lacks is written and named."""
+    store = make_case(tmp_path)
+    store.initialize()
+    target = store.root / "schema" / "waiver.schema.json"
+    target.unlink()
+    assert store.refresh_schemas() == ("waiver.schema.json",)
+    assert target.read_bytes() == (PACKAGED / "schema" / "waiver.schema.json").read_bytes()
+
+
+def test_refresh_schemas_writes_nothing_beyond_the_schema_copy(tmp_path: Path) -> None:
+    """SEG-SREQ-139: one stale and one missing copy change; every other file is byte-identical."""
+    store = make_case(tmp_path)
+    store.initialize()
+    store.write_nodes([requirement()])
+    (store.root / "schema" / "edge-base.schema.json").write_text("{}\n", encoding="utf-8")
+    (store.root / "schema" / "waiver.schema.json").unlink()
+    (store.root / "schema" / "extra.schema.json").write_text("{}\n", encoding="utf-8")
+    before = _tree(store.root)
+    assert store.refresh_schemas() == ("edge-base.schema.json", "waiver.schema.json")
+    after = _tree(store.root)
+    changed = {path for path in before.keys() | after.keys() if before.get(path) != after.get(path)}
+    assert changed == {
+        Path("schema") / "edge-base.schema.json",
+        Path("schema") / "waiver.schema.json",
+    }
+
+
+def test_refresh_schemas_of_a_current_case_reports_nothing_and_leaves_it_untouched(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-140: a current case yields an empty report and no rewrite, down to the mtime."""
+    store = make_case(tmp_path)
+    store.initialize()
+    before = {path: path.stat().st_mtime_ns for path in files_under(store.root)}
+    assert store.refresh_schemas() == ()
+    assert {path: path.stat().st_mtime_ns for path in files_under(store.root)} == before
+
+
+def test_refresh_schemas_counts_a_reformatted_but_equivalent_copy_as_differing(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-140: bytes are compared, so a copy differing only in formatting is reported."""
+    store = make_case(tmp_path)
+    store.initialize()
+    target = store.root / "schema" / "requirement.schema.json"
+    target.write_text(json.dumps(packaged_schema("requirement.schema.json")), encoding="utf-8")
+    assert store.refresh_schemas() == ("requirement.schema.json",)
+
+
+def test_refresh_schemas_refuses_a_root_that_is_not_a_directory_and_creates_nothing(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-139: a mistyped path never mints a case."""
+    store = make_case(tmp_path)
+    with pytest.raises(case.AffirmationStoreError, match="not a case"):
+        store.refresh_schemas()
+    assert not store.root.exists()
+
+
 def test_every_declared_kind_has_a_collection_document() -> None:
     """A kind cannot be declared without also being given somewhere to live."""
     assert set(_layout.NODE_DOCUMENTS) == taxonomy.node_kinds()

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="test_draft" kind="page">
+    <compoundname>test_draft</compoundname>
+    <title>Draft Test Cases</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><variablelist>
+<varlistentry><term>Global <ref refid="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" kindref="member">test_stale_tag_recovers</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="test_draft_1_test_draft000001"/> </para>
+</listitem>
+</variablelist>
+</para>
+    </detaileddescription>
+    <location file="test_draft"/>
+  </compounddef>
+</doxygen>

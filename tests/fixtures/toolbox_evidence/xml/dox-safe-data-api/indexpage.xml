@@ -1,0 +1,206 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="indexpage" kind="page">
+    <compoundname>index</compoundname>
+    <title>Safe Data API</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><anchor id="index_1md_README"/></para>
+<para>Generic Zephyr facility for protecting a variable or data structure with an integrity tag (CRC), an optional redundant shadow copy, and a mutex — so that data integrity is guaranteed <emphasis>by construction</emphasis> rather than by remembering to call the right function at the right time.</para>
+<para>The repository is also a self-contained example of generated, auditable safety evidence. Its requirements, annotated tests and twister results are rendered into a requirement specification, a test specification, a test report and a traceability matrix (see <computeroutput>doc/README.md</computeroutput>).</para>
+<sect1 id="index_1autotoc_md1">
+<title>Why</title><para>In a safety-critical context, RAM and stored values can be corrupted by SEUs, stack overflow, rogue DMA, or plain bugs. A container bundles the data with an integrity tag and serialises every access so that:</para>
+<para><itemizedlist>
+<listitem><para>every mutation reseals the tag atomically (it can never go stale),</para>
+</listitem><listitem><para>every read verifies before handing data out,</para>
+</listitem><listitem><para>corruption is either <bold>recovered</bold> (redundant copy) or reported via a <bold>configurable</bold> reaction (return error / handler / panic) — not always a hard panic.</para>
+</listitem></itemizedlist>
+</para>
+</sect1>
+<sect1 id="index_1autotoc_md2">
+<title>Layout</title><para><programlisting><codeline><highlight class="normal">include/safe_data/safe_data.h<sp/><sp/><sp/>typed<sp/>macros<sp/>+<sp/>core<sp/>prototypes</highlight></codeline>
+<codeline><highlight class="normal">src/safe_data.c<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>type-erased<sp/>core<sp/>(one<sp/>audited<sp/>copy<sp/>of<sp/>the<sp/>logic)</highlight></codeline>
+<codeline><highlight class="normal">Kconfig,<sp/>CMakeLists.txt<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Zephyr<sp/>module<sp/>wiring</highlight></codeline>
+<codeline><highlight class="normal">zephyr/module.yml</highlight></codeline>
+<codeline><highlight class="normal">samples/config_guard<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>copy-in/out<sp/>style;<sp/>corruption<sp/>-&gt;<sp/>recover<sp/>defaults</highlight></codeline>
+<codeline><highlight class="normal">samples/transaction<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>atomic<sp/>RMW,<sp/>scoped<sp/>section,<sp/>shadow<sp/>recovery</highlight></codeline>
+<codeline><highlight class="normal">samples/producer_consumer<sp/><sp/><sp/><sp/><sp/><sp/><sp/>two<sp/>threads<sp/>share<sp/>one<sp/>struct;<sp/>lock<sp/>prevents<sp/>torn<sp/>reads</highlight></codeline>
+<codeline><highlight class="normal">tests/safe_data<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ztest<sp/>suite<sp/>(incl.<sp/>a<sp/>concurrency<sp/>test)</highlight></codeline>
+<codeline><highlight class="normal">doc/<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>requirements,<sp/>test<sp/>specification,<sp/>test<sp/>report</highlight></codeline>
+<codeline><highlight class="normal">west.yml<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>standalone<sp/>workspace<sp/>manifest</highlight></codeline>
+</programlisting></para>
+</sect1>
+<sect1 id="index_1autotoc_md3">
+<title>Usage</title><para><programlisting filename=".c"><codeline><highlight class="preprocessor">#include<sp/>&lt;<ref refid="safe__data_8h" kindref="compound">safe_data/safe_data.h</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">system_config<sp/>{<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>temperature;<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>fan_enabled;<sp/>};</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><ref refid="group__safe__data__container__apis_1ga85fa73c137a6b6480f182f22bdec2bf1" kindref="member">SAFE_CONTAINER_DEFINE</ref>(safe_config,<sp/></highlight><highlight class="keyword">struct</highlight><highlight class="normal"><sp/>system_config);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">safe_config<sp/>cfg;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>init(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">system_config<sp/>v<sp/>=<sp/>{<sp/>.temperature<sp/>=<sp/>25<sp/>};</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__safe__data__container__apis_1ga3c8b6136d72cedd0d4cf96ab158a24f8" kindref="member">SAFE_INIT</ref>(&amp;cfg);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>init<sp/>mutex<sp/>+<sp/>seal<sp/>current<sp/>contents<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__safe__data__container__apis_1gae6b082f0286e0cd05c1509f73ffaeec2" kindref="member">SAFE_WRITE</ref>(&amp;cfg,<sp/>&amp;v);<sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>install<sp/>a<sp/>value<sp/>+<sp/>reseal<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+<sect2 id="index_1autotoc_md4">
+<title>Read / write (copy semantics — nothing touches storage directly)</title><para><programlisting filename=".c"><codeline><highlight class="keyword">struct<sp/></highlight><highlight class="normal">system_config<sp/>local;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<ref refid="group__safe__data__container__apis_1ga20b85f35ef0dd25ec1f32818bfc6f613" kindref="member">SAFE_READ</ref>(&amp;cfg,<sp/>&amp;local)<sp/>==<sp/>0)<sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>validated<sp/>snapshot<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>local.temperature<sp/>=<sp/>90;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__safe__data__container__apis_1gae6b082f0286e0cd05c1509f73ffaeec2" kindref="member">SAFE_WRITE</ref>(&amp;cfg,<sp/>&amp;local);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>install<sp/>+<sp/>reseal<sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</sect2>
+<sect2 id="index_1autotoc_md5">
+<title>Atomic read-modify-write (callback transaction)</title><para>The lock is held across the whole transaction; the tag is resealed on success. If the mutator returns an error the change is <bold>rolled back</bold> (when the redundant shadow is enabled) and the error is propagated.</para>
+<para><programlisting filename=".c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>bump(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>,<sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*user)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">system_config<sp/>*c<sp/>=<sp/><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>c-&gt;temperature<sp/>+=<sp/>*(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*)user;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>(c-&gt;temperature<sp/>&gt;<sp/>125)<sp/>?<sp/>-ERANGE<sp/>:<sp/>0;<sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>abort<sp/>-&gt;<sp/>rollback<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>delta<sp/>=<sp/>5;</highlight></codeline>
+<codeline><highlight class="normal"><ref refid="group__safe__data__container__apis_1ga8e7e35fe3c39ac028c21f85fb3b8c1cd" kindref="member">SAFE_UPDATE</ref>(&amp;cfg,<sp/>bump,<sp/>&amp;delta);</highlight></codeline>
+</programlisting></para>
+</sect2>
+<sect2 id="index_1autotoc_md6">
+<title>Scoped section (plain-C access, auto reseal + unlock)</title><para>The ergonomic replacement for the original &quot;checkout a pointer / remember to
+update&quot; idea — but the lock is held for the whole block and the tag is resealed automatically at the end.</para>
+<para><programlisting filename=".c"><codeline><highlight class="normal"><ref refid="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" kindref="member">SAFE_SECTION</ref>(&amp;cfg,<sp/>p)<sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>p<sp/>is<sp/>a<sp/>struct<sp/>system_config<sp/>*<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>p-&gt;temperature<sp/>=<sp/>90;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>p-&gt;fan_enabled<sp/>=<sp/>(p-&gt;temperature<sp/>&gt;<sp/>85);</highlight></codeline>
+<codeline><highlight class="normal">}<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>tag<sp/>resealed,<sp/>lock<sp/>released<sp/>here<sp/>*/</highlight></codeline>
+</programlisting></para>
+<para><blockquote><para>Do not <computeroutput>return</computeroutput> / <computeroutput>break</computeroutput> / <computeroutput>goto</computeroutput> out of a <computeroutput><ref refid="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" kindref="member">SAFE_SECTION</ref></computeroutput> block — that would skip the reseal + unlock. <computeroutput>continue</computeroutput> exits the block cleanly. </para>
+</blockquote></para>
+</sect2>
+<sect2 id="index_1autotoc_md7">
+<title>Two threads sharing a container</title><para>The mutex embedded in each container (the default) serialises every access, so a reader thread can never observe a half-finished update from a writer thread — each <computeroutput><ref refid="group__safe__data__container__apis_1ga20b85f35ef0dd25ec1f32818bfc6f613" kindref="member">SAFE_READ</ref></computeroutput> snapshot is internally consistent and CRC-valid. See <computeroutput>samples/producer_consumer</computeroutput> for a runnable demo: a producer mutates a multi-field struct with an invariant (<computeroutput>sum == x + y</computeroutput>) via <computeroutput><ref refid="group__safe__data__container__apis_1ga8e7e35fe3c39ac028c21f85fb3b8c1cd" kindref="member">SAFE_UPDATE</ref></computeroutput> while a consumer validates snapshots via <computeroutput><ref refid="group__safe__data__container__apis_1ga20b85f35ef0dd25ec1f32818bfc6f613" kindref="member">SAFE_READ</ref></computeroutput>; the invariant holds on every read.</para>
+</sect2>
+<sect2 id="index_1autotoc_md8">
+<title>Reseal after an external modification</title><para>If an audited low-level path writes the storage directly, <computeroutput><ref refid="group__safe__data__container__apis_1ga12ad5dc864d048968014b783b7bdcafe" kindref="member">SAFE_COMMIT</ref></computeroutput> reseals the tag (and refreshes the shadow) over the current contents under the lock:</para>
+<para><programlisting filename=".c"><codeline><highlight class="normal"><ref refid="group__safe__data__container__apis_1ga12ad5dc864d048968014b783b7bdcafe" kindref="member">SAFE_COMMIT</ref>(&amp;cfg);<sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>recompute<sp/>the<sp/>integrity<sp/>tag<sp/>in<sp/>place<sp/>*/</highlight></codeline>
+</programlisting></para>
+</sect2>
+</sect1>
+<sect1 id="index_1autotoc_md9">
+<title>Configuration (Kconfig)</title><para><table rows="13" cols="3"><row>
+<entry thead="yes"><para>Option  </para>
+</entry><entry thead="yes"><para>Default  </para>
+</entry><entry thead="yes"><para>Meaning  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA</computeroutput>  </para>
+</entry><entry thead="no"><para>n  </para>
+</entry><entry thead="no"><para>Enable the library (selects <computeroutput>CRC</computeroutput>).  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_LEVEL_BASIC</computeroutput> / <computeroutput>_LEVEL_ENHANCED</computeroutput> / <computeroutput>_LEVEL_STRICT</computeroutput>  </para>
+</entry><entry thead="no"><para>BASIC  </para>
+</entry><entry thead="no"><para>Integrity-level preset. ENHANCED implies redundancy + statistics; STRICT additionally implies boot self-test + checked writes and removes <computeroutput><ref refid="group__safe__data__container__apis_1ga12ad5dc864d048968014b783b7bdcafe" kindref="member">SAFE_COMMIT</ref></computeroutput>/<computeroutput><ref refid="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" kindref="member">SAFE_SECTION</ref></computeroutput> from the API surface. Implied options remain individually overridable.  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_CRC32_IEEE</computeroutput> / <computeroutput>_CRC16_CCITT</computeroutput> / <computeroutput>_CRC8_CCITT</computeroutput>  </para>
+</entry><entry thead="no"><para>CRC32  </para>
+</entry><entry thead="no"><para>Integrity-tag algorithm. A compile-time bound ties tag strength to payload size (CRC-8 ≤ 16 B, CRC-16 ≤ 256 B).  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_LOCKING</computeroutput>  </para>
+</entry><entry thead="no"><para>y  </para>
+</entry><entry thead="no"><para>Embed a <computeroutput>k_mutex</computeroutput> in each container and serialise access. Disable to drop the mutex when a container is only touched from one context (caller then owns mutual exclusion).  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_LOCK_TIMEOUT_MS</computeroutput>  </para>
+</entry><entry thead="no"><para>0  </para>
+</entry><entry thead="no"><para>Bound on lock acquisition; on expiry the operation returns <computeroutput>-ETIMEDOUT</computeroutput> (counted + reported). 0 = wait forever.  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_REDUNDANT</computeroutput>  </para>
+</entry><entry thead="no"><para>n  </para>
+</entry><entry thead="no"><para>Keep an inverted shadow copy; enables recovery + RMW rollback (2× payload RAM).  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_STATS</computeroutput>  </para>
+</entry><entry thead="no"><para>n  </para>
+</entry><entry thead="no"><para>Global fault/recovery counters via <computeroutput><ref refid="group__safe__data__diag__apis_1gaad3c56f1c632cd66b47b108c8901c3bd" kindref="member">safe_data_stats_get()</ref></computeroutput> — the observability hook for a health monitor.  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_WRITE_CHECKS_OLD</computeroutput>  </para>
+</entry><entry thead="no"><para>n  </para>
+</entry><entry thead="no"><para>Verify old contents before overwriting (observe-only; corruption is reported, the write still succeeds).  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_SELFTEST</computeroutput> (+ <computeroutput>_SELFTEST_BOOT</computeroutput>)  </para>
+</entry><entry thead="no"><para>n  </para>
+</entry><entry thead="no"><para><computeroutput><ref refid="group__safe__data__diag__apis_1gadee7fa4b7d5afaef9b625d4bc2c4a1b3" kindref="member">safe_data_selftest()</ref></computeroutput>: CRC known-answer test + seal/corrupt/detect/recover round trip. <computeroutput>_BOOT</computeroutput> runs it from <computeroutput><ref refid="safe__data_8c_1adb1c4df097e41bfea517b0c4da97a411" kindref="member">SYS_INIT</ref></computeroutput> and panics on failure.  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_ALLOW_UNCHECKED_COMMIT</computeroutput>  </para>
+</entry><entry thead="no"><para>y (n at STRICT)  </para>
+</entry><entry thead="no"><para>Keep <computeroutput><ref refid="group__safe__data__container__apis_1ga12ad5dc864d048968014b783b7bdcafe" kindref="member">SAFE_COMMIT</ref></computeroutput> (reseal without verify) in the API surface.  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_GNU_EXTENSIONS</computeroutput>  </para>
+</entry><entry thead="no"><para>y (n at STRICT)  </para>
+</entry><entry thead="no"><para>Keep <computeroutput><ref refid="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" kindref="member">SAFE_SECTION</ref></computeroutput> (statement expressions, <computeroutput>__typeof__</computeroutput>) in the API surface.  </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>SAFE_DATA_FAULT_RETURN</computeroutput> / <computeroutput>_FAULT_HANDLER</computeroutput> / <computeroutput>_FAULT_PANIC</computeroutput>  </para>
+</entry><entry thead="no"><para>RETURN  </para>
+</entry><entry thead="no"><para>Control-flow reaction to an <emphasis>unrecoverable</emphasis> fault. Independently of it, a callback registered via <computeroutput><ref refid="group__safe__data__diag__apis_1gaf59812adbd045cc7780afb28bb754bf5" kindref="member">safe_data_fault_handler_register()</ref></computeroutput> receives <bold>all</bold> integrity events (recoveries, timeouts, overwrites, clamped mutator returns). The callback may run with the container lock held: it must not block or touch safe containers.  </para>
+</entry></row>
+</table>
+</para>
+<para>Return codes: <computeroutput>0</computeroutput> success, <computeroutput>-EILSEQ</computeroutput> unrecoverable corruption, <computeroutput>-EINVAL</computeroutput> bad args, <computeroutput><ref refid="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" kindref="member">SAFE_DATA_RECOVERED</ref></computeroutput> (<computeroutput>-EAGAIN</computeroutput>) for a shadow-coverable fault — from <computeroutput><ref refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" kindref="member">safe_data_verify()</ref></computeroutput> it means <emphasis>recoverable</emphasis> (pure check, payload untouched); from <computeroutput><ref refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" kindref="member">safe_data_verify_repair()</ref></computeroutput> (lock-held, used internally by read/update/<computeroutput><ref refid="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" kindref="member">SAFE_SECTION</ref></computeroutput>) it means <emphasis>repaired in place</emphasis>.</para>
+</sect1>
+<sect1 id="index_1autotoc_md10">
+<title>Workspace</title><para>The repository is its own west manifest (<computeroutput>west.yml</computeroutput>): Zephyr at a release tag plus the zdocs documentation engine, nothing else.</para>
+<para><programlisting filename=".sh"><codeline><highlight class="normal">west<sp/>init<sp/>-m<sp/>git@github.com:tiacsys/safety-toolbox.git<sp/>toolbox-ws</highlight></codeline>
+<codeline><highlight class="normal">cd<sp/>toolbox-ws</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>update</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>zephyr-export</highlight></codeline>
+<codeline><highlight class="normal">pip<sp/>install<sp/>-r<sp/>zephyr/scripts/requirements.txt</highlight></codeline>
+</programlisting></para>
+<para>All commands below run from the workspace root (<computeroutput>toolbox-ws/</computeroutput>).</para>
+</sect1>
+<sect1 id="index_1autotoc_md11">
+<title>Build &amp; run (native_sim)</title><para>The samples are self-contained applications and add this repository as a module themselves. On a 64-bit host without 32-bit multilib (e.g. aarch64), use <computeroutput>native_sim/native/64</computeroutput> in place of <computeroutput>native_sim</computeroutput>.</para>
+<para><programlisting filename=".sh"><codeline><highlight class="normal">#<sp/>atomic<sp/>read-modify-write,<sp/>scoped<sp/>section,<sp/>shadow<sp/>recovery</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>build<sp/>-p<sp/>always<sp/>-b<sp/>native_sim<sp/>-d<sp/>build/transaction<sp/>\</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>safety-toolbox/samples/transaction</highlight></codeline>
+<codeline><highlight class="normal">build/transaction/zephyr/zephyr.exe<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>#<sp/>Ctrl-C<sp/>to<sp/>stop<sp/>(idles<sp/>after<sp/>main)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>two<sp/>threads<sp/>sharing<sp/>one<sp/>protected<sp/>struct</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>build<sp/>-p<sp/>always<sp/>-b<sp/>native_sim<sp/>-d<sp/>build/producer_consumer<sp/>\</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>safety-toolbox/samples/producer_consumer</highlight></codeline>
+<codeline><highlight class="normal">build/producer_consumer/zephyr/zephyr.exe<sp/><sp/><sp/><sp/>#<sp/>Ctrl-C<sp/>to<sp/>stop<sp/>(idles<sp/>after<sp/>main)</highlight></codeline>
+</programlisting></para>
+</sect1>
+<sect1 id="index_1autotoc_md12">
+<title>Tests</title><para>The ztest suite has four twister scenarios (default, detection-only without the shadow copy, bounded locking, and the STRICT preset):</para>
+<para><programlisting filename=".sh"><codeline><highlight class="normal">west<sp/>twister<sp/>-T<sp/>safety-toolbox/tests<sp/>-p<sp/>native_sim<sp/>-O<sp/>twister-out</highlight></codeline>
+</programlisting></para>
+<para>The twister output directory is also the input to the generated test report (see <computeroutput>doc/README.md</computeroutput>).</para>
+</sect1>
+<sect1 id="index_1autotoc_md13">
+<title>Using the module</title><para>Add the repository to your own manifest, or pass it on the command line:</para>
+<para><programlisting filename=".sh"><codeline><highlight class="normal">west<sp/>build<sp/>-b<sp/>&lt;board&gt;<sp/>&lt;app&gt;<sp/>--<sp/>-DEXTRA_ZEPHYR_MODULES=&lt;path<sp/>to<sp/>safety-toolbox&gt;</highlight></codeline>
+</programlisting></para>
+</sect1>
+<sect1 id="index_1autotoc_md14">
+<title>Limitations / notes</title><para><itemizedlist>
+<listitem><para>With locking enabled (the default) containers are for <bold>thread context</bold> (the mutex must not be taken from an ISR). For data shared between threads <emphasis>and</emphasis> ISRs, use a spinlock-based variant (future work) or copy under the lock from a thread. With <computeroutput>CONFIG_SAFE_DATA_LOCKING=n</computeroutput> the API makes no blocking calls and may be used from a single context such as one ISR — but then no mutual exclusion is provided, so it must not be shared concurrently.</para>
+</listitem><listitem><para>Fully populate the payload before <computeroutput><ref refid="group__safe__data__container__apis_1ga3c8b6136d72cedd0d4cf96ab158a24f8" kindref="member">SAFE_INIT</ref></computeroutput> — the tag covers all <computeroutput>sizeof(payload)</computeroutput> bytes including any padding. <computeroutput><ref refid="group__safe__data__container__apis_1ga3c8b6136d72cedd0d4cf96ab158a24f8" kindref="member">SAFE_INIT</ref></computeroutput> does not zero the struct; zero-initialise the instance (e.g. <computeroutput>static</computeroutput>) so padding is defined.</para>
+</listitem><listitem><para>Without <computeroutput>SAFE_DATA_REDUNDANT</computeroutput> there is no rollback buffer: a mutator that returns an error must not have modified the payload first (validate up front).</para>
+</listitem><listitem><para>The shadow scheme detects and recovers a <emphasis>single</emphasis> corrupted copy; a simultaneous double fault is reported as unrecoverable. </para>
+</listitem></itemizedlist>
+</para>
+</sect1>
+    </detaileddescription>
+    <location file="README.md"/>
+  </compounddef>
+</doxygen>

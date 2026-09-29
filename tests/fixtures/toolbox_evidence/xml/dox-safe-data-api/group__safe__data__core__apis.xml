@@ -1,0 +1,710 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="group__safe__data__core__apis" kind="group">
+    <compoundname>safe_data_core_apis</compoundname>
+    <title>Type-Erased Core</title>
+    <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="group__safe__data__core__apis_1ga3c770b1d01f6dc639227675746e109ce" prot="public" static="no">
+        <type>int(*</type>
+        <definition>typedef int(* safe_data_mutator_t) (void *payload, void *user)</definition>
+        <argsstring>)(void *payload, void *user)</argsstring>
+        <name>safe_data_mutator_t</name>
+        <briefdescription>
+<para>Mutator callback used by <ref refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" kindref="member">safe_data_update()</ref> / <ref refid="group__safe__data__container__apis_1ga8e7e35fe3c39ac028c21f85fb3b8c1cd" kindref="member">SAFE_UPDATE()</ref>. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Invoked with the lock held and the payload already verified. Mutate <computeroutput>payload</computeroutput> in place. Return 0 to commit (the integrity tag is resealed) or a negative errno to abort (the payload is rolled back / left as-is and NOT resealed). A positive return value is a contract violation: it is clamped to -EINVAL, the transaction aborts, and the event is counted in the statistics.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to the (verified) payload, cast to its real type. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>user</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Opaque user context forwarded from the call site. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 to commit, negative errno to abort the transaction. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="98" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="98" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="group__safe__data__core__apis_1gae355d680bd0bbcb20ca74d55bb584d4a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_init</definition>
+        <argsstring>(struct k_mutex *lock, void *payload, size_t len, uint32_t *crc, void *shadow)</argsstring>
+        <name>safe_data_init</name>
+        <param>
+          <type>struct k_mutex *</type>
+          <declname>lock</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t *</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>shadow</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-001"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Initialise the lock and seal the current payload contents. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Must be called once before any other operation. The payload should be fully written (no indeterminate padding) before sealing.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>lock</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Container mutex (initialised here). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Integrity tag storage. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes, or NULL if disabled. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success, -EINVAL on bad arguments. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="262" column="5" bodyfile="src/safe_data.c" bodystart="224" bodyend="237" declfile="include/safe_data/safe_data.h" declline="262" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_verify</definition>
+        <argsstring>(const void *payload, size_t len, uint32_t crc, const void *shadow)</argsstring>
+        <name>safe_data_verify</name>
+        <param>
+          <type>const void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>const void *</type>
+          <declname>shadow</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-003"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Verify payload integrity. Pure: read-only and lock-free; it NEVER modifies the payload, so it is safe to call concurrently with writers (a transient mismatch may then be reported - callers needing atomicity should use the higher-level helpers). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer to check. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stored integrity tag to check against. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes, or NULL if disabled. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 if valid, SAFE_DATA_RECOVERED (-EAGAIN) if corrupt but recoverable from the shadow copy (payload untouched), -EILSEQ if corrupt and unrecoverable, -EINVAL on bad args. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="281" column="5" bodyfile="src/safe_data.c" bodystart="277" bodyend="288" declfile="include/safe_data/safe_data.h" declline="281" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa49ae1298de9f012a2c2ffe79cc8e2cf6" compoundref="safe__data_8h" startline="116">SAFE_DATA_FAULT_KIND_UNRECOVERABLE</references>
+        <references refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</references>
+        <references refid="safe__data_8c_1a7305bfd3372aa8a6ec8e91403c419dfe" compoundref="safe__data_8c" startline="242" endline="275">verify_quiet</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_verify_repair</definition>
+        <argsstring>(void *payload, size_t len, uint32_t crc, void *shadow)</argsstring>
+        <name>safe_data_verify_repair</name>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>shadow</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-004"></requirement>
+          <requirement refid="requirement_SD-REQ-009"></requirement>
+          <requirement refid="requirement_SD-REQ-010"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Verify payload integrity and repair a recoverable fault in place. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>MUST be called with the container lock held (or with equivalent external mutual exclusion): the repair writes to the payload, and doing that concurrently with a writer would corrupt live data. The locked helpers (read/update/SAFE_SECTION) call this internally; after SAFE_DATA_RECOVERED the caller reseals the stored tag to make the repair durable.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer to check and, if recoverable, repair in place. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stored integrity tag to check against. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes, or NULL if disabled. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 if valid, SAFE_DATA_RECOVERED (-EAGAIN) if the payload was repaired from the shadow copy (reseal required), -EILSEQ if corrupt and unrecoverable, -EINVAL on bad args. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="305" column="5" bodyfile="src/safe_data.c" bodystart="290" bodyend="324" declfile="include/safe_data/safe_data.h" declline="305" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+        <references refid="safe__data_8c_1a2ce87b4befe9f0fd62a39c49e19c7a0c" compoundref="safe__data_8c" startline="74" endline="87">payload_matches_shadow</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa6895e8b209fe8afb0641382f18c9fa14" compoundref="safe__data_8h" startline="120">SAFE_DATA_FAULT_KIND_RECOVERED_PAYLOAD</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa80eb45f35d22f6ef676794b4537514fa" compoundref="safe__data_8h" startline="118">SAFE_DATA_FAULT_KIND_RECOVERED_TAG</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa49ae1298de9f012a2c2ffe79cc8e2cf6" compoundref="safe__data_8h" startline="116">SAFE_DATA_FAULT_KIND_UNRECOVERABLE</references>
+        <references refid="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" compoundref="safe__data_8h" startline="83">SAFE_DATA_RECOVERED</references>
+        <references refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</references>
+        <references refid="safe__data_8c_1a7305bfd3372aa8a6ec8e91403c419dfe" compoundref="safe__data_8c" startline="242" endline="275">verify_quiet</references>
+        <referencedby refid="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" compoundref="safe__data_8c" startline="326" endline="352">safe_data_read</referencedby>
+        <referencedby refid="group__safe__data__diag__apis_1gadee7fa4b7d5afaef9b625d4bc2c4a1b3" compoundref="safe__data_8c" startline="490" endline="546">safe_data_selftest</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" compoundref="safe__data_8c" startline="386" endline="451">safe_data_update</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_read</definition>
+        <argsstring>(struct k_mutex *lock, void *payload, size_t len, uint32_t *crc, void *shadow, void *out)</argsstring>
+        <name>safe_data_read</name>
+        <param>
+          <type>struct k_mutex *</type>
+          <declname>lock</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t *</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>shadow</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>out</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-005"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Verify under lock and copy the payload out to <computeroutput>out</computeroutput>. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>A recoverable fault is repaired and resealed before copying, so a 0 return always means <computeroutput>out</computeroutput> holds a valid snapshot.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>lock</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Container mutex, or NULL to skip locking. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Integrity tag storage (resealed after a repair). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes, or NULL if disabled. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination buffer of <computeroutput>len</computeroutput> bytes for the validated copy. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success (incl. recovered), -EILSEQ if unrecoverable, -EINVAL on bad args, -ETIMEDOUT if the lock bound expired. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="325" column="5" bodyfile="src/safe_data.c" bodystart="326" bodyend="352" declfile="include/safe_data/safe_data.h" declline="325" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa653cb077246ba485bd1f3ed90f8295f8" compoundref="safe__data_8h" startline="122">SAFE_DATA_FAULT_KIND_LOCK_TIMEOUT</references>
+        <references refid="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" compoundref="safe__data_8h" startline="83">SAFE_DATA_RECOVERED</references>
+        <references refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" compoundref="safe__data_8c" startline="290" endline="324">safe_data_verify_repair</references>
+        <references refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__core__apis_1ga8e7e3cfa5544a70471a2e8dca7fc35f9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_write</definition>
+        <argsstring>(struct k_mutex *lock, void *payload, size_t len, uint32_t *crc, void *shadow, const void *in)</argsstring>
+        <name>safe_data_write</name>
+        <param>
+          <type>struct k_mutex *</type>
+          <declname>lock</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t *</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>shadow</declname>
+        </param>
+        <param>
+          <type>const void *</type>
+          <declname>in</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-006"></requirement>
+          <requirement refid="requirement_SD-REQ-018"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Copy <computeroutput>in</computeroutput> into the payload under lock and reseal the integrity tag. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>With CONFIG_SAFE_DATA_WRITE_CHECKS_OLD the previous contents are verified first; a detected corruption is reported (stats + fault callback, kind OVERWRITTEN) but does not change the outcome of the write.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>lock</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Container mutex, or NULL to skip locking. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer (overwritten). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Integrity tag storage (resealed). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes, or NULL if disabled. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>in</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Source buffer of <computeroutput>len</computeroutput> bytes to copy into the payload. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success, -EINVAL on bad args, -ETIMEDOUT if the lock bound expired. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="347" column="5" bodyfile="src/safe_data.c" bodystart="354" bodyend="384" declfile="include/safe_data/safe_data.h" declline="347" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa653cb077246ba485bd1f3ed90f8295f8" compoundref="safe__data_8h" startline="122">SAFE_DATA_FAULT_KIND_LOCK_TIMEOUT</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa92d1691bb9efe6dd1ae932ce26ba29d4" compoundref="safe__data_8h" startline="124">SAFE_DATA_FAULT_KIND_OVERWRITTEN</references>
+        <references refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</references>
+        <references refid="safe__data_8c_1a7305bfd3372aa8a6ec8e91403c419dfe" compoundref="safe__data_8c" startline="242" endline="275">verify_quiet</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_update</definition>
+        <argsstring>(struct k_mutex *lock, void *payload, size_t len, uint32_t *crc, void *shadow, safe_data_mutator_t fn, void *user)</argsstring>
+        <name>safe_data_update</name>
+        <param>
+          <type>struct k_mutex *</type>
+          <declname>lock</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t *</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>shadow</declname>
+        </param>
+        <param>
+          <type><ref refid="group__safe__data__core__apis_1ga3c770b1d01f6dc639227675746e109ce" kindref="member">safe_data_mutator_t</ref></type>
+          <declname>fn</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>user</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-007"></requirement>
+          <requirement refid="requirement_SD-REQ-008"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Atomic read-modify-write: lock, verify, run <computeroutput>fn</computeroutput>, reseal on success. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>This is the correct &quot;checkout&quot;: the lock is held for the entire transaction and the integrity tag is resealed automatically, so it can never go stale.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>lock</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Container mutex, or NULL to skip locking. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer, verified before and resealed after <computeroutput>fn</computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Integrity tag storage (resealed on commit). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes, or NULL if disabled (without it an aborting mutator must not have modified the payload - there is no rollback buffer). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>fn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Mutator invoked with the lock held and the payload verified. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>user</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Opaque context forwarded to <computeroutput>fn</computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success, the mutator&apos;s negative return value if it aborts (a positive mutator return is clamped to -EINVAL), -EILSEQ if the pre-check fails unrecoverably, -EINVAL on bad args, -ETIMEDOUT if the lock bound expired. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="373" column="5" bodyfile="src/safe_data.c" bodystart="386" bodyend="451" declfile="include/safe_data/safe_data.h" declline="373" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa653cb077246ba485bd1f3ed90f8295f8" compoundref="safe__data_8h" startline="122">SAFE_DATA_FAULT_KIND_LOCK_TIMEOUT</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa79e05564a044a402ae5f3b06eeb31c53" compoundref="safe__data_8h" startline="126">SAFE_DATA_FAULT_KIND_MUTATOR_CLAMPED</references>
+        <references refid="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" compoundref="safe__data_8h" startline="83">SAFE_DATA_RECOVERED</references>
+        <references refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" compoundref="safe__data_8c" startline="290" endline="324">safe_data_verify_repair</references>
+        <references refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</references>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data__core__apis_1gaeb1df317ad3fc576ec5ff67d6cd4f3d3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int safe_data_commit</definition>
+        <argsstring>(struct k_mutex *lock, void *payload, size_t len, uint32_t *crc, void *shadow)</argsstring>
+        <name>safe_data_commit</name>
+        <param>
+          <type>struct k_mutex *</type>
+          <declname>lock</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>payload</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>len</declname>
+        </param>
+        <param>
+          <type>uint32_t *</type>
+          <declname>crc</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>shadow</declname>
+        </param>
+        <satisfies>
+          <requirement refid="requirement_SD-REQ-022"></requirement>
+        </satisfies>
+        <briefdescription>
+<para>Reseal after an explicit external modification (advanced use). Lock, recompute the integrity tag, unlock. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="warning"><para>Re-tags the current memory contents with NO verification - this can seal corrupted data. Only available with CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT (off at the Strict level).</para>
+</simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>lock</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Container mutex, or NULL to skip locking. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername><ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref></parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload buffer whose current contents are sealed as-is. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Payload size in bytes (&gt; 0). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>crc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Integrity tag storage (recomputed). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shadow</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Redundant shadow buffer of <computeroutput>len</computeroutput> bytes (refreshed), or NULL if disabled. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 on success, -EINVAL on bad args, -ETIMEDOUT if the lock bound expired.</para>
+</simplesect>
+<xrefsect id="kconfig_depends_1_kconfig_depends000003"><xreftitle>Depends on</xreftitle><xrefdescription><para>defined(CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT) </para>
+</xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="398" column="5" bodyfile="src/safe_data.c" bodystart="454" bodyend="472" declfile="include/safe_data/safe_data.h" declline="398" declcolumn="5"/>
+        <references refid="structsafe__data__fault__info_1a2e1608f3ddcfee1c9930ad2e1d7ad7f9" compoundref="safe__data_8h" startline="136">safe_data_fault_info::len</references>
+        <references refid="group__safe__data__diag__apis_1gga52ecdf754b20f11653a6e01a3d018adfa653cb077246ba485bd1f3ed90f8295f8" compoundref="safe__data_8h" startline="122">SAFE_DATA_FAULT_KIND_LOCK_TIMEOUT</references>
+        <references refid="safe__data_8c_1ac711a6d7430b6407ff17614a0ff1c0a8" compoundref="safe__data_8c" startline="168" endline="199">safe_event</references>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="group__safe__data__core__apis_1ga2e449be977ff002accc60ffdacd439d6" prot="public" static="no">
+        <name>SAFE_DATA_RECOVERED</name>
+        <initializer>(-EAGAIN)</initializer>
+        <briefdescription>
+<para>Return code for a fault that the redundant shadow copy covers. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>From <ref refid="group__safe__data__core__apis_1ga5a7ff94945a049416e8edc6f0d3f019a" kindref="member">safe_data_verify()</ref> (pure) it means the fault is <emphasis>recoverable</emphasis>: the payload was NOT modified. From <ref refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" kindref="member">safe_data_verify_repair()</ref> it means the payload has been repaired in place and is valid again once the tag is resealed. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/safe_data/safe_data.h" line="83" column="9" bodyfile="include/safe_data/safe_data.h" bodystart="83" bodyend="-1"/>
+        <referencedby refid="group__safe__data__core__apis_1ga38e1726bdca5cecc7803f8d5e16ee1c2" compoundref="safe__data_8c" startline="326" endline="352">safe_data_read</referencedby>
+        <referencedby refid="group__safe__data__diag__apis_1gadee7fa4b7d5afaef9b625d4bc2c4a1b3" compoundref="safe__data_8c" startline="490" endline="546">safe_data_selftest</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga22c753dd75eb10609dbc8cf9ad12a5f6" compoundref="safe__data_8c" startline="386" endline="451">safe_data_update</referencedby>
+        <referencedby refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" compoundref="safe__data_8c" startline="290" endline="324">safe_data_verify_repair</referencedby>
+        <referencedby refid="safe__data_8c_1a7305bfd3372aa8a6ec8e91403c419dfe" compoundref="safe__data_8c" startline="242" endline="275">verify_quiet</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>Type-erased core operations; all integrity logic in one audited place. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>Application code should prefer the typed container layer (<ref refid="group__safe__data__container__apis" kindref="compound">Containers and Typed Access</ref>) - the macros there only derive <computeroutput>(&amp;<ref refid="structpayload" kindref="compound" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-testspec/doxygen.tag">payload</ref>, sizeof(payload), &amp;crc, &amp;lock, shadow)</computeroutput> from a typed container and forward to these functions.</para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

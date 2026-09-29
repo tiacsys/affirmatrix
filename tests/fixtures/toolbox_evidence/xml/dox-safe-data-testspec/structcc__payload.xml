@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="structcc__payload" kind="struct" language="C++" prot="public">
+    <compoundname>cc_payload</compoundname>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structcc__payload_1a749d2e73da641010fe0c5313ef26be52" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t cc_payload::seq</definition>
+        <argsstring></argsstring>
+        <name>seq</name>
+        <qualifiedname>cc_payload::seq</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="423" column="10" bodyfile="tests/safe_data/src/main.c" bodystart="423" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structcc__payload_1a100f186ca62fa5ba8fe292634f47c34a" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t cc_payload::a</definition>
+        <argsstring></argsstring>
+        <name>a</name>
+        <qualifiedname>cc_payload::a</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="424" column="10" bodyfile="tests/safe_data/src/main.c" bodystart="424" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structcc__payload_1a80ba0e27ea3c045478d7929b73cff843" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t cc_payload::b</definition>
+        <argsstring></argsstring>
+        <name>b</name>
+        <qualifiedname>cc_payload::b</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="425" column="10" bodyfile="tests/safe_data/src/main.c" bodystart="425" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structcc__payload_1af41d6817a0478b65d2161f485e765d5a" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t cc_payload::sum</definition>
+        <argsstring></argsstring>
+        <name>sum</name>
+        <qualifiedname>cc_payload::sum</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="426" column="10" bodyfile="tests/safe_data/src/main.c" bodystart="426" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tests/safe_data/src/main.c" line="422" column="1" bodyfile="tests/safe_data/src/main.c" bodystart="422" bodyend="427"/>
+    <listofallmembers>
+      <member refid="structcc__payload_1a100f186ca62fa5ba8fe292634f47c34a" prot="public" virt="non-virtual"><scope>cc_payload</scope><name>a</name></member>
+      <member refid="structcc__payload_1a80ba0e27ea3c045478d7929b73cff843" prot="public" virt="non-virtual"><scope>cc_payload</scope><name>b</name></member>
+      <member refid="structcc__payload_1a749d2e73da641010fe0c5313ef26be52" prot="public" virt="non-virtual"><scope>cc_payload</scope><name>seq</name></member>
+      <member refid="structcc__payload_1af41d6817a0478b65d2161f485e765d5a" prot="public" virt="non-virtual"><scope>cc_payload</scope><name>sum</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

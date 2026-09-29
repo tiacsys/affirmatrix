@@ -14,7 +14,7 @@ from affirmatrix import drift, graph
 from affirmatrix.case import AffirmationStore
 from affirmatrix.cli import _judgement, _outcome
 from affirmatrix.config import Config
-from affirmatrix.records import EdgeReference, LinkState, RecordSource, hex_digest
+from affirmatrix.records import EdgeReference, LinkState, RecordSource
 from affirmatrix.sources.store import StoreError
 
 _SUSPECT_OR_BROKEN = frozenset(
@@ -63,8 +63,8 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     if args.json:
         _outcome.render_json(report)
     else:
-        print(f"nodes by kind: {report['nodesByKind']}")
-        print(f"edges by kind: {report['edgesByKind']}")
+        print(f"nodes by kind: {_outcome.counts_display(report['nodesByKind'])}")
+        print(f"edges by kind: {_outcome.counts_display(report['edgesByKind'])}")
         print(f"pending: {pending}")
     return _outcome.exit_for(_outcome.POSITIVE)
 
@@ -76,6 +76,12 @@ def handle_status(args: argparse.Namespace, config: Config, store: AffirmationSt
     :implements: SEG-SREQ-081
     :implements: SEG-SREQ-082
     :implements: SEG-SREQ-083
+    :implements: SEG-SREQ-137
+    :implements: SEG-SREQ-138
+
+    Every recorded edge the current stream no longer has is listed after the
+    rest, with no state, and takes no part in the verdict, which reads the
+    derived edges alone.
     """
     try:
         current = _judgement.resolve_current(args.current, config)
@@ -89,6 +95,10 @@ def handle_status(args: argparse.Namespace, config: Config, store: AffirmationSt
         _outcome.render_refusal(str(error), as_json=args.json)
         return _outcome.exit_for(_outcome.INDETERMINATE)
     rows = [_status_row(built, edge, store, verbose=args.verbose) for edge in built.edges]
+    rows += [
+        _vanished_row(edge)
+        for edge in sorted(derivation.vanished, key=lambda e: (e.from_id, e.to_id, e.kind))
+    ]
     if args.json:
         _outcome.render_json({"edges": rows})
     else:
@@ -105,6 +115,10 @@ def _current_or_case(
     if args.current is not None:
         return _judgement.resolve_current(args.current, config)
     return store
+
+
+def _vanished_row(edge) -> dict[str, object]:
+    return {"from": edge.from_id, "to": edge.to_id, "kind": edge.kind}
 
 
 def _status_row(built, edge, store: AffirmationStore, *, verbose: bool) -> dict[str, object]:
@@ -130,8 +144,8 @@ def _status_row(built, edge, store: AffirmationStore, *, verbose: bool) -> dict[
                     "endpoint": side,
                     "name": item.name,
                     "status": item.status.value,
-                    "recorded": _digest_display(item.recorded, verbose=verbose),
-                    "current": _digest_display(item.current, verbose=verbose),
+                    "recorded": _outcome.anchor_display(item.recorded, verbose=verbose),
+                    "current": _outcome.anchor_display(item.current, verbose=verbose),
                 }
                 for side, hashes in (("from", comparison.from_hashes), ("to", comparison.to_hashes))
                 for item in hashes
@@ -139,15 +153,13 @@ def _status_row(built, edge, store: AffirmationStore, *, verbose: bool) -> dict[
     return row
 
 
-def _digest_display(anchor, *, verbose: bool) -> str | None:
-    if anchor is None:
-        return None
-    return _outcome.hash_display(hex_digest(anchor.digest), verbose=verbose)
-
-
 def _print_status(rows: list[dict[str, object]]) -> None:
     for row in rows:
-        print(f"{row['from']} --[{row['kind']}]--> {row['to']} ({row['state']})")
+        head = f"{row['from']} --[{row['kind']}]--> {row['to']}"
+        if "state" not in row:
+            print(f"{head}  vanished from the current stream")
+            continue
+        print(f"{head} ({row['state']})")
         for item in row.get("comparison", []) or []:
             recorded = item["recorded"] if item["recorded"] is not None else "—"
             current = item["current"] if item["current"] is not None else "—"

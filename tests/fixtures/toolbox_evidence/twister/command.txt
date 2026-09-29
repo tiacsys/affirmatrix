@@ -1,0 +1,2 @@
+west twister -T safety-toolbox/tests -p native_sim/native/64 -O /wrk/z/ws-safety/twister-out-toolbox-r3 (cwd /wrk/z/ws-safety)
+2026-09-29T20:25:54+02:00

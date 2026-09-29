@@ -1,0 +1,487 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="group__safe__data" kind="group">
+    <compoundname>safe_data</compoundname>
+    <title>safe_data</title>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="group__safe__data_1gae55f6906f3e0f23cfce1987b1402dcac" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_init_and_verify</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_init_and_verify</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-001"></requirement>
+          <requirement refid="requirement_SD-REQ-003"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Init seals and verification passes. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>SAFE_INIT seals the freshly written payload; SAFE_VERIFY on the untouched container returns 0.</para>
+<para><xrefsect id="testids_1_testids000001"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_INIT_AND_VERIFY</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000001"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="44" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="44" bodyend="48"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga7f5ee866205c157f284b8cddd1df733c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_read_roundtrip</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_read_roundtrip</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-005"></requirement>
+          <requirement refid="requirement_SD-REQ-006"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Read returns the sealed value. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>A value written through SAFE_WRITE is returned bit-exact by a validated SAFE_READ.</para>
+<para><xrefsect id="testids_1_testids000002"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_READ_ROUNDTRIP</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000002"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="61" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="61" bodyend="70"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga5c68e87269a52acae345c5e6546a526f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_write_reseals</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_write_reseals</name>
+        <qualifier>obsolete</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-006"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Write replaces the payload and reseals. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>After SAFE_WRITE the container verifies clean and a subsequent read returns the new value: the tag can never go stale across a write.</para>
+<para>Status obsolete (demonstration of status handling): superseded by TC_SAFE_DATA_READ_ROUNDTRIP, which checks the resealed write through a validated read. The test still runs.</para>
+<para><xrefsect id="testids_1_testids000003"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_WRITE_RESEALS</para>
+</xrefdescription></xrefsect><xrefsect id="test_obsolete_1_test_obsolete000001"><xreftitle>Test Status: Obsolete</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="86" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="86" bodyend="96"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1gac032958aa2b97cbda5eb6163dcb22013" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_update_commits</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_update_commits</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-007"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Update commits a mutator transaction. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>SAFE_UPDATE runs the mutator under the lock and reseals on a zero return; the committed value is visible to the next read.</para>
+<para><xrefsect id="testids_1_testids000004"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_UPDATE_COMMITS</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000003"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="125" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="125" bodyend="134"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga8accdf3b41c892d614c2ff40d2cd1b6e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_update_abort_keeps_integrity</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_update_abort_keeps_integrity</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-007"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Aborted update leaves a consistent container. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>A mutator returning a negative errno aborts the transaction. With the redundant shadow the payload is rolled back to the pre-update value; without it the partial write is detectable via the (not resealed) tag.</para>
+<para><xrefsect id="testids_1_testids000005"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_UPDATE_ABORT_KEEPS_INTEGRITY</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000004"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="147" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="147" bodyend="168"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga3f85bb0775dce304dbf00a712a54896b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_section_scope</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_section_scope</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-021"></requirement>
+        </verifies>
+        <briefdescription>
+<para>SAFE_SECTION reseals at scope exit. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Modifications made through the typed pointer inside a SAFE_SECTION block are sealed automatically on normal scope exit and visible to the next read.</para>
+<para><xrefsect id="testids_1_testids000006"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_SECTION_SCOPE</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000001"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_GNU_EXTENSIONS</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000005"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="181" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="181" bodyend="198"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga1aa530087f0fc0668cf846fb41220eb2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_detects_corruption</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_detects_corruption</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-003"></requirement>
+          <requirement refid="requirement_SD-REQ-009"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Payload corruption detected; verification is pure. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Out-of-band payload corruption is detected by SAFE_VERIFY without modifying the payload (pure check). With the shadow copy the subsequent locked read repairs and reseals; without it the fault is unrecoverable.</para>
+<para><xrefsect id="testids_1_testids000007"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_DETECTS_CORRUPTION</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000006"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="212" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="212" bodyend="236"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga23a749d09e9ffd5cad209e73d3ee59b1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_verify_repair_fixes_in_place</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_verify_repair_fixes_in_place</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-004"></requirement>
+          <requirement refid="requirement_SD-REQ-009"></requirement>
+        </verifies>
+        <briefdescription>
+<para>verify_repair restores the payload in place </para>
+        </briefdescription>
+        <detaileddescription>
+<para><ref refid="group__safe__data__core__apis_1ga08da109c60349a5bd8f6fbe8af830704" kindref="member" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag">safe_data_verify_repair()</ref> (lock-held contract) restores a corrupted payload from the shadow copy in place; the container verifies clean afterwards.</para>
+<para><xrefsect id="testids_1_testids000008"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000002"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_REDUNDANT</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000007"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="250" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="250" bodyend="268"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga5f7531f9f7160986103c65a27e818ce0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_commit_reseals_external_write</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_commit_reseals_external_write</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-022"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Unchecked commit reseals an external modification. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>SAFE_COMMIT re-tags the current contents after an audited direct modification of the storage (only available with CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT).</para>
+<para><xrefsect id="testids_1_testids000009"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_COMMIT_RESEALS_EXTERNAL_WRITE</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000003"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000008"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="282" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="282" bodyend="302"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1gace41bb5522ab7162ea326c0724b53c50" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_stale_tag_recovers</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_stale_tag_recovers</name>
+        <qualifier>draft</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-009"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Stale tag with consistent data recovers. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>When only the stored tag is corrupted (payload and shadow agree), the fault is recoverable; a locked read makes the reseal durable.</para>
+<para>Status draft (demonstration of status handling): SD-REQ-009 is also verified by TC_SAFE_DATA_DETECTS_CORRUPTION and TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE. The test still runs.</para>
+<para><xrefsect id="testids_1_testids000010"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_STALE_TAG_RECOVERS</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000004"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_REDUNDANT</para>
+</xrefdescription></xrefsect><xrefsect id="test_draft_1_test_draft000001"><xreftitle>Test Status: Draft</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="319" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="319" bodyend="340"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga2922b4bbaf847eccc26f4732a1836ee8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_double_fault_unrecoverable</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_double_fault_unrecoverable</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-010"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Double fault is unrecoverable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Inconsistent corruption of payload AND shadow leaves no copy to vouch for the data: verification reports -EILSEQ.</para>
+<para><xrefsect id="testids_1_testids000011"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000005"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_REDUNDANT</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000009"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="353" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="353" bodyend="372"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga798956ba248b65c68f5d49a0c8d63a0b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_null_args</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_null_args</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-002"></requirement>
+        </verifies>
+        <briefdescription>
+<para>NULL and zero-size arguments are rejected. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Every API entry point rejects missing required pointers and zero-length payloads with -EINVAL (a NULL lock is legal: locking is optional).</para>
+<para><xrefsect id="testids_1_testids000012"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_NULL_ARGS</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000010"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="384" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="384" bodyend="413"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga147549439a2551b44676b636c8d1320b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_concurrent_access_is_serialised</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_concurrent_access_is_serialised</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-016"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Concurrent access never yields torn snapshots. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>A producer mutating dependent fields under SAFE_UPDATE and a consumer using SAFE_READ run concurrently for many iterations; the consumer never observes a snapshot violating the payload invariant.</para>
+<para><xrefsect id="testids_1_testids000013"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_CONCURRENT_ACCESS_IS_SERIALISED</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000011"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="495" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="495" bodyend="517"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga58409145190167c31bb10e1e89cafffc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_selftest</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_selftest</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-017"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Self-test reports a healthy mechanism. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><ref refid="group__safe__data__diag__apis_1gadee7fa4b7d5afaef9b625d4bc2c4a1b3" kindref="member" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag">safe_data_selftest()</ref> passes on a healthy system: CRC known-answer test plus a seal/corrupt/detect(/recover) round trip on a scratch container.</para>
+<para><xrefsect id="testids_1_testids000014"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_SELFTEST</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000006"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_SELFTEST</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000012"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="535" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="535" bodyend="542"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1gae736dcfeadc44bbadef9a8cecb217df9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_stats_count_events</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_stats_count_events</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-012"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Statistics count every integrity event. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Recovered-payload, recovered-tag and unrecoverable detections each increment their dedicated counter exactly once per detection.</para>
+<para><xrefsect id="testids_1_testids000015"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_STATS_COUNT_EVENTS</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000007"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_STATS</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000013"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="555" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="555" bodyend="594"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga79b76f168b941350a8cf6319474037b2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_fault_handler_events</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_fault_handler_events</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-011"></requirement>
+          <requirement refid="requirement_SD-REQ-013"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Registered handler receives all event kinds. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><ref refid="group__safe__data__diag__apis_1gaf59812adbd045cc7780afb28bb754bf5" kindref="member" external="/wrk/z/ws-safety/bdoc-toolbox-r3a/deploy/html/dox-safe-data-api/doxygen.tag">safe_data_fault_handler_register()</ref> accepts one callback (second registration is rejected with -EALREADY, re-registration is idempotent) and the callback receives recovery events as well as unrecoverable faults with a populated event descriptor.</para>
+<para><xrefsect id="testids_1_testids000016"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_FAULT_HANDLER_EVENTS</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000014"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="623" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="623" bodyend="657"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1ga21a7a26ee6df4663d818734e2372a72e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_update_clamps_positive_mutator_return</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_update_clamps_positive_mutator_return</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-008"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Positive mutator return is clamped and aborted. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>A mutator returning a positive value violates the contract: SAFE_UPDATE returns -EINVAL, the transaction aborts (rollback with shadow), and the violation is counted.</para>
+<para><xrefsect id="testids_1_testids000017"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_UPDATE_CLAMPS_POSITIVE_MUTATOR_RETURN</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000015"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="679" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="679" bodyend="703"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1gacd295aa8e39452735df6800a973e841b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_write_observes_overwritten_corruption</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_write_observes_overwritten_corruption</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-018"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Write observes corruption before overwriting. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>With CONFIG_SAFE_DATA_WRITE_CHECKS_OLD a write over corrupted contents still succeeds, but the destroyed evidence is counted in the statistics first.</para>
+<para><xrefsect id="testids_1_testids000018"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_WRITE_OBSERVES_OVERWRITTEN_CORRUPTION</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000008"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_WRITE_CHECKS_OLD </para>
+<para>CONFIG_SAFE_DATA_STATS</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000016"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="717" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="717" bodyend="738"/>
+      </memberdef>
+      <memberdef kind="function" id="group__safe__data_1gada2bf52c35a16ccdbc55a315af0ffde9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void test_lock_timeout_is_bounded_and_reported</definition>
+        <argsstring>(void)</argsstring>
+        <name>test_lock_timeout_is_bounded_and_reported</name>
+        <qualifier>active</qualifier>
+        <param>
+          <type>void</type>
+        </param>
+        <verifies>
+          <requirement refid="requirement_SD-REQ-014"></requirement>
+        </verifies>
+        <briefdescription>
+<para>Blocked access fails within the lock bound. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>While another thread holds the container lock, an access fails with -ETIMEDOUT within CONFIG_SAFE_DATA_LOCK_TIMEOUT_MS and the timeout is counted; the container is usable again after the holder releases.</para>
+<para><xrefsect id="testids_1_testids000019"><xreftitle>Test ID</xreftitle><xrefdescription><para>TC_SAFE_DATA_LOCK_TIMEOUT_IS_BOUNDED_AND_REPORTED</para>
+</xrefdescription></xrefsect><xrefsect id="kconfig_depends_1_kconfig_depends000009"><xreftitle>Depends on</xreftitle><xrefdescription><para>CONFIG_SAFE_DATA_LOCK_TIMEOUT_MS &gt; 0 </para>
+<para>CONFIG_SAFE_DATA_LOCKING</para>
+</xrefdescription></xrefsect><xrefsect id="test_active_1_test_active000017"><xreftitle>Test Status: Active</xreftitle><xrefdescription></xrefdescription></xrefsect></para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tests/safe_data/src/main.c" line="772" column="9" bodyfile="tests/safe_data/src/main.c" bodystart="772" bodyend="803"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

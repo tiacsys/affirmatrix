@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="indexpage" kind="page">
+    <compoundname>index</compoundname>
+    <title>Safe Data API — Test Specification (Doxygen)</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><anchor id="index_1md_doc_2dox_2safe-data-testspec_2mainpage"/></para>
+<para>Doxygen rendering of the annotated <computeroutput>ZTEST()</computeroutput> functions of the Safe Data API test application (<computeroutput>tests/safe_data</computeroutput>). The group hierarchy models the test structure:</para>
+<para><itemizedlist>
+<listitem><para><bold>Safe Data API Tests</bold> (<computeroutput><ref refid="group__all__tests" kindref="compound">Safe Data API Tests</ref></computeroutput>)<itemizedlist>
+<listitem><para><bold>Safe Data Test Suites</bold> (<computeroutput><ref refid="group__safe__data__tests" kindref="compound">Safe Data Test Suites</ref></computeroutput>)<itemizedlist>
+<listitem><para><bold>Safe Data Test Application</bold> (<computeroutput><ref refid="group__safe__data__module" kindref="compound">Safe Data Test Application</ref></computeroutput>, one per test app)<itemizedlist>
+<listitem><para>ztest suite <bold><computeroutput><ref refid="group__safe__data" kindref="compound">safe_data</ref></computeroutput></bold> (one doxygen group per <computeroutput>ZTEST_SUITE()</computeroutput>)</para>
+</listitem></itemizedlist>
+</para>
+</listitem></itemizedlist>
+</para>
+</listitem></itemizedlist>
+</para>
+</listitem></itemizedlist>
+</para>
+<para>The Sphinx test specification consumes the XML output of this build via the <computeroutput>testmodule</computeroutput> directive and turns every test case into a traceable sphinx-needs item. </para>
+    </detaileddescription>
+    <location file="doc/dox/safe-data-testspec/mainpage.md"/>
+  </compounddef>
+</doxygen>

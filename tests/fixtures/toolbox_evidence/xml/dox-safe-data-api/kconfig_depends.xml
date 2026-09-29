@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="kconfig_depends" kind="page">
+    <compoundname>kconfig_depends</compoundname>
+    <title>Kconfig dependencies</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><variablelist>
+<varlistentry><term>Global <ref refid="group__safe__data__container__apis_1ga12ad5dc864d048968014b783b7bdcafe" kindref="member">SAFE_COMMIT</ref>  (_c)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000004"/> defined(CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT)  </para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data__core__apis_1gaeb1df317ad3fc576ec5ff67d6cd4f3d3" kindref="member">safe_data_commit</ref>  (struct k_mutex *lock, void *payload, size_t len, uint32_t *crc, void *shadow)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000003"/> defined(CONFIG_SAFE_DATA_ALLOW_UNCHECKED_COMMIT)  </para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data__diag__apis_1gadee7fa4b7d5afaef9b625d4bc2c4a1b3" kindref="member">safe_data_selftest</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000001"/> defined(CONFIG_SAFE_DATA_SELFTEST)  </para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data__diag__apis_1ga57136221e2d494b50ffc15c5069b8f7c" kindref="member">safe_data_selftest_result</ref>  (void)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000002"/> defined(CONFIG_SAFE_DATA_SELFTEST)  </para>
+</listitem>
+<varlistentry><term>Global <ref refid="group__safe__data__container__apis_1ga44ad4716f7743e811a5547a1e8009a4f" kindref="member">SAFE_SECTION</ref>  (_c, _pvar)</term></varlistentry>
+<listitem><para><anchor id="kconfig_depends_1_kconfig_depends000005"/> defined(CONFIG_SAFE_DATA_GNU_EXTENSIONS) </para>
+</listitem>
+</variablelist>
+</para>
+    </detaileddescription>
+    <location file="kconfig_depends"/>
+  </compounddef>
+</doxygen>

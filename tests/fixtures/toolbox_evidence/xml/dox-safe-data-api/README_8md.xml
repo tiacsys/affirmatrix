@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="README_8md" kind="file" language="Markdown">
+    <compoundname>README.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">#<sp/>Safe<sp/>Data<sp/>API</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Generic<sp/>Zephyr<sp/>facility<sp/>for<sp/>protecting<sp/>a<sp/>variable<sp/>or<sp/>data<sp/>structure<sp/>with<sp/>an</highlight></codeline>
+<codeline><highlight class="normal">integrity<sp/>tag<sp/>(CRC),<sp/>an<sp/>optional<sp/>redundant<sp/>shadow<sp/>copy,<sp/>and<sp/>a<sp/>mutex<sp/>—<sp/>so<sp/>that</highlight></codeline>
+<codeline><highlight class="normal">data<sp/>integrity<sp/>is<sp/>guaranteed<sp/>*by<sp/>construction*<sp/>rather<sp/>than<sp/>by<sp/>remembering<sp/>to</highlight></codeline>
+<codeline><highlight class="normal">call<sp/>the<sp/>right<sp/>function<sp/>at<sp/>the<sp/>right<sp/>time.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>repository<sp/>is<sp/>also<sp/>a<sp/>self-contained<sp/>example<sp/>of<sp/>generated,<sp/>auditable<sp/>safety</highlight></codeline>
+<codeline><highlight class="normal">evidence.<sp/>Its<sp/>requirements,<sp/>annotated<sp/>tests<sp/>and<sp/>twister<sp/>results<sp/>are<sp/>rendered</highlight></codeline>
+<codeline><highlight class="normal">into<sp/>a<sp/>requirement<sp/>specification,<sp/>a<sp/>test<sp/>specification,<sp/>a<sp/>test<sp/>report<sp/>and<sp/>a</highlight></codeline>
+<codeline><highlight class="normal">traceability<sp/>matrix<sp/>(see<sp/>`doc/README.md`).</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Why</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">In<sp/>a<sp/>safety-critical<sp/>context,<sp/>RAM<sp/>and<sp/>stored<sp/>values<sp/>can<sp/>be<sp/>corrupted<sp/>by<sp/>SEUs,</highlight></codeline>
+<codeline><highlight class="normal">stack<sp/>overflow,<sp/>rogue<sp/>DMA,<sp/>or<sp/>plain<sp/>bugs.<sp/>A<sp/>container<sp/>bundles<sp/>the<sp/>data<sp/>with<sp/>an</highlight></codeline>
+<codeline><highlight class="normal">integrity<sp/>tag<sp/>and<sp/>serialises<sp/>every<sp/>access<sp/>so<sp/>that:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>every<sp/>mutation<sp/>reseals<sp/>the<sp/>tag<sp/>atomically<sp/>(it<sp/>can<sp/>never<sp/>go<sp/>stale),</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>every<sp/>read<sp/>verifies<sp/>before<sp/>handing<sp/>data<sp/>out,</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>corruption<sp/>is<sp/>either<sp/>**recovered**<sp/>(redundant<sp/>copy)<sp/>or<sp/>reported<sp/>via<sp/>a</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>**configurable**<sp/>reaction<sp/>(return<sp/>error<sp/>/<sp/>handler<sp/>/<sp/>panic)<sp/>—<sp/>not<sp/>always<sp/>a</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>hard<sp/>panic.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Layout</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">include/safe_data/safe_data.h<sp/><sp/><sp/>typed<sp/>macros<sp/>+<sp/>core<sp/>prototypes</highlight></codeline>
+<codeline><highlight class="normal">src/safe_data.c<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>type-erased<sp/>core<sp/>(one<sp/>audited<sp/>copy<sp/>of<sp/>the<sp/>logic)</highlight></codeline>
+<codeline><highlight class="normal">Kconfig,<sp/>CMakeLists.txt<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Zephyr<sp/>module<sp/>wiring</highlight></codeline>
+<codeline><highlight class="normal">zephyr/module.yml</highlight></codeline>
+<codeline><highlight class="normal">samples/config_guard<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>copy-in/out<sp/>style;<sp/>corruption<sp/>-&gt;<sp/>recover<sp/>defaults</highlight></codeline>
+<codeline><highlight class="normal">samples/transaction<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>atomic<sp/>RMW,<sp/>scoped<sp/>section,<sp/>shadow<sp/>recovery</highlight></codeline>
+<codeline><highlight class="normal">samples/producer_consumer<sp/><sp/><sp/><sp/><sp/><sp/><sp/>two<sp/>threads<sp/>share<sp/>one<sp/>struct;<sp/>lock<sp/>prevents<sp/>torn<sp/>reads</highlight></codeline>
+<codeline><highlight class="normal">tests/safe_data<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ztest<sp/>suite<sp/>(incl.<sp/>a<sp/>concurrency<sp/>test)</highlight></codeline>
+<codeline><highlight class="normal">doc/<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>requirements,<sp/>test<sp/>specification,<sp/>test<sp/>report</highlight></codeline>
+<codeline><highlight class="normal">west.yml<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>standalone<sp/>workspace<sp/>manifest</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Usage</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```c</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;safe_data/safe_data.h&gt;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">struct<sp/>system_config<sp/>{<sp/>int<sp/>temperature;<sp/>bool<sp/>fan_enabled;<sp/>};</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">SAFE_CONTAINER_DEFINE(safe_config,<sp/>struct<sp/>system_config);</highlight></codeline>
+<codeline><highlight class="normal">static<sp/>struct<sp/>safe_config<sp/>cfg;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">void<sp/>init(void)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>struct<sp/>system_config<sp/>v<sp/>=<sp/>{<sp/>.temperature<sp/>=<sp/>25<sp/>};</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>SAFE_INIT(&amp;cfg);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>/*<sp/>init<sp/>mutex<sp/>+<sp/>seal<sp/>current<sp/>contents<sp/>*/</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>SAFE_WRITE(&amp;cfg,<sp/>&amp;v);<sp/><sp/><sp/><sp/><sp/>/*<sp/>install<sp/>a<sp/>value<sp/>+<sp/>reseal<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*/</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Read<sp/>/<sp/>write<sp/>(copy<sp/>semantics<sp/>—<sp/>nothing<sp/>touches<sp/>storage<sp/>directly)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```c</highlight></codeline>
+<codeline><highlight class="normal">struct<sp/>system_config<sp/>local;</highlight></codeline>
+<codeline><highlight class="normal">if<sp/>(SAFE_READ(&amp;cfg,<sp/>&amp;local)<sp/>==<sp/>0)<sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/>/*<sp/>validated<sp/>snapshot<sp/>*/</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>local.temperature<sp/>=<sp/>90;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>SAFE_WRITE(&amp;cfg,<sp/>&amp;local);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>/*<sp/>install<sp/>+<sp/>reseal<sp/><sp/><sp/>*/</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Atomic<sp/>read-modify-write<sp/>(callback<sp/>transaction)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>lock<sp/>is<sp/>held<sp/>across<sp/>the<sp/>whole<sp/>transaction;<sp/>the<sp/>tag<sp/>is<sp/>resealed<sp/>on<sp/>success.</highlight></codeline>
+<codeline><highlight class="normal">If<sp/>the<sp/>mutator<sp/>returns<sp/>an<sp/>error<sp/>the<sp/>change<sp/>is<sp/>**rolled<sp/>back**<sp/>(when<sp/>the</highlight></codeline>
+<codeline><highlight class="normal">redundant<sp/>shadow<sp/>is<sp/>enabled)<sp/>and<sp/>the<sp/>error<sp/>is<sp/>propagated.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```c</highlight></codeline>
+<codeline><highlight class="normal">static<sp/>int<sp/>bump(void<sp/>*payload,<sp/>void<sp/>*user)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>struct<sp/>system_config<sp/>*c<sp/>=<sp/>payload;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>c-&gt;temperature<sp/>+=<sp/>*(int<sp/>*)user;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>return<sp/>(c-&gt;temperature<sp/>&gt;<sp/>125)<sp/>?<sp/>-ERANGE<sp/>:<sp/>0;<sp/><sp/><sp/>/*<sp/>abort<sp/>-&gt;<sp/>rollback<sp/>*/</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">int<sp/>delta<sp/>=<sp/>5;</highlight></codeline>
+<codeline><highlight class="normal">SAFE_UPDATE(&amp;cfg,<sp/>bump,<sp/>&amp;delta);</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Scoped<sp/>section<sp/>(plain-C<sp/>access,<sp/>auto<sp/>reseal<sp/>+<sp/>unlock)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>ergonomic<sp/>replacement<sp/>for<sp/>the<sp/>original<sp/>&quot;checkout<sp/>a<sp/>pointer<sp/>/<sp/>remember<sp/>to</highlight></codeline>
+<codeline><highlight class="normal">update&quot;<sp/>idea<sp/>—<sp/>but<sp/>the<sp/>lock<sp/>is<sp/>held<sp/>for<sp/>the<sp/>whole<sp/>block<sp/>and<sp/>the<sp/>tag<sp/>is<sp/>resealed</highlight></codeline>
+<codeline><highlight class="normal">automatically<sp/>at<sp/>the<sp/>end.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```c</highlight></codeline>
+<codeline><highlight class="normal">SAFE_SECTION(&amp;cfg,<sp/>p)<sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>/*<sp/>p<sp/>is<sp/>a<sp/>struct<sp/>system_config<sp/>*<sp/>*/</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>p-&gt;temperature<sp/>=<sp/>90;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>p-&gt;fan_enabled<sp/>=<sp/>(p-&gt;temperature<sp/>&gt;<sp/>85);</highlight></codeline>
+<codeline><highlight class="normal">}<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>/*<sp/>tag<sp/>resealed,<sp/>lock<sp/>released<sp/>here<sp/>*/</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">&gt;<sp/>Do<sp/>not<sp/>`return`<sp/>/<sp/>`break`<sp/>/<sp/>`goto`<sp/>out<sp/>of<sp/>a<sp/>`SAFE_SECTION`<sp/>block<sp/>—<sp/>that<sp/>would</highlight></codeline>
+<codeline><highlight class="normal">&gt;<sp/>skip<sp/>the<sp/>reseal<sp/>+<sp/>unlock.<sp/>`continue`<sp/>exits<sp/>the<sp/>block<sp/>cleanly.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Two<sp/>threads<sp/>sharing<sp/>a<sp/>container</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>mutex<sp/>embedded<sp/>in<sp/>each<sp/>container<sp/>(the<sp/>default)<sp/>serialises<sp/>every<sp/>access,<sp/>so<sp/>a</highlight></codeline>
+<codeline><highlight class="normal">reader<sp/>thread<sp/>can<sp/>never<sp/>observe<sp/>a<sp/>half-finished<sp/>update<sp/>from<sp/>a<sp/>writer<sp/>thread<sp/>—<sp/>each</highlight></codeline>
+<codeline><highlight class="normal">`SAFE_READ`<sp/>snapshot<sp/>is<sp/>internally<sp/>consistent<sp/>and<sp/>CRC-valid.<sp/>See</highlight></codeline>
+<codeline><highlight class="normal">`samples/producer_consumer`<sp/>for<sp/>a<sp/>runnable<sp/>demo:<sp/>a</highlight></codeline>
+<codeline><highlight class="normal">producer<sp/>mutates<sp/>a<sp/>multi-field<sp/>struct<sp/>with<sp/>an<sp/>invariant<sp/>(`sum<sp/>==<sp/>x<sp/>+<sp/>y`)<sp/>via</highlight></codeline>
+<codeline><highlight class="normal">`SAFE_UPDATE`<sp/>while<sp/>a<sp/>consumer<sp/>validates<sp/>snapshots<sp/>via<sp/>`SAFE_READ`;<sp/>the<sp/>invariant</highlight></codeline>
+<codeline><highlight class="normal">holds<sp/>on<sp/>every<sp/>read.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Reseal<sp/>after<sp/>an<sp/>external<sp/>modification</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">If<sp/>an<sp/>audited<sp/>low-level<sp/>path<sp/>writes<sp/>the<sp/>storage<sp/>directly,<sp/>`SAFE_COMMIT`<sp/>reseals<sp/>the</highlight></codeline>
+<codeline><highlight class="normal">tag<sp/>(and<sp/>refreshes<sp/>the<sp/>shadow)<sp/>over<sp/>the<sp/>current<sp/>contents<sp/>under<sp/>the<sp/>lock:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```c</highlight></codeline>
+<codeline><highlight class="normal">SAFE_COMMIT(&amp;cfg);<sp/><sp/><sp/>/*<sp/>recompute<sp/>the<sp/>integrity<sp/>tag<sp/>in<sp/>place<sp/>*/</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Configuration<sp/>(Kconfig)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">|<sp/>Option<sp/>|<sp/>Default<sp/>|<sp/>Meaning<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|--------|---------|---------|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA`<sp/>|<sp/>n<sp/>|<sp/>Enable<sp/>the<sp/>library<sp/>(selects<sp/>`CRC`).<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_LEVEL_BASIC`<sp/>/<sp/>`_LEVEL_ENHANCED`<sp/>/<sp/>`_LEVEL_STRICT`<sp/>|<sp/>BASIC<sp/>|<sp/>Integrity-level<sp/>preset.<sp/>ENHANCED<sp/>implies<sp/>redundancy<sp/>+<sp/>statistics;<sp/>STRICT<sp/>additionally<sp/>implies<sp/>boot<sp/>self-test<sp/>+<sp/>checked<sp/>writes<sp/>and<sp/>removes<sp/>`SAFE_COMMIT`/`SAFE_SECTION`<sp/>from<sp/>the<sp/>API<sp/>surface.<sp/>Implied<sp/>options<sp/>remain<sp/>individually<sp/>overridable.<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_CRC32_IEEE`<sp/>/<sp/>`_CRC16_CCITT`<sp/>/<sp/>`_CRC8_CCITT`<sp/>|<sp/>CRC32<sp/>|<sp/>Integrity-tag<sp/>algorithm.<sp/>A<sp/>compile-time<sp/>bound<sp/>ties<sp/>tag<sp/>strength<sp/>to<sp/>payload<sp/>size<sp/>(CRC-8<sp/>≤<sp/>16<sp/>B,<sp/>CRC-16<sp/>≤<sp/>256<sp/>B).<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_LOCKING`<sp/>|<sp/>y<sp/>|<sp/>Embed<sp/>a<sp/>`k_mutex`<sp/>in<sp/>each<sp/>container<sp/>and<sp/>serialise<sp/>access.<sp/>Disable<sp/>to<sp/>drop<sp/>the<sp/>mutex<sp/>when<sp/>a<sp/>container<sp/>is<sp/>only<sp/>touched<sp/>from<sp/>one<sp/>context<sp/>(caller<sp/>then<sp/>owns<sp/>mutual<sp/>exclusion).<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_LOCK_TIMEOUT_MS`<sp/>|<sp/>0<sp/>|<sp/>Bound<sp/>on<sp/>lock<sp/>acquisition;<sp/>on<sp/>expiry<sp/>the<sp/>operation<sp/>returns<sp/>`-ETIMEDOUT`<sp/>(counted<sp/>+<sp/>reported).<sp/>0<sp/>=<sp/>wait<sp/>forever.<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_REDUNDANT`<sp/>|<sp/>n<sp/>|<sp/>Keep<sp/>an<sp/>inverted<sp/>shadow<sp/>copy;<sp/>enables<sp/>recovery<sp/>+<sp/>RMW<sp/>rollback<sp/>(2×<sp/>payload<sp/>RAM).<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_STATS`<sp/>|<sp/>n<sp/>|<sp/>Global<sp/>fault/recovery<sp/>counters<sp/>via<sp/>`safe_data_stats_get()`<sp/>—<sp/>the<sp/>observability<sp/>hook<sp/>for<sp/>a<sp/>health<sp/>monitor.<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_WRITE_CHECKS_OLD`<sp/>|<sp/>n<sp/>|<sp/>Verify<sp/>old<sp/>contents<sp/>before<sp/>overwriting<sp/>(observe-only;<sp/>corruption<sp/>is<sp/>reported,<sp/>the<sp/>write<sp/>still<sp/>succeeds).<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_SELFTEST`<sp/>(+<sp/>`_SELFTEST_BOOT`)<sp/>|<sp/>n<sp/>|<sp/>`safe_data_selftest()`:<sp/>CRC<sp/>known-answer<sp/>test<sp/>+<sp/>seal/corrupt/detect/recover<sp/>round<sp/>trip.<sp/>`_BOOT`<sp/>runs<sp/>it<sp/>from<sp/>`SYS_INIT`<sp/>and<sp/>panics<sp/>on<sp/>failure.<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_ALLOW_UNCHECKED_COMMIT`<sp/>|<sp/>y<sp/>(n<sp/>at<sp/>STRICT)<sp/>|<sp/>Keep<sp/>`SAFE_COMMIT`<sp/>(reseal<sp/>without<sp/>verify)<sp/>in<sp/>the<sp/>API<sp/>surface.<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_GNU_EXTENSIONS`<sp/>|<sp/>y<sp/>(n<sp/>at<sp/>STRICT)<sp/>|<sp/>Keep<sp/>`SAFE_SECTION`<sp/>(statement<sp/>expressions,<sp/>`__typeof__`)<sp/>in<sp/>the<sp/>API<sp/>surface.<sp/>|</highlight></codeline>
+<codeline><highlight class="normal">|<sp/>`SAFE_DATA_FAULT_RETURN`<sp/>/<sp/>`_FAULT_HANDLER`<sp/>/<sp/>`_FAULT_PANIC`<sp/>|<sp/>RETURN<sp/>|<sp/>Control-flow<sp/>reaction<sp/>to<sp/>an<sp/>*unrecoverable*<sp/>fault.<sp/>Independently<sp/>of<sp/>it,<sp/>a<sp/>callback<sp/>registered<sp/>via<sp/>`safe_data_fault_handler_register()`<sp/>receives<sp/>**all**<sp/>integrity<sp/>events<sp/>(recoveries,<sp/>timeouts,<sp/>overwrites,<sp/>clamped<sp/>mutator<sp/>returns).<sp/>The<sp/>callback<sp/>may<sp/>run<sp/>with<sp/>the<sp/>container<sp/>lock<sp/>held:<sp/>it<sp/>must<sp/>not<sp/>block<sp/>or<sp/>touch<sp/>safe<sp/>containers.<sp/>|</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Return<sp/>codes:<sp/>`0`<sp/>success,<sp/>`-EILSEQ`<sp/>unrecoverable<sp/>corruption,<sp/>`-EINVAL`<sp/>bad</highlight></codeline>
+<codeline><highlight class="normal">args,<sp/>`SAFE_DATA_RECOVERED`<sp/>(`-EAGAIN`)<sp/>for<sp/>a<sp/>shadow-coverable<sp/>fault<sp/>—<sp/>from</highlight></codeline>
+<codeline><highlight class="normal">`safe_data_verify()`<sp/>it<sp/>means<sp/>*recoverable*<sp/>(pure<sp/>check,<sp/>payload<sp/>untouched);</highlight></codeline>
+<codeline><highlight class="normal">from<sp/>`safe_data_verify_repair()`<sp/>(lock-held,<sp/>used<sp/>internally<sp/>by</highlight></codeline>
+<codeline><highlight class="normal">read/update/`SAFE_SECTION`)<sp/>it<sp/>means<sp/>*repaired<sp/>in<sp/>place*.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Workspace</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>repository<sp/>is<sp/>its<sp/>own<sp/>west<sp/>manifest<sp/>(`west.yml`):<sp/>Zephyr<sp/>at<sp/>a</highlight></codeline>
+<codeline><highlight class="normal">release<sp/>tag<sp/>plus<sp/>the<sp/>zdocs<sp/>documentation<sp/>engine,<sp/>nothing<sp/>else.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```sh</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>init<sp/>-m<sp/>git@github.com:tiacsys/safety-toolbox.git<sp/>toolbox-ws</highlight></codeline>
+<codeline><highlight class="normal">cd<sp/>toolbox-ws</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>update</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>zephyr-export</highlight></codeline>
+<codeline><highlight class="normal">pip<sp/>install<sp/>-r<sp/>zephyr/scripts/requirements.txt</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">All<sp/>commands<sp/>below<sp/>run<sp/>from<sp/>the<sp/>workspace<sp/>root<sp/>(`toolbox-ws/`).</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Build<sp/>&amp;<sp/>run<sp/>(native_sim)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>samples<sp/>are<sp/>self-contained<sp/>applications<sp/>and<sp/>add<sp/>this<sp/>repository<sp/>as<sp/>a</highlight></codeline>
+<codeline><highlight class="normal">module<sp/>themselves.<sp/>On<sp/>a<sp/>64-bit<sp/>host<sp/>without<sp/>32-bit<sp/>multilib<sp/>(e.g.<sp/>aarch64),</highlight></codeline>
+<codeline><highlight class="normal">use<sp/>`native_sim/native/64`<sp/>in<sp/>place<sp/>of<sp/>`native_sim`.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```sh</highlight></codeline>
+<codeline><highlight class="normal">#<sp/>atomic<sp/>read-modify-write,<sp/>scoped<sp/>section,<sp/>shadow<sp/>recovery</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>build<sp/>-p<sp/>always<sp/>-b<sp/>native_sim<sp/>-d<sp/>build/transaction<sp/>\</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>safety-toolbox/samples/transaction</highlight></codeline>
+<codeline><highlight class="normal">build/transaction/zephyr/zephyr.exe<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>#<sp/>Ctrl-C<sp/>to<sp/>stop<sp/>(idles<sp/>after<sp/>main)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>two<sp/>threads<sp/>sharing<sp/>one<sp/>protected<sp/>struct</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>build<sp/>-p<sp/>always<sp/>-b<sp/>native_sim<sp/>-d<sp/>build/producer_consumer<sp/>\</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>safety-toolbox/samples/producer_consumer</highlight></codeline>
+<codeline><highlight class="normal">build/producer_consumer/zephyr/zephyr.exe<sp/><sp/><sp/><sp/>#<sp/>Ctrl-C<sp/>to<sp/>stop<sp/>(idles<sp/>after<sp/>main)</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Tests</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>ztest<sp/>suite<sp/>has<sp/>four<sp/>twister<sp/>scenarios<sp/>(default,<sp/>detection-only<sp/>without</highlight></codeline>
+<codeline><highlight class="normal">the<sp/>shadow<sp/>copy,<sp/>bounded<sp/>locking,<sp/>and<sp/>the<sp/>STRICT<sp/>preset):</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```sh</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>twister<sp/>-T<sp/>safety-toolbox/tests<sp/>-p<sp/>native_sim<sp/>-O<sp/>twister-out</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>twister<sp/>output<sp/>directory<sp/>is<sp/>also<sp/>the<sp/>input<sp/>to<sp/>the<sp/>generated<sp/>test<sp/>report</highlight></codeline>
+<codeline><highlight class="normal">(see<sp/>`doc/README.md`).</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Using<sp/>the<sp/>module</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Add<sp/>the<sp/>repository<sp/>to<sp/>your<sp/>own<sp/>manifest,<sp/>or<sp/>pass<sp/>it<sp/>on<sp/>the<sp/>command<sp/>line:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```sh</highlight></codeline>
+<codeline><highlight class="normal">west<sp/>build<sp/>-b<sp/>&lt;board&gt;<sp/>&lt;app&gt;<sp/>--<sp/>-DEXTRA_ZEPHYR_MODULES=&lt;path<sp/>to<sp/>safety-toolbox&gt;</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Limitations<sp/>/<sp/>notes</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>With<sp/>locking<sp/>enabled<sp/>(the<sp/>default)<sp/>containers<sp/>are<sp/>for<sp/>**thread<sp/>context**</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>(the<sp/>mutex<sp/>must<sp/>not<sp/>be<sp/>taken<sp/>from<sp/>an<sp/>ISR).<sp/>For<sp/>data<sp/>shared<sp/>between<sp/>threads</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>*and*<sp/>ISRs,<sp/>use<sp/>a<sp/>spinlock-based<sp/>variant<sp/>(future<sp/>work)<sp/>or<sp/>copy<sp/>under<sp/>the<sp/>lock</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>from<sp/>a<sp/>thread.<sp/>With<sp/>`CONFIG_SAFE_DATA_LOCKING=n`<sp/>the<sp/>API<sp/>makes<sp/>no<sp/>blocking</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>calls<sp/>and<sp/>may<sp/>be<sp/>used<sp/>from<sp/>a<sp/>single<sp/>context<sp/>such<sp/>as<sp/>one<sp/>ISR<sp/>—<sp/>but<sp/>then<sp/>no</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>mutual<sp/>exclusion<sp/>is<sp/>provided,<sp/>so<sp/>it<sp/>must<sp/>not<sp/>be<sp/>shared<sp/>concurrently.</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>Fully<sp/>populate<sp/>the<sp/>payload<sp/>before<sp/>`SAFE_INIT`<sp/>—<sp/>the<sp/>tag<sp/>covers<sp/>all</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>`sizeof(payload)`<sp/>bytes<sp/>including<sp/>any<sp/>padding.<sp/>`SAFE_INIT`<sp/>does<sp/>not<sp/>zero<sp/>the</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>struct;<sp/>zero-initialise<sp/>the<sp/>instance<sp/>(e.g.<sp/>`static`)<sp/>so<sp/>padding<sp/>is<sp/>defined.</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>Without<sp/>`SAFE_DATA_REDUNDANT`<sp/>there<sp/>is<sp/>no<sp/>rollback<sp/>buffer:<sp/>a<sp/>mutator<sp/>that</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>returns<sp/>an<sp/>error<sp/>must<sp/>not<sp/>have<sp/>modified<sp/>the<sp/>payload<sp/>first<sp/>(validate<sp/>up<sp/>front).</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>The<sp/>shadow<sp/>scheme<sp/>detects<sp/>and<sp/>recovers<sp/>a<sp/>*single*<sp/>corrupted<sp/>copy;<sp/>a</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>simultaneous<sp/>double<sp/>fault<sp/>is<sp/>reported<sp/>as<sp/>unrecoverable.</highlight></codeline>
+    </programlisting>
+    <location file="README.md"/>
+  </compounddef>
+</doxygen>
