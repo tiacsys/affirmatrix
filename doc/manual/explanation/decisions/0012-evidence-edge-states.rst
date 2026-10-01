@@ -4,10 +4,10 @@
 Status
 ------
 
-Accepted, 2026-10-01. Changes the states of the edges that carry a test
-outcome's evidence. The decision of ADR-0010 on where a revision comes from
-applies, with one difference per command (see *Where the revision comes
-from*).
+Superseded by ADR-0013, 2026-10-01. Accepted, 2026-10-01. Changes the
+states of the edges that carry a test outcome's evidence. The decision of
+ADR-0010 on where a revision comes from applies, with one difference per
+command (see *Where the revision comes from*).
 
 Context
 -------
