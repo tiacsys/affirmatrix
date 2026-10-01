@@ -162,3 +162,17 @@ def test_two_kinds_with_identical_content_still_differ() -> None:
         for kind in ("Requirement", "TestOutcome", "Waiver")
     }
     assert len(hashes) == 3
+
+
+# ── The evidence kinds: what the case does not store ────────────────────────
+
+
+def test_the_evidence_kinds_are_the_outcome_node_and_the_three_evidence_edges() -> None:
+    assert taxonomy.evidence_node_kinds() == frozenset({"TestOutcome"})
+    assert taxonomy.evidence_edge_kinds() == frozenset({"Confirms", "Witnesses", "Excuses"})
+
+
+def test_the_evidence_kinds_are_declared_kinds_and_no_evidence_edge_propagates() -> None:
+    assert taxonomy.evidence_node_kinds() <= taxonomy.node_kinds()
+    assert taxonomy.evidence_edge_kinds() <= taxonomy.edge_kinds()
+    assert taxonomy.evidence_edge_kinds().isdisjoint(taxonomy.propagating_edge_kinds())

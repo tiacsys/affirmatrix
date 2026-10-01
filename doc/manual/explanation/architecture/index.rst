@@ -23,6 +23,7 @@ module realizes.
    outcome-extractor
    affirmation-store-write-face
    affirmation-store-read-face
+   graph-builder
    drift-derivation
    affirmation-recorder
    package-gate

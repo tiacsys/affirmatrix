@@ -10,10 +10,12 @@ those records come from a stand-in: the **would-be store**, under
 ``tests/fixtures/``, a verbatim transcription of this repository taken at
 one commit — its 139 requirements as the specification exported them, its
 79 definitions carrying an ``:implements:`` field, and the ten-function
-verification suite together with that suite's own run. It is read through
-the same seam a real content extractor and outcome extractor will use
-once they exist, so nothing about this page changes when they land — only
-where the records come from.
+verification suite. It holds no test results: test evidence does not come
+from the store. It comes from run bundles, which the verbs that judge evidence
+read at the moment they judge (see :doc:`seal-and-prove`). The store is read
+through the same seam a real content extractor will use once it exists, so
+nothing about this page changes when it lands — only where the records come
+from.
 
 Sync the records
 ----------------
@@ -32,16 +34,13 @@ stream straight into the case (:need:`SEG-SREQ-072`):
 
    $ ls case/nodes case/edges
    case/edges:
-   confirms.jsonld
    implements.jsonld
    refines.jsonld
    verifies.jsonld
-   witnesses.jsonld
 
    case/nodes:
    implementations.jsonld
    requirements.jsonld
-   test_outcomes.jsonld
    test_specifications.jsonld
 
 Three things worth noticing before the next command:
@@ -65,19 +64,21 @@ Check the graph
 .. code-block:: console
 
    $ affirmatrix graph check
-   nodes by kind: Implementation 79, Requirement 139, TestOutcome 10, TestSpecification 10
-   edges by kind: Confirms 10, Implements 141, Refines 128, Verifies 10, Witnesses 12
-   pending: 301
+   nodes by kind: Implementation 79, Requirement 139, TestSpecification 10
+   edges by kind: Implements 141, Refines 128, Verifies 10
+   pending: 279
    $ echo $?
    0
 
 ``graph check`` answers one question: *can this record set be a graph at
 all?* It reports node and edge counts by kind and the count of pending
-edges — never a count of dangling endpoints (:need:`SEG-SREQ-077`). A kind
+strong edges (refines, verifies, implements) — never a count of dangling
+endpoints (:need:`SEG-SREQ-077`). The case holds no test evidence, so there
+is no other kind of edge to count. A kind
 the vocabulary does not declare, a duplicate identifier, a cycle in the
 refines relation — each of these is refused loudly, because the
 alternative is a graph that looks complete and is wrong. What
-``graph check`` does **not** judge is readiness: 301 pending edges is a
+``graph check`` does **not** judge is readiness: 279 pending edges is a
 perfectly consistent state. Pending is not a defect; it is the truthful
 description of a graph nobody has affirmed.
 
@@ -88,19 +89,16 @@ The same report, structured rather than rendered for a person to read:
    $ affirmatrix graph check --json
    {
      "edgesByKind": {
-       "Confirms": 10,
        "Implements": 141,
        "Refines": 128,
-       "Verifies": 10,
-       "Witnesses": 12
+       "Verifies": 10
      },
      "nodesByKind": {
        "Implementation": 79,
        "Requirement": 139,
-       "TestOutcome": 10,
        "TestSpecification": 10
      },
-     "pending": 301
+     "pending": 279
    }
 
 The exit code is the contract either way; ``--json`` only changes how the

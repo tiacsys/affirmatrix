@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from affirmatrix import case, commitment, drift, graph, proof
+from affirmatrix import case, commitment, drift, graph, proof, taxonomy
 from affirmatrix.cli import main
 from affirmatrix.records import EdgeRecord, LinkState
 from affirmatrix.sources.store import StoreLoader
@@ -62,11 +62,14 @@ def _minimal_store(root: Path) -> Path:
 
 
 def _ready_case(case_root: Path, store_root: Path) -> None:
-    """A case with SREQ-1's design edges affirmed active against the minimal store."""
+    """A case with SREQ-1's design edges affirmed active against the minimal store.
+
+    The case holds the design nodes only: it stores no test outcome.
+    """
     store = case.AffirmationStore(root=case_root)
     store.initialize()
     current = StoreLoader(root=store_root)
-    nodes = list(current.nodes())
+    nodes = [n for n in current.nodes() if n.kind not in taxonomy.evidence_node_kinds()]
     hashes = {n.local_id: commitment.node_hash(n.kind, n.content_hashes) for n in nodes}
     store.write_nodes(nodes)
     design_edges = (("TS-1", "SREQ-1", "Verifies"), ("pkg.fn", "SREQ-1", "Implements"))

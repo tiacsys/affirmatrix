@@ -15,7 +15,9 @@ test specification and test outcome is a node that carries hashes of its
 content. Each relationship between two nodes is an edge that carries a hash of
 both endpoints. A human affirms an edge, once, by recording a judgement that
 the two ends belong together; from then on the tool recomputes hashes and says
-whether the content the judgement was made over still holds.
+whether the content the judgement was made over still holds. Test evidence is
+not kept in the graph's store: a verdict builds it, at that time, from run
+bundles that the configuration names and identifies by digest.
 
 Three workflows sit on that mechanism:
 
@@ -27,6 +29,10 @@ Three workflows sit on that mechanism:
   active, directly outdated (its own content moved), transitively suspect (a
   strong edge it depends on is not active), doubly outdated (both at once) or
   broken (an endpoint is missing).
+- **Evidence.** Build the test outcomes and the edges that tie them to
+  specifications and implementations from the run bundles, when a verdict is
+  made. ``graph status`` reports them apart from the strong edges, and the gate
+  reads them.
 - **Evidence package.** For a chosen scope of requirements, check that the
   scope is ready, and if it is, seal it into four documents whose claims a
   reader can verify by recomputation.
@@ -74,9 +80,10 @@ Four things stand around the tool.
   a hand-transcribed fixture under ``tests/fixtures/``. The requirements reader,
   the content extractor and the outcome extractor are composed by the command
   line from the configured ``producer`` block into one current stream, which is
-  how a project with a sphinx-needs export, Doxygen output and twister run
-  artifacts builds its case. The outcome extractor reads each run under a
-  configured repository.
+  how a project with a sphinx-needs export, Doxygen output and run bundles
+  builds its case. The outcome extractor reads each run bundle under a
+  configured repository, checks its digest, and it is built only for the
+  verbs that judge evidence. The case stores no outcome and no evidence edge.
 
 Outside the tool: any write to git, continuous integration, and storage of
 content of any kind. A pipeline that wants to run the tool runs the command
@@ -345,7 +352,9 @@ therefore takes an explicit revision.
   one repository has no single revision to discover, and one must be given.
 - **A package binds its siblings by file name.** Only the design consistency
   proof is covered by the root; the evidence manifest names the other three
-  documents without a digest, so editing one does not disturb the root.
+  documents without a digest, so editing one does not disturb the root. The
+  manifest also lists the digests of the run bundles the package used; no seal
+  binds them yet, and the root does not cover them.
 - **A package carries no trace of who affirmed.** The root says which edges
   were sealed, not that anyone stood behind them; that record is the case's own
   commit history, which the package does not contain. For this reason there is
@@ -362,9 +371,9 @@ content files, so every content hash moves; every node hash and edge hash
 moves with them, so every affirmed edge goes suspect; and the operator
 re-affirms each at the new revision. That is the designed behaviour and not a
 defect: an affirmation was a judgement about specific content, and the content
-is different. Test outcomes from real runs carry their own run identifiers, so
-the transcribed outcomes do not move to new hashes; they vanish, and the new
-ones stand in their place. An anchor's repository will name a configured
+is different. The would-be store holds no test outcomes, and the case holds none either.
+Test evidence comes from run bundles, and each verb that judges evidence builds
+it again. An anchor's repository will name a configured
 repository rather than a path, which removes the need for an explicit revision
 wherever the configuration maps the name. Nothing else in the engine changes,
 because the input seam is the one place this swap touches.

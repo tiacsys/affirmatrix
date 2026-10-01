@@ -589,7 +589,7 @@ def test_store_backed_round_trip_derives_drift_and_leaves_the_case_unchanged(
     nodes = list(current.nodes())
     hashes = {node.local_id: node_hash_of(node) for node in nodes}
     strong = taxonomy.propagating_edge_kinds()
-    store.write_nodes(nodes)
+    store.write_nodes([n for n in nodes if n.kind not in taxonomy.evidence_node_kinds()])
     store.write_edges(
         [
             records.EdgeRecord(
@@ -601,9 +601,8 @@ def test_store_backed_round_trip_derives_drift_and_leaves_the_case_unchanged(
                     edge.from_id, edge.to_id, edge.kind, hashes[edge.from_id], hashes[edge.to_id]
                 ),
             )
-            if edge.kind in strong
-            else edge
             for edge in current.edges()
+            if edge.kind in strong
         ]
     )
 

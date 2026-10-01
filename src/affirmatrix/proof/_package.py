@@ -204,12 +204,20 @@ def assemble(
     snapshot_timestamp: datetime,
     evaluation_date: date,
     current_revision: str,
+    evidence_bundles: Mapping[str, str] | None = None,
 ) -> Package:
     """Collect a scope, judge it, and build its documents — or refuse.
 
     :implements: SEG-SREQ-035
     :implements: SEG-SREQ-046
     :implements: SEG-SREQ-048
+    :implements: SEG-SREQ-226
+
+    ``evidence_bundles`` maps the identifier of a test outcome to the digest
+    of the run bundle that supplied it. The manifest records the digest of
+    every bundle that supplied an outcome in the scope, an outcome the gate
+    set aside as stale included. Nothing here binds the digests to the design
+    root. Without the mapping the manifest records no digest.
 
     Composes :func:`check_readiness`. When the judgement is blocked, raises
     :class:`GenerationRefused` at this one point, before any document body
@@ -230,7 +238,9 @@ def assemble(
         DESIGN_CONSISTENCY_PROOF: _design_consistency_proof_document(scope, current_revision),
         EXECUTION_COVERAGE_RECORD: _execution_coverage_record_document(scope, report),
         COVERAGE_REPORT: coverage_report_document(report),
-        EVIDENCE_MANIFEST: _evidence_manifest_document(scope, current_revision),
+        EVIDENCE_MANIFEST: _evidence_manifest_document(
+            scope, current_revision, evidence_bundles or {}
+        ),
     }
     return Package(scope=scope, coverage_report=report, documents=documents)
 
@@ -449,7 +459,9 @@ def coverage_report_document(report: gates.CoverageReport) -> Mapping[str, objec
     }
 
 
-def _evidence_manifest_document(scope: Scope, current_revision: str) -> Mapping[str, object]:
+def _evidence_manifest_document(
+    scope: Scope, current_revision: str, evidence_bundles: Mapping[str, str]
+) -> Mapping[str, object]:
     """The evidence manifest: the package's scope, its totality, and its siblings.
 
     :implements: SEG-SREQ-038
@@ -472,6 +484,13 @@ def _evidence_manifest_document(scope: Scope, current_revision: str) -> Mapping[
         "designConsistencyProof": f"{DESIGN_CONSISTENCY_PROOF}.jsonld",
         "executionCoverageRecord": f"{EXECUTION_COVERAGE_RECORD}.jsonld",
         "coverageReport": f"{COVERAGE_REPORT}.jsonld",
+        "runBundles": sorted(
+            {
+                digest
+                for outcome_id, digest in evidence_bundles.items()
+                if outcome_id in scope.member_ids
+            }
+        ),
     }
 
 

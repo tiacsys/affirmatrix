@@ -60,6 +60,15 @@
       "type": "string",
       "minLength": 1,
       "description": "The coverage report document's file name, relative to this manifest's own directory."
+    },
+    "runBundles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "uniqueItems": true,
+      "description": "The digest of every run bundle that supplied a test outcome in the package's scope, sorted. Optional, so that a package written before run bundles were recorded still reads."
     }
   }
 }

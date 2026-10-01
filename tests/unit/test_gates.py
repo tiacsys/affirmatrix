@@ -988,8 +988,8 @@ def test_operators_path_from_bootstrap_blocked_to_ready(tmp_path: Path) -> None:
     all_edges = [*strong_edges, *evidence_edges]
 
     store = case.AffirmationStore(root=tmp_path / "case")
-    store.write_nodes(nodes)
-    store.write_edges(all_edges)
+    store.write_nodes([n for n in nodes if n is not run])
+    store.write_edges(strong_edges)
 
     current = Source(nodes, all_edges)
     node_by_id = {node.local_id: node for node in nodes}
@@ -1048,8 +1048,8 @@ def test_operators_path_from_unwaived_failure_to_excused_via_waiver(tmp_path: Pa
     all_edges = [*strong_edges, *evidence_edges]
 
     store = case.AffirmationStore(root=tmp_path / "case")
-    store.write_nodes(nodes)
-    store.write_edges(all_edges)
+    store.write_nodes([n for n in nodes if n is not run])
+    store.write_edges(strong_edges)
 
     current = Source(nodes, all_edges)
     blocked = graph.build(drift.derive(recorded=store, current=current))
@@ -1063,7 +1063,6 @@ def test_operators_path_from_unwaived_failure_to_excused_via_waiver(tmp_path: Pa
     excuse = waiver("WVR-1", expiry=date(2099, 1, 1))
     excusal_edge = excuses("WVR-1", "run-1/TS-1")
     store.write_nodes([excuse])
-    store.write_edges([excusal_edge])
 
     current_with_waiver = Source([*nodes, excuse], [*all_edges, excusal_edge])
     settled = graph.build(drift.derive(recorded=store, current=current_with_waiver))

@@ -85,6 +85,10 @@ strong edge genuinely awaiting its first affirmation. The refusal names the
 distinction directly: an evidence edge cannot be affirmed because
 re-execution, not judgement, is what would resolve it.
 
+The case stores no evidence edge (:doc:`affirmation-store-write-face`), so the
+refusal is reached only for an evidence edge that a producer supplies in the
+current stream; the selection of an edge verb never finds one in a case.
+
 ``affirmable`` therefore takes both the state and the kind::
 
    affirmation.affirmable(edge.state, edge.kind)

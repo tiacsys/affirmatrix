@@ -87,7 +87,6 @@ def _spoil_revision(bundle: Path) -> None:
     (bundle / "toolbox.sha").unlink()
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-231: no verb reads a bundle or refuses one")
 def test_a_refused_bundle_gives_exit_status_2_and_no_verdict(tmp_path: Path, capsys) -> None:
     """A run bundle that the extractor refuses gives exit status 2 and no verdict.
 
@@ -137,7 +136,6 @@ def test_a_refused_bundle_gives_exit_status_2_and_no_verdict(tmp_path: Path, cap
     assert not (tmp_path / "out" / "proofs").exists()
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-230: the configuration cannot name a bundle yet")
 def test_the_other_verbs_read_no_run_bundle(tmp_path: Path, capsys) -> None:
     """Case sync, case check, graph check, edge show and edge affirm read no run bundle.
 
@@ -182,7 +180,6 @@ def test_the_other_verbs_read_no_run_bundle(tmp_path: Path, capsys) -> None:
     assert run(capsys, "graph", "status", *opened.args(), "--revision", REVISION)[0] == 2
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-229: no verb builds evidence from a bundle")
 def test_the_verbs_that_judge_evidence_include_every_named_bundle(tmp_path: Path, capsys) -> None:
     """Proof check includes the test evidence of every run bundle the configuration names.
 
@@ -222,7 +219,6 @@ def test_the_verbs_that_judge_evidence_include_every_named_bundle(tmp_path: Path
     assert document["evidence"]["current"] + document["evidence"]["stale"] == 2 * OUTCOMES_PER_RUN
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-210: graph status reports no evidence section")
 def test_graph_status_reports_the_evidence_apart_with_its_counts(tmp_path: Path, capsys) -> None:
     """Graph status reports outcomes at the current revision and at another, and dangling edges.
 
@@ -245,9 +241,6 @@ def test_graph_status_reports_the_evidence_apart_with_its_counts(tmp_path: Path,
     assert {row["kind"] for row in document["edges"]} <= STRONG_KINDS
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-083: the builder hides a dangling evidence edge as pending"
-)
 def test_a_dangling_evidence_edge_gives_the_negative_status_verdict(tmp_path: Path, capsys) -> None:
     """A Confirms, Witnesses or Excuses edge that touches an absent node gives exit status 1.
 
@@ -272,9 +265,6 @@ def test_a_dangling_evidence_edge_gives_the_negative_status_verdict(tmp_path: Pa
     assert status == 1
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-210: graph status counts no dangling evidence edge"
-)
 def test_graph_status_counts_the_dangling_evidence_edges(tmp_path: Path, capsys) -> None:
     """The evidence section counts each evidence edge that touches an absent node.
 
@@ -295,9 +285,6 @@ def test_graph_status_counts_the_dangling_evidence_edges(tmp_path: Path, capsys)
     assert json.loads(out)["evidence"] == {"current": 1, "stale": 1, "dangling": 1}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-080: graph status lists evidence edges among its rows"
-)
 def test_graph_status_lists_strong_edges_only(tmp_path: Path, capsys) -> None:
     """Graph status gives a state for every strong edge and for no evidence edge.
 
@@ -339,7 +326,6 @@ def test_pending_strong_edges_leave_the_status_verdict_positive(tmp_path: Path, 
     assert status == 0
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-112: graph status checks no cleanliness")
 def test_graph_status_refuses_a_dirty_implementation_repository(tmp_path: Path, capsys) -> None:
     """Graph status refuses a discovered revision when the repository holds an untracked file.
 
@@ -389,7 +375,6 @@ def test_proof_verbs_refuse_a_dirty_implementation_repository(tmp_path: Path, ca
         assert status != 2
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-208: graph status asks for no revision")
 def test_no_obtainable_revision_cannot_be_judged(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -449,9 +434,6 @@ def _invalid_case(world) -> None:
     (world.case / "edges" / "refines.jsonld").write_text(json.dumps(document), encoding="utf-8")
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-211: a refused store read ends the verb with an exception"
-)
 def test_a_refused_store_read_is_a_request_the_command_cannot_judge(tmp_path: Path, capsys) -> None:
     """A verb that reads a case whose record fails its schema exits with status 2.
 
@@ -482,7 +464,6 @@ def test_a_refused_store_read_is_a_request_the_command_cannot_judge(tmp_path: Pa
     assert json.loads(out)["error"]
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-077: graph check counts evidence edges as pending")
 def test_graph_check_counts_pending_strong_edges_only(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:

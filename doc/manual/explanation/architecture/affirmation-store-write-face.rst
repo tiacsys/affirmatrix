@@ -53,6 +53,11 @@ acquire a home by accident; this way, giving it one is a deliberate edit.
 Documents are created when something is written to them. A kind nothing produces
 yet — a waiver, a call — has a name and a schema but no empty file.
 
+The case stores no test evidence. The documents ``test_outcomes``, ``confirms``,
+``witnesses`` and ``excuses`` stay in the layout and keep their schemas, because
+a case written before this rule holds them and the read face must still read
+them. The store never writes to them: see the next section but one.
+
 A case describes itself
 -----------------------
 
@@ -81,7 +86,14 @@ for that reason — one call rewrites one document per kind it touches:
 
    store.write_nodes(node_records)
    store.write_edges(edge_records)
+   store.write_records(node_records, edge_records)
    store.append_review_events(events)
+
+``write_records`` writes nodes and edges together. It validates both batches and
+checks the demotions before it rewrites the first document, so one refusal
+leaves every document as it was (:need:`SEG-SREQ-212`). Calling ``write_nodes``
+and then ``write_edges`` cannot promise that, because the nodes would already
+be written when the edges are refused. ``case sync`` uses ``write_records``.
 
 A rewrite reads what the document already holds, replaces the entries this call
 produced, keeps every other entry exactly as it was, sorts by identifier and
@@ -105,6 +117,22 @@ only within one filesystem, and a temporary file elsewhere would degrade it into
 a copy and reintroduce the half-written document. On any failure the temporary
 file is removed, so an interrupted run leaves neither a partial document nor a
 stray file.
+
+No test evidence in the case
+----------------------------
+
+A write that names a test outcome node, or an edge of kind ``Confirms``,
+``Witnesses`` or ``Excuses``, is refused before any byte is written
+(:need:`SEG-SREQ-227`). The refusal names the record and says that test
+evidence is built from run bundles when a verdict is made. This holds for every
+write method, and a batch that mixes an evidence record with others is refused
+whole: the other records are not written. Waiver nodes are not evidence in this
+sense and are written as before.
+
+The store can still remove such records. ``case sync`` reads what a case from
+before this rule holds and removes it with the ordinary removal operations,
+after it has written the derived stream (:need:`SEG-SREQ-228`; see
+:doc:`command-line-interface`).
 
 Affirmations are appended, never rewritten
 ------------------------------------------

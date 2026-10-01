@@ -64,6 +64,11 @@ _EDGE_KINDS = frozenset(
 #: what is actually needed.
 _PROPAGATING_EDGE_KINDS = frozenset({"Refines", "Verifies", "Implements"})
 
+#: The kinds that carry test evidence. The case stores none of them: evidence
+#: is built from run bundles when a verdict is made.
+_EVIDENCE_NODE_KINDS = frozenset({"TestOutcome"})
+_EVIDENCE_EDGE_KINDS = frozenset({"Confirms", "Witnesses", "Excuses"})
+
 
 def node_kinds() -> frozenset[str]:
     """The node kinds of the built-in safety-evidence graph type.
@@ -119,9 +124,27 @@ def content_hash_names(node_kind: str) -> frozenset[str]:
         raise ValueError(f"{node_kind!r} is not a declared node kind") from None
 
 
+def evidence_node_kinds() -> frozenset[str]:
+    """The node kinds that carry test evidence, which the case does not store.
+
+    :implements: SEG-SREQ-227
+    """
+    return _EVIDENCE_NODE_KINDS
+
+
+def evidence_edge_kinds() -> frozenset[str]:
+    """The edge kinds that carry test evidence, which the case does not store.
+
+    :implements: SEG-SREQ-227
+    """
+    return _EVIDENCE_EDGE_KINDS
+
+
 __all__ = [
     "content_hash_names",
     "edge_kinds",
+    "evidence_edge_kinds",
+    "evidence_node_kinds",
     "node_kinds",
     "propagates",
     "propagating_edge_kinds",

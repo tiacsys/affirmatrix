@@ -15,7 +15,7 @@ from affirmatrix import drift, graph, proof
 from affirmatrix.case import AffirmationStore
 from affirmatrix.cli import _judgement, _outcome
 from affirmatrix.config import Config
-from affirmatrix.sources import SourceError
+from affirmatrix.sources import SourceError, composed
 
 
 def add_check_arguments(parser: argparse.ArgumentParser) -> None:
@@ -38,8 +38,10 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
 
     :implements: SEG-SREQ-090
     :implements: SEG-SREQ-091
+    :implements: SEG-SREQ-229
+    :implements: SEG-SREQ-231
     """
-    built, error_status = _build(args, config, store)
+    built, _, error_status = _build(args, config, store)
     if built is None:
         return error_status
     try:
@@ -74,8 +76,11 @@ def handle_generate(args: argparse.Namespace, config: Config, store: Affirmation
     :implements: SEG-SREQ-092
     :implements: SEG-SREQ-093
     :implements: SEG-SREQ-094
+    :implements: SEG-SREQ-226
+    :implements: SEG-SREQ-229
+    :implements: SEG-SREQ-231
     """
-    built, error_status = _build(args, config, store)
+    built, current, error_status = _build(args, config, store)
     if built is None:
         return error_status
     try:
@@ -91,6 +96,7 @@ def handle_generate(args: argparse.Namespace, config: Config, store: Affirmation
             snapshot_timestamp=_judgement.resolve_timestamp(args.timestamp),
             evaluation_date=_judgement.resolve_evaluation_date(args.evaluation_date),
             current_revision=gate_revision,
+            evidence_bundles=composed.evidence_bundles(current),
         )
     except proof.ScopeError as error:
         _outcome.render_refusal(str(error), as_json=args.json)
@@ -122,19 +128,23 @@ def handle_generate(args: argparse.Namespace, config: Config, store: Affirmation
 
 
 def _build(args: argparse.Namespace, config: Config, store: AffirmationStore):
-    """The built graph over both streams, or ``(None, exit_status)`` on refusal."""
+    """The built graph and the current stream, or ``(None, None, exit_status)`` on refusal.
+
+    Both proof verbs judge test evidence, so the current stream includes the
+    configured run bundles and a bundle that is refused ends the verb here.
+    """
     try:
-        current = _judgement.resolve_current(args.current, config)
+        current = _judgement.resolve_current(args.current, config, evidence=True)
     except _judgement.JudgementError as error:
         _outcome.render_refusal(str(error), as_json=args.json)
-        return None, _outcome.exit_for(_outcome.INDETERMINATE)
+        return None, None, _outcome.exit_for(_outcome.INDETERMINATE)
     try:
         derivation = drift.derive(recorded=store, current=current)
         built = graph.build(derivation)
     except (graph.GraphError, drift.DriftError, SourceError) as error:
         _outcome.render_refusal(str(error), as_json=args.json)
-        return None, _outcome.exit_for(_outcome.INDETERMINATE)
-    return built, None
+        return None, None, _outcome.exit_for(_outcome.INDETERMINATE)
+    return built, current, None
 
 
 __all__ = ["add_check_arguments", "add_generate_arguments", "handle_check", "handle_generate"]

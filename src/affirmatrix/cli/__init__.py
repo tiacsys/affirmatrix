@@ -27,7 +27,7 @@ from importlib import metadata
 from pathlib import Path
 
 from affirmatrix import config as _config
-from affirmatrix.case import AffirmationStore
+from affirmatrix.case import AffirmationStore, AffirmationStoreError
 from affirmatrix.cli import _case, _edge, _graph, _judgement, _outcome, _proof
 
 
@@ -35,6 +35,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Parse arguments, dispatch to the named verb's handler, and return its exit status.
 
     :implements: SEG-SREQ-068
+    :implements: SEG-SREQ-211
 
     The one place a noun/verb pair resolves to a handler and the handler is
     called; nothing here judges anything the library did not already decide.
@@ -62,7 +63,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     store = AffirmationStore(root=resolved_config.case)
     try:
         return handler(args, resolved_config, store)
-    except _judgement.JudgementError as error:
+    except (_judgement.JudgementError, AffirmationStoreError) as error:
         _outcome.render_refusal(str(error), as_json=getattr(args, "json", False))
         return _outcome.exit_for(_outcome.INDETERMINATE)
 

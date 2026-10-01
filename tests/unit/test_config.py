@@ -19,6 +19,9 @@ import pytest
 
 from affirmatrix import config
 
+DIGEST_ONE = "sha256:" + "1" * 64
+DIGEST_TWO = "sha256:" + "2" * 64
+
 
 def test_every_parameter_defaults_when_the_file_is_absent(tmp_path: Path) -> None:
     """SEG-SREQ-119."""
@@ -233,8 +236,10 @@ producer:
     export: needs/impl.json
     doxygen: xml/src
   outcomes:
-    - {artifact: run1/report.json, revision: run1/rev, name: run1/name}
-    - {artifact: run2/report.json, revision: run2/rev, name: run2/name}
+    - bundle: run1
+      digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+    - bundle: run2
+      digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
 """
 
 
@@ -305,14 +310,14 @@ def test_the_implementation_export_and_doxygen_locations_are_carried(tmp_path: P
     )
 
 
-def test_each_runs_three_locations_are_carried_in_file_order(tmp_path: Path) -> None:
+def test_each_runs_bundle_and_digest_are_carried_in_file_order(tmp_path: Path) -> None:
     """SEG-SREQ-197."""
     producer = _producer(tmp_path)
     assert producer is not None
     base = tmp_path / "repo"
     assert producer.outcomes == (
-        config.RunInputs(base / "run1/report.json", base / "run1/rev", base / "run1/name"),
-        config.RunInputs(base / "run2/report.json", base / "run2/rev", base / "run2/name"),
+        config.RunInputs(base / "run1", DIGEST_ONE),
+        config.RunInputs(base / "run2", DIGEST_TWO),
     )
 
 
@@ -423,9 +428,9 @@ def test_outcomes_that_are_not_a_list_are_a_refusal(tmp_path: Path) -> None:
         _producer(tmp_path, "producer:\n  outcomes: nope\n")
 
 
-def test_an_outcome_missing_its_name_is_a_refusal(tmp_path: Path) -> None:
-    with pytest.raises(config.ConfigError, match=r"producer\.outcomes\[0\]\.name"):
-        _producer(tmp_path, "producer:\n  outcomes:\n    - {artifact: a, revision: r}\n")
+def test_an_outcome_missing_its_digest_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.outcomes\[0\]\.digest"):
+        _producer(tmp_path, "producer:\n  outcomes:\n    - {bundle: a}\n")
 
 
 def test_a_producer_sub_block_that_is_not_a_mapping_is_a_refusal(tmp_path: Path) -> None:
@@ -447,7 +452,8 @@ def test_a_runs_repository_name_is_carried(tmp_path: Path) -> None:
     """SEG-SREQ-197."""
     producer = _producer(
         tmp_path,
-        "producer:\n  outcomes:\n    - {artifact: a, revision: r, name: n, repository: evidence}\n",
+        "producer:\n  outcomes:\n"
+        f"    - {{bundle: a, digest: {DIGEST_ONE}, repository: evidence}}\n",
     )
     assert producer is not None and producer.outcomes[0].repository == "evidence"
 
@@ -455,7 +461,7 @@ def test_a_runs_repository_name_is_carried(tmp_path: Path) -> None:
 def test_a_run_without_a_repository_name_carries_none(tmp_path: Path) -> None:
     """SEG-SREQ-197."""
     producer = _producer(
-        tmp_path, "producer:\n  outcomes:\n    - {artifact: a, revision: r, name: n}\n"
+        tmp_path, f"producer:\n  outcomes:\n    - {{bundle: a, digest: {DIGEST_ONE}}}\n"
     )
     assert producer is not None and producer.outcomes[0].repository is None
 
@@ -464,5 +470,21 @@ def test_a_runs_repository_that_is_not_a_string_is_a_refusal(tmp_path: Path) -> 
     with pytest.raises(config.ConfigError, match=r"producer\.outcomes\[0\]\.repository"):
         _producer(
             tmp_path,
-            "producer:\n  outcomes:\n    - {artifact: a, revision: r, name: n, repository: 3}\n",
+            f"producer:\n  outcomes:\n    - {{bundle: a, digest: {DIGEST_ONE}, repository: 3}}\n",
         )
+
+
+@pytest.mark.parametrize("digest", ["abc", "sha256:ABC", "sha1:" + "1" * 40, "sha256:" + "1" * 63])
+def test_a_digest_that_is_not_sha256_and_64_lowercase_hex_digits_is_a_refusal(
+    tmp_path: Path, digest: str
+) -> None:
+    """SEG-SREQ-197."""
+    with pytest.raises(config.ConfigError, match=r"producer\.outcomes\[0\]\.digest"):
+        _producer(tmp_path, f"producer:\n  outcomes:\n    - {{bundle: a, digest: '{digest}'}}\n")
+
+
+def test_a_run_with_one_of_the_old_keys_is_refused_naming_it(tmp_path: Path) -> None:
+    """SEG-SREQ-197: the keys of a run before bundles are no longer read."""
+    text = f"producer:\n  outcomes:\n    - {{bundle: a, digest: {DIGEST_ONE}, revision: r}}\n"
+    with pytest.raises(config.ConfigError, match="'revision'"):
+        _producer(tmp_path, text)

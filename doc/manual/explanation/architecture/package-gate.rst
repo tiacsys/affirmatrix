@@ -119,6 +119,10 @@ reviewer signs — it is resolved by re-running the test, not by judgement. The
 list is sorted by kind, then source, then target, so two evaluations of the
 same graph produce the same worklist in the same order.
 
+A broken edge is listed with the detail ``broken`` also when it was never
+affirmed: the graph builder keeps that verdict (:doc:`graph-builder`) and does
+not read it as pending.
+
 Gaps land at the leaf
 -----------------------
 

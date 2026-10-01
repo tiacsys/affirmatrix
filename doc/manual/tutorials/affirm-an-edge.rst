@@ -4,7 +4,7 @@ Affirming an edge
 .. admonition:: Prerequisites
 
    - The synced, checked and committed graph from :doc:`build-the-graph` —
-     301 edges under ``case/``, all pending.
+     279 edges under ``case/``, all pending.
 
 An affirmation is a content-bound human judgement: *I reviewed this edge,
 between exactly these two pieces of content, and I stand behind it.* The
@@ -54,7 +54,7 @@ Fourteen edges: four ``Refines`` (the vocabulary requirements
 ``SEG-SREQ-029`` to ``032`` under ``SEG-SYS-009``), six ``Implements``
 (the taxonomy module and the graph builder against those requirements),
 and four ``Verifies`` (the verification tests against them). Why this
-subtree and not all 301? A fresh graph affirmed wholesale is a rubber
+subtree and not all 279? A fresh graph affirmed wholesale is a rubber
 stamp — and most of the other edges bind code
 that nothing verifies yet. Affirm what you have actually read.
 
@@ -125,12 +125,10 @@ a plain directory path rather than a repository. Ask without one:
    2
 
 Nothing was written. The revision to give is ``678f72f``, in full: the
-commit the would-be store was transcribed at and the verification suite's
-run was recorded against. That is the point at which the content the
+commit the would-be store was transcribed at. That is the point at which the content the
 graph holds hashes of was true, so it is the revision an affirmation over
 it is honest to record. The repository's current head would be wrong —
-it names content the store does not carry, and an outcome recorded
-against a different revision goes stale at the proof gate.
+it names content the store does not carry.
 
 (The dirty-anchor refusal, :need:`SEG-SREQ-108`, is not something this
 tutorial can show: nothing in the would-be store has a repository to be
@@ -261,11 +259,16 @@ Check where the graph stands:
    affirmatrix.affirmation.compose --[Implements]--> SEG-SREQ-024 (pending)
    $ affirmatrix graph status | grep -c '(active)'
    14
+   $ affirmatrix graph status | tail -1
+   evidence: 0 at the current revision, 0 at another revision, 0 dangling
 
-``graph status`` lists every edge with the state derived from the recorded
-and the current stream — 301 lines, of which the head is quoted here;
-fourteen are active, the other 287 remain pending. Pending edges do not
-fail the verdict, so it exits 0 (:need:`SEG-SREQ-082`).
+``graph status`` lists every strong edge with the state derived from the
+recorded and the current stream — 279 lines, of which the head is quoted
+here; fourteen are active, the other 265 remain pending. Pending edges do not
+fail the verdict, so it exits 0 (:need:`SEG-SREQ-082`). The last line is not
+an edge. It reports the test evidence apart from the edges, with its counts
+(:need:`SEG-SREQ-210`); this repository's case has no run bundle configured,
+so all three are zero.
 
 What is not affirmable
 ----------------------
@@ -298,18 +301,21 @@ exits 1 (:need:`SEG-SREQ-088`). Had one member been affirmable, the tool
 would have affirmed it, listed the others with their reasons the same way,
 and exited 0 (:need:`SEG-SREQ-087`).
 
-The other class is the evidence edges, ``Confirms`` and ``Witnesses``:
+The other class is the evidence edges, ``Confirms`` and ``Witnesses``. The
+case stores none of them: test evidence is built from run bundles when a
+verdict is made, never kept (:need:`SEG-SREQ-227`). So there is nothing to
+select:
 
 .. code-block:: console
 
    $ affirmatrix edge affirm --kind Confirms --from run-0001/SEG-TS-001 --role Maintainer --reason "x" --revision 678f72f5371cd69416adb9199ff0af54b706acdb
-   not affirmed: run-0001/SEG-TS-001 -> SEG-TS-001 (Confirms) (an evidence edge is resolved by re-execution, not by a judgement)
+   the selector matched no edge
    $ echo $?
-   1
+   2
 
 An evidence edge records that a run observed something; it is settled by
 running the test again, not by anyone's judgement, so no reason of yours
-can make it active. A ``broken`` edge — one with an endpoint that is gone
+could make it active. A ``broken`` edge — one with an endpoint that is gone
 — needs the endpoint fixed, not an affirmation.
 
 Bulk, or one at a time

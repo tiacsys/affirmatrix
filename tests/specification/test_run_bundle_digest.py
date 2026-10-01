@@ -21,8 +21,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import pytest
-
 from .evidence_support import CLEAN_BUNDLE, CLEAN_DIGEST, copy_bundle, recipe_digest
 
 SHELL_RECIPE = (
@@ -36,9 +34,6 @@ def _digest(path: Path) -> str:
     return outcomes.bundle_digest(path)
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-220: the extractor computes no digest of a run bundle"
-)
 def test_a_bundle_digest_is_the_sha256_of_its_file_list_by_path_and_content(
     tmp_path: Path,
 ) -> None:
@@ -70,9 +65,6 @@ def test_a_bundle_digest_is_the_sha256_of_its_file_list_by_path_and_content(
     assert _digest(copy_bundle(tmp_path, "elsewhere")) == f"sha256:{CLEAN_DIGEST}"
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-220: the extractor computes no digest of a run bundle"
-)
 def test_a_changed_byte_a_renamed_file_or_a_new_file_changes_the_digest(tmp_path: Path) -> None:
     """A changed byte, a renamed file or an added file changes the digest of a bundle.
 

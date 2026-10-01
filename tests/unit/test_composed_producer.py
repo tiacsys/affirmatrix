@@ -11,6 +11,7 @@ exist.
 from __future__ import annotations
 
 import json
+import shutil
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
@@ -19,12 +20,14 @@ import pytest
 from affirmatrix import config, graph
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
 from affirmatrix.sources import SourceError
-from affirmatrix.sources.composed import ComposedProducer, from_config
+from affirmatrix.sources.composed import ComposedProducer, evidence_bundles, from_config
 from affirmatrix.sources.content import ExtractorError
-from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
+from affirmatrix.sources.outcomes import TwisterOutcomeExtractor, bundle_digest
 from affirmatrix.sources.store import StoreLoader
 
 ConfigWriter = Callable[..., Path]
+
+EVIDENCE_SOURCES = Path(__file__).resolve().parents[1] / "fixtures" / "toolbox_evidence" / "sources"
 
 _DIGEST = bytes(32)
 SUBSTREAM_REQUIREMENT = "doc/requirement-specification/detailed.rst"
@@ -279,29 +282,27 @@ def test_from_config_surfaces_a_missing_source_file_as_a_source_error_when_strea
 
 # --- outcomes -----------------------------------------------------------------
 
-EVIDENCE = Path(__file__).resolve().parents[1] / "fixtures" / "toolbox_evidence"
+RUN_BUNDLES = Path(__file__).resolve().parents[1] / "fixtures" / "run_bundles"
 
 
-def _run(name_record: Path | None = None, **extra: str) -> dict[str, str]:
-    return {
-        "artifact": str(EVIDENCE / "twister" / "twister.json"),
-        "revision": str(EVIDENCE / "revisions" / "toolbox.sha"),
-        "name": str(name_record or EVIDENCE / "revisions" / "run.name"),
-        **extra,
-    }
+def _run(bundle: Path = RUN_BUNDLES / "clean", **extra: str) -> dict[str, str]:
+    """One configured run: the bundle and the digest it has."""
+    return {"bundle": str(bundle), "digest": bundle_digest(bundle), **extra}
 
 
 _MIRRORED = {
-    "toolbox": str(EVIDENCE / "sources"),
-    "evidence": str(EVIDENCE),
-    "mirror": str(EVIDENCE),
+    "toolbox": str(EVIDENCE_SOURCES),
+    "evidence": str(RUN_BUNDLES),
+    "mirror": str(RUN_BUNDLES),
 }
 
 
-def _name_record(tmp_path: Path, text: str) -> Path:
-    record = tmp_path / f"{text}.name"
-    record.write_text(text + "\n", encoding="utf-8")
-    return record
+def _second_bundle(directory: Path, name: str) -> Path:
+    """A copy of the clean bundle under ``directory``, with another run name."""
+    target = directory / name
+    shutil.copytree(RUN_BUNDLES / "clean", target)
+    (target / "run.name").write_text(f"{name}\n", encoding="utf-8")
+    return target
 
 
 def _extractors(source) -> list[TwisterOutcomeExtractor]:
@@ -323,13 +324,13 @@ def test_from_config_chains_the_outcome_extractor_after_the_content_extractor(
     assert kinds[60:] == ["TestOutcome"] * 76
 
 
-def test_from_config_anchors_an_outcome_at_its_repository_name_and_the_artifact_path(
+def test_from_config_anchors_an_outcome_at_its_repository_name_and_the_bundles_artifact_path(
     composed_config: ConfigWriter,
 ) -> None:
     source = from_config(_load(composed_config(outcomes=True)))
     outcomes = [n for n in source.nodes() if n.kind == "TestOutcome"]
     anchors = [a for n in outcomes for a in n.content_anchors.values()]
-    assert {(a.repository, a.path) for a in anchors} == {("evidence", "twister/twister.json")}
+    assert {(a.repository, a.path) for a in anchors} == {("evidence", "clean/twister.json")}
     assert all(a.locator.startswith("nodeid:") for a in anchors)
 
 
@@ -338,7 +339,7 @@ def test_from_config_takes_the_producers_repository_for_a_run_with_no_repository
 ) -> None:
     path = composed_config(
         requirements=False,
-        repositories={"toolbox": str(EVIDENCE)},
+        repositories={"toolbox": str(RUN_BUNDLES)},
         producer={"outcomes": [_run()]},
     )
     (extractor,) = _extractors(from_config(_load(path)))
@@ -350,26 +351,30 @@ def test_from_config_takes_the_producers_repository_for_a_run_with_no_repository
 def test_from_config_reads_the_runs_of_one_repository_with_one_extractor_in_file_order(
     composed_config: ConfigWriter, tmp_path: Path
 ) -> None:
-    second = _name_record(tmp_path, "run-two")
-    runs = [_run(repository="evidence"), _run(second, repository="evidence")]
-    path = composed_config(outcomes=True, producer={"outcomes": runs})
+    bundles = tmp_path / "bundles"
+    first, second = _second_bundle(bundles, "run-one"), _second_bundle(bundles, "run-two")
+    runs = [_run(first, repository="evidence"), _run(second, repository="evidence")]
+    path = composed_config(
+        outcomes=True,
+        repositories={"toolbox": str(EVIDENCE_SOURCES), "evidence": str(bundles)},
+        producer={"outcomes": runs},
+    )
     (extractor,) = _extractors(from_config(_load(path)))
-    assert [run.name.name for run in extractor.runs] == ["run.name", "run-two.name"]
+    assert [run.bundle.name for run in extractor.runs] == ["run-one", "run-two"]
 
 
 def test_from_config_builds_one_extractor_for_each_repository_the_runs_name(
     composed_config: ConfigWriter, tmp_path: Path
 ) -> None:
-    second = _name_record(tmp_path, "run-two")
     path = composed_config(
         outcomes=True,
         repositories=_MIRRORED,
-        producer={"outcomes": [_run(repository="evidence"), _run(second, repository="mirror")]},
+        producer={"outcomes": [_run(repository="evidence"), _run(repository="mirror")]},
     )
     extractors = _extractors(from_config(_load(path)))
     assert [(e.repository, e.root, len(e.runs)) for e in extractors] == [
-        ("evidence", EVIDENCE, 1),
-        ("mirror", EVIDENCE, 1),
+        ("evidence", RUN_BUNDLES, 1),
+        ("mirror", RUN_BUNDLES, 1),
     ]
 
 
@@ -377,7 +382,7 @@ def test_from_config_refuses_a_run_naming_a_repository_that_is_not_configured(
     composed_config: ConfigWriter,
 ) -> None:
     path = composed_config(producer={"outcomes": [_run(repository="nowhere")]})
-    with pytest.raises(SourceError, match=r"twister\.json names repository 'nowhere'"):
+    with pytest.raises(SourceError, match=r"clean names repository 'nowhere'"):
         from_config(_load(path))
 
 
@@ -408,3 +413,35 @@ def test_from_config_leaves_a_duplicate_identity_across_repositories_to_the_grap
     source = from_config(_load(path))
     with pytest.raises(graph.GraphError):
         graph.build(source)
+
+
+def test_from_config_without_evidence_reads_no_bundle(composed_config: ConfigWriter) -> None:
+    """SEG-SREQ-230: a bundle that does not exist refuses nothing until a verb needs it."""
+    path = composed_config(outcomes=True, producer={"outcomes": [_run()]})
+    document = path.read_text(encoding="utf-8").replace("clean", "absent")
+    path.write_text(document, encoding="utf-8")
+    source = from_config(_load(path), evidence=False)
+    assert _extractors(source) == []
+    with pytest.raises(SourceError, match="absent"):
+        from_config(_load(path))
+
+
+def test_from_config_without_evidence_still_checks_the_runs_repository_names(
+    composed_config: ConfigWriter,
+) -> None:
+    path = composed_config(producer={"outcomes": [_run(repository="nowhere")]})
+    with pytest.raises(SourceError, match="nowhere"):
+        from_config(_load(path), evidence=False)
+
+
+def test_a_composed_producer_gives_the_bundle_digest_of_each_outcome(
+    composed_config: ConfigWriter,
+) -> None:
+    source = from_config(_load(composed_config(outcomes=True)))
+    digests = evidence_bundles(source)
+    assert len(digests) == 76
+    assert set(digests.values()) == {bundle_digest(RUN_BUNDLES / "clean")}
+
+
+def test_a_source_that_is_not_composed_gives_no_bundle_digest(would_be_store_copy: Path) -> None:
+    assert evidence_bundles(StoreLoader(root=would_be_store_copy)) == {}

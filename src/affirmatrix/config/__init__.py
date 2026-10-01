@@ -34,11 +34,12 @@ The file is real YAML, read with ``yaml.safe_load``:
 The producer block may also name the inputs the extraction readers consume —
 ``repository``, ``requirements`` (``export``, ``types``, ``source``),
 ``specifications`` and ``implementations`` (each ``export`` and ``doxygen``),
-and a list of ``outcomes`` (each ``artifact``, ``revision`` and ``name``, and
-optionally ``repository``). Every named field of a sub-block present is
-required, except the ``repository`` of a run. It names the configured
-repository that the files of the run lie under, and the producer's repository
-is the default. A missing or mistyped field raises, naming its dotted key.
+and a list of ``outcomes`` (each ``bundle`` and ``digest``, and optionally
+``repository``). Every named field of a sub-block present is required, except
+the ``repository`` of a run. It names the configured repository that the
+bundle of the run lies under, and the producer's repository is the default. A
+run that gives the keys ``artifact``, ``revision`` or ``name`` is refused:
+those keys are no longer read. A missing or mistyped field raises, naming its dotted key.
 
 A relative path the file gives (``case``, ``producer.root``, every
 ``repositories`` value and every location under the producer's readers) is
@@ -59,6 +60,7 @@ carried elsewhere and is no part of this component's own.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -114,17 +116,16 @@ class ImplementationInputs:
 
 @dataclass(frozen=True, slots=True)
 class RunInputs:
-    """Where one run to be extracted is recorded.
+    """Where one run to be extracted is recorded, and the digest its record must have.
 
-    ``artifact`` is the run artifact, ``revision`` the record of the run's
-    full revision and ``name`` the record of the run's name. ``repository``
-    names the configured repository that the files of the run lie under, or
-    is ``None`` for the producer's own repository.
+    ``bundle`` is the run bundle, a directory. ``digest`` is the digest the
+    bundle is expected to have, as ``sha256:`` and 64 lowercase hex digits.
+    ``repository`` names the configured repository that the bundle lies
+    under, or is ``None`` for the producer's own repository.
     """
 
-    artifact: Path
-    revision: Path
-    name: Path
+    bundle: Path
+    digest: str
     repository: str | None = None
 
 
@@ -402,8 +403,12 @@ def _implementation_inputs(
     )
 
 
+_OLD_RUN_KEYS = ("artifact", "revision", "name")
+_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
+
+
 def _outcome_inputs(producer: Mapping[str, object], base: Path) -> tuple[RunInputs, ...]:
-    """Each run's artifact, revision record, name record and repository name, in file order.
+    """Each run's bundle, digest and repository name, in file order.
 
     :implements: SEG-SREQ-197
     """
@@ -417,15 +422,30 @@ def _outcome_inputs(producer: Mapping[str, object], base: Path) -> tuple[RunInpu
         where = f"producer.outcomes[{index}]"
         if not isinstance(run, Mapping):
             raise ConfigError(f"'{where}' must be a mapping")
+        old = [key for key in _OLD_RUN_KEYS if key in run]
+        if old:
+            raise ConfigError(
+                f"'{where}' gives the keys {', '.join(map(repr, old))}, which are no longer "
+                "read; a run gives 'bundle' and 'digest'"
+            )
         result.append(
             RunInputs(
-                artifact=_path(run, where, "artifact", base),
-                revision=_path(run, where, "revision", base),
-                name=_path(run, where, "name", base),
+                bundle=_path(run, where, "bundle", base),
+                digest=_digest(run, where),
                 repository=_run_repository(run, where),
             )
         )
     return tuple(result)
+
+
+def _digest(run: Mapping[str, object], where: str) -> str:
+    """The digest a run's bundle is expected to have: ``sha256:`` and 64 hex digits."""
+    value = _required(run, where, "digest")
+    if not isinstance(value, str) or not _DIGEST_PATTERN.fullmatch(value):
+        raise ConfigError(
+            f"'{where}.digest' must be 'sha256:' and 64 lowercase hex digits, not {value!r}"
+        )
+    return value
 
 
 def _run_repository(run: Mapping[str, object], where: str) -> str | None:

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from affirmatrix import case, commitment
+from affirmatrix import case, commitment, taxonomy
 from affirmatrix.cli import main
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
 from affirmatrix.sources.store import StoreLoader
@@ -74,9 +74,9 @@ def test_case_sync_writes_the_derived_stream_never_demoting(
     store.initialize()
 
     current = StoreLoader(root=would_be_store_copy)
-    nodes = list(current.nodes())
+    nodes = [n for n in current.nodes() if n.kind not in taxonomy.evidence_node_kinds()]
     hashes = {node.local_id: commitment.node_hash(node.kind, node.content_hashes) for node in nodes}
-    one_edge = next(iter(current.edges()))
+    one_edge = next(e for e in current.edges() if e.kind in taxonomy.propagating_edge_kinds())
     store.write_nodes(nodes)
     store.write_edges(
         [
@@ -385,15 +385,16 @@ def test_case_sync_over_a_composed_producer_writes_60_nodes_and_62_edges_all_pen
     assert {edge.state for edge in edges} == {LinkState.PENDING}
 
 
-def test_case_sync_over_a_composed_producer_with_outcomes_writes_136_nodes_214_edges_pending(
+def test_case_sync_over_a_composed_producer_with_outcomes_configured_writes_no_evidence(
     tmp_path: Path, composed_config
 ) -> None:
+    """SEG-SREQ-227, SEG-SREQ-230: the design is written, and no bundle is read for it."""
     status, _, root = _composed_sync(tmp_path, composed_config, outcomes=True)
     assert status == 0
     store = case.AffirmationStore(root=root)
-    assert sum(1 for _ in store.nodes()) == 136
+    assert sum(1 for _ in store.nodes()) == 60
     edges = list(store.edges())
-    assert len(edges) == 214
+    assert len(edges) == 62
     assert {edge.state for edge in edges} == {LinkState.PENDING}
 
 
@@ -430,3 +431,17 @@ def test_case_sync_with_an_absent_extractor_source_file_exits_2_without_a_traceb
     assert status == 2
     assert "cannot be read" in capsys.readouterr().out
     assert sum(1 for _ in case.AffirmationStore(root=root).nodes()) == 0
+
+
+def test_case_sync_over_a_store_with_outcomes_leaves_them_out_of_the_case(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-227, SEG-SREQ-228: the stream's outcomes and evidence edges are not written."""
+    root = _case_root(tmp_path)
+    status = main(["case", "init", "--case", str(root)])
+    status = main(["case", "sync", "--case", str(root), "--current", str(would_be_store_copy)])
+    store = case.AffirmationStore(root=root)
+    assert status == 0
+    assert "removed" not in capsys.readouterr().out
+    assert {node.kind for node in store.nodes()}.isdisjoint(taxonomy.evidence_node_kinds())
+    assert {edge.kind for edge in store.edges()}.isdisjoint(taxonomy.evidence_edge_kinds())

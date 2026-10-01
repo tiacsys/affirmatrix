@@ -7,10 +7,23 @@ from pathlib import Path
 
 import pytest
 
-from affirmatrix import case, commitment
+from affirmatrix import case, commitment, taxonomy
 from affirmatrix.cli import main
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
 from affirmatrix.sources.store import StoreLoader
+
+#: The would-be store holds test outcomes, so graph status asks for the
+#: implementation revision. No repository stands behind the store, so the
+#: tests give one.
+REVISION = ["--revision", "a-revision"]
+
+#: The revision the clean run bundle records for the implementation checkout.
+BUNDLE_REVISION = "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+
+
+def _design_nodes(current: StoreLoader) -> list[NodeRecord]:
+    """The store's nodes without its test outcomes, which the case does not store."""
+    return [n for n in current.nodes() if n.kind not in taxonomy.evidence_node_kinds()]
 
 
 def test_graph_check_reports_counts_by_kind_and_pending(
@@ -50,7 +63,16 @@ def test_graph_status_derives_every_edges_state(
     root = tmp_path / "case"
     case.AffirmationStore(root=root).initialize()
     status = main(
-        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy), "--json"]
+        [
+            "graph",
+            "status",
+            "--case",
+            str(root),
+            "--current",
+            str(would_be_store_copy),
+            "--json",
+            *REVISION,
+        ]
     )
     assert status == 0
     out = capsys.readouterr().out
@@ -76,7 +98,7 @@ def test_graph_status_with_only_pending_edges_is_the_positive_verdict(
     root = tmp_path / "case"
     case.AffirmationStore(root=root).initialize()
     status = main(
-        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy)]
+        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy), *REVISION]
     )
     assert status == 0
 
@@ -89,7 +111,7 @@ def test_graph_status_naming_a_suspect_or_broken_edge_is_the_negative_verdict(
     store = case.AffirmationStore(root=root)
     store.initialize()
     current = StoreLoader(root=would_be_store_copy)
-    nodes = list(current.nodes())
+    nodes = _design_nodes(current)
     hashes = {n.local_id: commitment.node_hash(n.kind, n.content_hashes) for n in nodes}
     target_edge = next(edge for edge in current.edges() if edge.kind == "Implements")
     store.write_nodes(nodes)
@@ -111,7 +133,7 @@ def test_graph_status_naming_a_suspect_or_broken_edge_is_the_negative_verdict(
         ]
     )
     status = main(
-        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy)]
+        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy), *REVISION]
     )
     assert status == 1
 
@@ -123,7 +145,7 @@ def test_graph_status_verbose_adds_the_per_hash_comparison(
     store = case.AffirmationStore(root=root)
     store.initialize()
     current = StoreLoader(root=would_be_store_copy)
-    nodes = list(current.nodes())
+    nodes = _design_nodes(current)
     hashes = {n.local_id: commitment.node_hash(n.kind, n.content_hashes) for n in nodes}
     edge = next(edge for edge in current.edges() if edge.kind == "Refines")
     from_node = next(n for n in nodes if n.local_id == edge.from_id)
@@ -168,6 +190,7 @@ def test_graph_status_verbose_adds_the_per_hash_comparison(
             str(would_be_store_copy),
             "--json",
             "-v",
+            *REVISION,
         ]
     )
     assert status == 0
@@ -176,7 +199,16 @@ def test_graph_status_verbose_adds_the_per_hash_comparison(
     assert '"matching"' in out
 
     text_status = main(
-        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy), "-v"]
+        [
+            "graph",
+            "status",
+            "--case",
+            str(root),
+            "--current",
+            str(would_be_store_copy),
+            "-v",
+            *REVISION,
+        ]
     )
     assert text_status == 0
     text_out = capsys.readouterr().out
@@ -210,7 +242,9 @@ def _case_with_a_vanished_edge(tmp_path: Path) -> Path:
 
 def _status_lines(root: Path, current: Path, capsys, *extra: str) -> tuple[int, list[str]]:
     capsys.readouterr()
-    status = main(["graph", "status", "--case", str(root), "--current", str(current), *extra])
+    status = main(
+        ["graph", "status", "--case", str(root), "--current", str(current), *REVISION, *extra]
+    )
     return status, capsys.readouterr().out.splitlines()
 
 
@@ -241,8 +275,9 @@ def test_graph_status_lists_vanished_edges_after_every_derived_edge(
     """SEG-SREQ-137: the vanished rows come last, so a leading slice of the listing is unchanged."""
     root = _case_with_a_vanished_edge(tmp_path)
     _, lines = _status_lines(root, would_be_store_copy, capsys)
-    assert lines[-1].startswith("SEG-GONE-1 --")
-    assert all("(" in line for line in lines[:-1])
+    rows = [line for line in lines if not line.startswith("evidence:")]
+    assert rows[-1].startswith("SEG-GONE-1 --")
+    assert all("(" in line for line in rows[:-1])
 
 
 def test_graph_status_pending_count_ignores_a_vanished_edge(
@@ -342,27 +377,66 @@ def test_graph_status_over_a_composed_producer_exits_0_with_every_edge_pending(
     assert {row["state"] for row in rows} == {"pending"}
 
 
-def test_graph_check_over_a_case_synced_with_outcomes_reports_214_pending(
+def test_graph_check_over_a_case_synced_with_outcomes_configured_reports_62_pending(
     tmp_path: Path, composed_config, capsys
 ) -> None:
+    """SEG-SREQ-077, SEG-SREQ-227: the case holds no outcome, so no evidence edge is counted."""
     _, root = _synced_from_composed(tmp_path, composed_config, outcomes=True)
     capsys.readouterr()
     status = main(["graph", "check", "--case", str(root), "--json"])
     report = json.loads(capsys.readouterr().out)
     assert status == 0
-    assert report["pending"] == 214
-    assert report["nodesByKind"]["TestOutcome"] == 76
-    assert report["edgesByKind"]["Confirms"] == 76
-    assert report["edgesByKind"]["Witnesses"] == 76
+    assert report["pending"] == 62
+    assert "TestOutcome" not in report["nodesByKind"]
+    assert set(report["edgesByKind"]) == {"Implements", "Refines", "Verifies"}
 
 
-def test_graph_status_over_a_producer_with_outcomes_exits_0_with_every_edge_pending(
+def test_graph_status_over_a_producer_with_outcomes_lists_strong_edges_and_counts_evidence(
     tmp_path: Path, composed_config, capsys
 ) -> None:
+    """SEG-SREQ-080, SEG-SREQ-210: the 62 strong edges are the rows; the 76 outcomes are counted."""
     config_path, root = _synced_from_composed(tmp_path, composed_config, outcomes=True)
     capsys.readouterr()
-    status = main(["--config", str(config_path), "graph", "status", "--case", str(root), "--json"])
-    rows = json.loads(capsys.readouterr().out)["edges"]
+    status = main(
+        [
+            "--config",
+            str(config_path),
+            "graph",
+            "status",
+            "--case",
+            str(root),
+            "--json",
+            "--revision",
+            BUNDLE_REVISION,
+        ]
+    )
+    document = json.loads(capsys.readouterr().out)
     assert status == 0
-    assert len(rows) == 214
-    assert {row["state"] for row in rows} == {"pending"}
+    assert len(document["edges"]) == 62
+    assert {row["state"] for row in document["edges"]} == {"pending"}
+    assert document["evidence"] == {"current": 76, "stale": 0, "dangling": 0}
+
+
+def test_graph_status_text_ends_with_the_evidence_counts(
+    tmp_path: Path, would_be_store_copy: Path, capsys
+) -> None:
+    """SEG-SREQ-210: the plain rendering names the three counts after the rows."""
+    root = tmp_path / "case"
+    case.AffirmationStore(root=root).initialize()
+    status = main(
+        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy), *REVISION]
+    )
+    last = capsys.readouterr().out.splitlines()[-1]
+    assert status == 0
+    assert last == "evidence: 0 at the current revision, 10 at another revision, 0 dangling"
+
+
+def test_graph_status_without_a_revision_over_a_stream_with_outcomes_cannot_be_judged(
+    tmp_path: Path, would_be_store_copy: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SEG-SREQ-208: the would-be store holds outcomes, and no repository gives a revision."""
+    monkeypatch.chdir(tmp_path)
+    root = tmp_path / "case"
+    case.AffirmationStore(root=root).initialize()
+    status = main(["graph", "status", "--case", str(root), "--current", str(would_be_store_copy)])
+    assert status == 2

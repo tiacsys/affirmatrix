@@ -26,8 +26,8 @@ Noun          Verb                Library call
                                    :meth:`~affirmatrix.case.AffirmationStore.missing_schemas`,
                                    record counts
 ``case``      ``sync``            :func:`~affirmatrix.drift.derive`, then
-                                   :meth:`~affirmatrix.case.AffirmationStore.write_nodes` /
-                                   :meth:`~affirmatrix.case.AffirmationStore.write_edges`
+                                   :meth:`~affirmatrix.case.AffirmationStore.write_records`,
+                                   then the removal of held test evidence
 ``case``      ``refresh``         :meth:`~affirmatrix.case.AffirmationStore.refresh_schemas`
 ``case``      ``remove``          :meth:`~affirmatrix.case.AffirmationStore.remove_edges`
 ``graph``     ``check``           :func:`affirmatrix.graph.build`
@@ -42,7 +42,8 @@ Noun          Verb                Library call
 ============  ==================  =============================================================
 
 A verb that needs the current stream (every one but ``case init``) resolves
-it in one order. ``--current <path>`` names a would-be store explicitly and
+it in one order. Only ``graph status``, ``proof check`` and ``proof generate``
+read run bundles into it (see "Test evidence" below). ``--current <path>`` names a would-be store explicitly and
 wins. Otherwise the producer is composed from the configuration: the
 requirements reader when ``producer.requirements`` is set, then the content
 extractor when ``producer.implementations`` or ``producer.specifications`` is
@@ -70,14 +71,15 @@ cannot map to a test specification without that export. A run that names a
 repository missing from ``repositories``, and outcomes without
 ``producer.specifications``, are each a request it could not judge (exit 2).
 
-A run artifact often lies outside the source checkout, for example in a build
+A run bundle often lies outside the source checkout, for example in a build
 directory. Map that directory to a repository name and give each run that name:
 
 .. code-block:: yaml
 
    repositories:
      source: /path/to/source
-     results: /path/to/build/twister-out
+     results: /path/to/build/bundles
+   implementation: source
    producer:
      repository: source
      specifications:
@@ -87,15 +89,72 @@ directory. Map that directory to a repository name and give each run that name:
        export: /path/to/needs/api-traceability/needs.json
        doxygen: /path/to/xml/dox-api
      outcomes:
-       - artifact: /path/to/build/twister-out/twister.json
-         revision: /path/to/build/revisions/source.sha
-         name: /path/to/build/revisions/run.name
+       - bundle: /path/to/build/bundles/run-2026-09-29
+         digest: sha256:f960023c5eacbe8c4a2fc2867d4d78c38bede4c02b1df6ac150f5804c8ca0043
          repository: results
 
-The artifact lies under the path of ``results``, so its anchor reads
-``twister.json`` in the repository ``results``. The ``revision`` and ``name``
-records are files that hold one line each. The key ``implementations`` is
-optional. Without it, no Witnesses edge is supplied.
+The bundle lies under the path of ``results``, so the anchor of an outcome
+reads ``run-2026-09-29/twister.json`` in the repository ``results``. The
+``digest`` is the one the bundle must have (:doc:`outcome-extractor`). The
+revision of each outcome is the revision the bundle records for the checkout
+that the top-level key ``implementation`` names (here ``source``, so the file
+``source.sha`` in the bundle). A new run is a new bundle and a new digest in the
+configuration. A run that still gives ``artifact``, ``revision`` or ``name`` is
+a refusal when the file is read. The key ``implementations`` is optional.
+Without it, no Witnesses edge is supplied.
+
+Test evidence
+-------------
+
+Test evidence is not stored in the case. A verb that judges evidence builds it
+from the configured run bundles every time it runs
+(:need:`SEG-SREQ-229`, :need:`SEG-SREQ-230`):
+
+* ``graph status``, ``proof check`` and ``proof generate`` read every
+  configured bundle and check its digest. Every bundle is checked, whatever
+  revision it records. A bundle that is refused (a wrong digest, a dirty
+  implementation checkout, no name, no run artifact, no revision) ends the verb
+  with exit status 2 and no verdict (:need:`SEG-SREQ-231`).
+* ``case sync``, ``case check``, ``graph check``, ``edge show`` and ``edge
+  affirm`` read no bundle. A configuration that names a bundle that does not
+  exist does not disturb them.
+
+The proof verbs always need the implementation revision (:need:`SEG-SREQ-112`).
+``graph status`` needs it only where the current stream holds a test outcome,
+and without one it needs neither a revision nor a clean tree. Given as
+``--revision`` it is used as it is. Otherwise it is discovered from the
+implementation repository, which must be clean, an untracked file included. If
+no revision can be obtained, including when git cannot read the configured
+repository, the verb exits with status 2 (:need:`SEG-SREQ-208`).
+
+``graph status`` reports the evidence apart from the strong edges. Its rows are
+the strong edges only. After them, the plain form ends with one line,
+``evidence: N at the current revision, N at another revision, N dangling``,
+and the JSON form has the section ``"evidence": {"current", "stale",
+"dangling"}`` (:need:`SEG-SREQ-210`). ``current`` and ``stale`` count test
+outcomes by whether their revision equals the one obtained; ``dangling`` counts
+evidence edges (Confirms, Witnesses, Excuses) that touch an absent node. An
+outcome at any revision never turns the verdict negative. A dangling evidence
+edge does, like a dangling strong edge (:need:`SEG-SREQ-083`).
+
+``case sync`` and test evidence
+-------------------------------
+
+``case sync`` writes the derived stream with all or nothing: if a record of it
+does not validate against the case's schema copy, it writes nothing and exits
+with status 2 (:need:`SEG-SREQ-212`). It leaves test outcomes and evidence
+edges that the stream holds out of what it writes, because the case stores
+none. After it has written, it removes every test outcome node and every
+evidence edge that the case still holds, and prints one ``removed:`` line for
+each. The held records are read, and so checked, before the write, so every
+refusal comes before the first removal; an interrupted run is finished by the
+next sync. A second sync has nothing to remove. A vanished evidence edge is not
+reported with the ``vanished:`` lines, because the removal covers it, and
+nothing in the case changes after a commit of the implementation repository.
+
+A refusal of the store to read a case (a record that fails its schema) is
+exit status 2, for every verb, and the JSON form of ``graph status`` then holds
+an ``error`` entry (:need:`SEG-SREQ-211`).
 
 The exit-status vocabulary
 ------------------------------
@@ -192,10 +251,14 @@ Key                                   Carries
 ``producer.root``                     the current stream's producer (default: none configured)
 ``producer.repository``, the reader   the readers' inputs; when any reader or run is set it supplies
 blocks and ``producer.outcomes``      the current stream and ``producer.root`` is ignored
-``producer.outcomes[].repository``    the repository a run's files lie under (default: the
+``producer.outcomes[].bundle``        the run bundle, a directory
+``producer.outcomes[].digest``        the digest the bundle must have, ``sha256:`` and 64 hex digits
+``producer.outcomes[].repository``    the repository a run's bundle lies under (default: the
                                       producer's repository)
 ``repositories.<name>``               a repository name an anchor may carry, mapped to its path
-``implementation``                    which configured repository is the implementation one
+``implementation``                    which configured repository is the implementation one, and
+                                      the checkout of a run bundle whose revision and dirty flag
+                                      decide
 ``roles``                             a list, the accepted affirmation roles
 ====================================  ===============================================================
 

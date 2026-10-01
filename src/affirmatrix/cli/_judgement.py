@@ -135,8 +135,11 @@ def resolve_gate_revision(config: Config, *, given: str | None) -> str:
             "no implementation repository is configured; a revision must be given "
             "explicitly (--revision)"
         )
-    revision = _repository.discover_revision(repository_path)
-    cleanliness = _repository.check_clean(repository_path, [Path(".")])
+    try:
+        revision = _repository.discover_revision(repository_path)
+        cleanliness = _repository.check_clean(repository_path, [Path(".")])
+    except _repository.RepositoryError as error:
+        raise JudgementError(f"the implementation repository cannot be read: {error}") from error
     if not cleanliness.clean:
         raise JudgementError(
             f"the implementation repository is dirty at {', '.join(cleanliness.dirty_paths)}; "
@@ -145,15 +148,19 @@ def resolve_gate_revision(config: Config, *, given: str | None) -> str:
     return str(revision)
 
 
-def resolve_current(current: str | None, config: Config) -> RecordSource:
+def resolve_current(current: str | None, config: Config, *, evidence: bool = True) -> RecordSource:
     """The producer supplying the current stream: given, configured, or refused.
 
     :implements: SEG-SREQ-142
+    :implements: SEG-SREQ-229
+    :implements: SEG-SREQ-230
 
     ``current`` names a would-be store explicitly and wins when given.
     Otherwise the producer is composed from the configuration: the configured
     readers when any is set, the would-be store at ``producer.root`` when none
-    is (see :func:`affirmatrix.sources.composed.from_config`). Absent all of
+    is (see :func:`affirmatrix.sources.composed.from_config`). ``evidence``
+    says whether the verb judges test evidence: only then are the configured
+    run bundles read, and a verb that passes false reads none. Absent all of
     them, or when a configured input cannot be read, the request cannot be
     judged — every such failure is a source error, folded into one exception
     here rather than asking each call site to catch several.
@@ -161,7 +168,7 @@ def resolve_current(current: str | None, config: Config) -> RecordSource:
     try:
         if current is not None:
             return StoreLoader(root=Path(current))
-        return composed.from_config(config)
+        return composed.from_config(config, evidence=evidence)
     except SourceError as error:
         raise JudgementError(str(error)) from error
 

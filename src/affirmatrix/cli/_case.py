@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import argparse
 
-from affirmatrix import drift, graph
+from affirmatrix import drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore, AffirmationStoreError
 from affirmatrix.cli import _judgement, _outcome, _selector
 from affirmatrix.config import Config
+from affirmatrix.records import EdgeRecord, NodeRecord
 from affirmatrix.sources import SourceError
 
 
@@ -81,30 +82,66 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
 
 
 def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
-    """Write the derived stream case sync produces, from both record sources.
+    """Write the derived stream case sync produces, then clear the test evidence the case holds.
 
     :implements: SEG-SREQ-072
     :implements: SEG-SREQ-073
     :implements: SEG-SREQ-074
     :implements: SEG-SREQ-136
+    :implements: SEG-SREQ-212
+    :implements: SEG-SREQ-228
 
-    A current stream that cannot be built stops the sync before any write,
-    exit 2.
+    A current stream that cannot be built, and a record of it that the case
+    refuses, stop the sync before any write, exit 2. The case stores no test
+    evidence, so the stream's test outcomes and evidence edges are left out of
+    what is written. After the write, every test outcome node and evidence
+    edge the case still holds is removed, and each removal is named. A
+    vanished evidence edge is not reported: the removal covers it.
     """
     try:
-        current = _judgement.resolve_current(args.current, config)
+        current = _judgement.resolve_current(args.current, config, evidence=False)
     except _judgement.JudgementError as error:
         return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
     try:
         derivation = drift.derive(recorded=store, current=current)
     except (graph.GraphError, drift.DriftError, SourceError) as error:
         return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
-    store.write_nodes(derivation.nodes())
-    store.write_edges(derivation.edges(), demote=())
+    evidence_nodes = taxonomy.evidence_node_kinds()
+    evidence_edges = taxonomy.evidence_edge_kinds()
+    held_nodes = [node for node in store.nodes() if node.kind in evidence_nodes]
+    held_edges = [edge for edge in store.edges() if edge.kind in evidence_edges]
+    store.write_records(
+        (node for node in derivation.nodes() if node.kind not in evidence_nodes),
+        (edge for edge in derivation.edges() if edge.kind not in evidence_edges),
+        demote=(),
+    )
     print(f"synced {store.root}")
     for edge in derivation.vanished:
-        print(f"vanished: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+        if edge.kind not in evidence_edges:
+            print(f"vanished: {edge.from_id} -> {edge.to_id} ({edge.kind})")
+    _remove_held_evidence(store, held_nodes, held_edges)
     return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def _remove_held_evidence(
+    store: AffirmationStore, nodes: list[NodeRecord], edges: list[EdgeRecord]
+) -> None:
+    """Remove the test evidence the case held before the sync, and name each record.
+
+    What is removed was read, and so checked against the case's schemas,
+    before the sync wrote anything. A kind with no held record is not touched,
+    so a case that holds no evidence is left byte for byte as it is.
+    """
+    for kind in sorted({node.kind for node in nodes}):
+        store.remove_nodes(kind, [node.local_id for node in nodes if node.kind == kind])
+    for kind in sorted({edge.kind for edge in edges}):
+        store.remove_edges(
+            kind, [(edge.from_id, edge.to_id) for edge in edges if edge.kind == kind]
+        )
+    for node in nodes:
+        print(f"removed: {node.local_id} ({node.kind})")
+    for edge in edges:
+        print(f"removed: {edge.from_id} -> {edge.to_id} ({edge.kind})")
 
 
 def handle_refresh(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
@@ -175,7 +212,7 @@ def _record_counts(store: AffirmationStore) -> dict[str, int]:
 
 def _producer_readable(args: argparse.Namespace, config: Config) -> bool:
     try:
-        current = _judgement.resolve_current(args.current, config)
+        current = _judgement.resolve_current(args.current, config, evidence=False)
         list(current.nodes())
     except (_judgement.JudgementError, SourceError):
         return False

@@ -83,9 +83,6 @@ def at_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-227: the store writes test outcomes and evidence edges"
-)
 def test_the_store_refuses_test_outcomes_and_evidence_edges(tmp_path: Path) -> None:
     """The affirmation store refuses a write that names a test outcome node or an evidence edge.
 
@@ -133,7 +130,6 @@ def test_the_store_refuses_test_outcomes_and_evidence_edges(tmp_path: Path) -> N
     assert [(e.kind, e.from_id) for e in store.edges()] == [("Refines", "REQ-1")]
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-228: case sync keeps the stored evidence")
 def test_case_sync_removes_the_stored_evidence_and_names_it(
     tmp_path: Path, capsys, at_tmp: Path
 ) -> None:
@@ -179,7 +175,6 @@ def test_case_sync_removes_the_stored_evidence_and_names_it(
     assert len(hashed) == 6
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-228: case sync keeps the stored evidence")
 def test_a_second_sync_removes_nothing_and_changes_nothing(
     tmp_path: Path, capsys, at_tmp: Path
 ) -> None:
@@ -218,9 +213,6 @@ def _forbid_refines_to(directory: Path, target: str) -> None:
     path.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-212: case sync writes nodes before it checks the edges"
-)
 def test_a_refused_sync_removes_nothing(tmp_path: Path, capsys, at_tmp: Path) -> None:
     """A case sync that cannot write the derived stream changes nothing, evidence included.
 
@@ -250,7 +242,6 @@ def test_a_refused_sync_removes_nothing(tmp_path: Path, capsys, at_tmp: Path) ->
     assert snapshot(root) == before
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-074: case sync reports vanished evidence edges")
 def test_a_vanished_strong_edge_is_reported_and_kept_and_evidence_is_not_reported(
     tmp_path: Path, capsys, at_tmp: Path
 ) -> None:

@@ -133,6 +133,26 @@ reference to each of the other three documents. Scope (:need:`SEG-SREQ-038`) and
 totality live here, on the package as a whole, rather than on the coverage
 report — the coverage report's eight typed findings are exactly, and only, the
 gate's own findings, and growing them to carry scope too would blur that.
+
+The manifest also records the run bundles the package used, in the property
+``runBundles``: a sorted list, without repeats, of the digests (``sha256:`` and
+64 hex digits) of every run bundle that supplied a test outcome in the member
+scope (:need:`SEG-SREQ-226`). A bundle counts when one of its outcomes is in
+scope, an outcome that the gate set aside as stale included, because the
+package says which evidence it looked at. A bundle with no outcome in scope is
+not listed. With the digests, a reader can fetch the same bundles, build the
+same evidence again and compute the verdict again.
+
+The digests stand beside the design root and are not part of it. The root
+binds the design alone, so a package over the same design, scope and revision
+has the same root with one run or with two, and the digests are not sealed:
+nobody signs which bundles were used. The property is optional in the manifest
+schema, so a package written before run bundles were recorded still reads; the
+generator always writes it.
+
+A package is checkable only while its bundles can be fetched. Whoever keeps the
+bundles has to keep each one as long as a package cites it. That is a rule of
+operation, not of the tool.
 The single ``revision`` is the one source revision a single-repository
 layout has (ADR-0002), where a multi-repository layout would anchor one
 per repository.

@@ -27,8 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from affirmatrix import case, identity, records
-from affirmatrix.case import _documents
+from affirmatrix import case, identity, records, taxonomy
+from affirmatrix.case import _atomic, _documents, _layout
 
 REVISION = "a1b2c3d4" * 5
 LATER_REVISION = "f0e1d2c3" * 5
@@ -171,20 +171,57 @@ def files_and_mtimes(root: Path) -> dict[Path, int]:
     return {path: path.stat().st_mtime_ns for path in root.rglob("*") if path.is_file()}
 
 
+def write_legacy_evidence(
+    store: case.AffirmationStore,
+    nodes: list[records.NodeRecord] = (),  # type: ignore[assignment]
+    edges: list[records.EdgeRecord] = (),  # type: ignore[assignment]
+) -> None:
+    """Author the documents a case held before it stopped storing test evidence.
+
+    The store refuses to write a test outcome or an evidence edge, so a test of
+    reading one writes the document itself, in the form the store used. The
+    read face still reads such a case, which is how ``case sync`` finds what to
+    remove.
+    """
+    store.initialize()
+    for kind in {node.kind for node in nodes}:
+        entries = [_documents.node_entry(node) for node in nodes if node.kind == kind]
+        payload = _documents.collection(entries, _layout.COLLECTION_CONTEXT)
+        _atomic.replace_file(_layout.node_document(store.root, kind), payload)
+    for kind in {edge.kind for edge in edges}:
+        entries = [_documents.edge_entry(edge) for edge in edges if edge.kind == kind]
+        payload = _documents.collection(entries, _layout.COLLECTION_CONTEXT)
+        _atomic.replace_file(_layout.edge_document(store.root, kind), payload)
+
+
+def stored_kinds(nodes: list[records.NodeRecord]) -> list[records.NodeRecord]:
+    """The nodes the store accepts: every kind but the test outcome."""
+    return [node for node in nodes if node.kind not in taxonomy.evidence_node_kinds()]
+
+
+def stored_edges(edges: list[records.EdgeRecord]) -> list[records.EdgeRecord]:
+    """The edges the store accepts: every kind but the three of test evidence."""
+    return [edge for edge in edges if edge.kind not in taxonomy.evidence_edge_kinds()]
+
+
 # ── Round-trip (SEG-SREQ-020) ───────────────────────────────────────────────
 
 
 def test_every_node_kind_reads_back_as_it_was_written(tmp_path: Path) -> None:
+    """The store writes four kinds; a case from before it stopped storing outcomes has the fifth."""
     store = make_case(tmp_path)
     written = one_node_of_every_kind()
-    store.write_nodes(written)
+    store.write_nodes(stored_kinds(written))
+    write_legacy_evidence(store, nodes=[n for n in written if n not in stored_kinds(written)])
     assert by_identity(list(store.nodes())) == by_identity(written)
 
 
 def test_every_edge_kind_reads_back_as_it_was_written(tmp_path: Path) -> None:
+    """The store writes four kinds; a case from before it kept no evidence has three more."""
     store = make_case(tmp_path)
     written = one_edge_of_every_kind()
-    store.write_edges(written)
+    store.write_edges(stored_edges(written))
+    write_legacy_evidence(store, edges=[e for e in written if e not in stored_edges(written)])
     assert set(store.edges()) == set(written)
 
 
@@ -222,8 +259,9 @@ def test_an_outcome_reads_back_with_its_result(tmp_path: Path) -> None:
     """SEG-SREQ-055 composed with SEG-SREQ-020: the recorded stream supplies
     the result in every test outcome record, exactly as it was written."""
     store = make_case(tmp_path)
-    store.write_nodes(
-        [
+    write_legacy_evidence(
+        store,
+        nodes=[
             records.NodeRecord(
                 local_id="run-0002/SEG-TS-001",
                 kind="TestOutcome",
@@ -231,7 +269,7 @@ def test_an_outcome_reads_back_with_its_result(tmp_path: Path) -> None:
                 result=records.TestResult.FAILED,
                 revision="r1",
             )
-        ]
+        ],
     )
     (read,) = store.nodes()
     assert read.result is records.TestResult.FAILED
@@ -240,8 +278,9 @@ def test_an_outcome_reads_back_with_its_result(tmp_path: Path) -> None:
 def test_a_result_outside_the_vocabulary_is_refused_on_read(tmp_path: Path) -> None:
     """A hand-edited result is nobody's pass; the stream refuses, never guesses."""
     store = make_case(tmp_path)
-    store.write_nodes(
-        [
+    write_legacy_evidence(
+        store,
+        nodes=[
             records.NodeRecord(
                 local_id="run-0002/SEG-TS-001",
                 kind="TestOutcome",
@@ -249,7 +288,7 @@ def test_a_result_outside_the_vocabulary_is_refused_on_read(tmp_path: Path) -> N
                 result=records.TestResult.PASSED,
                 revision="r1",
             )
-        ]
+        ],
     )
     edit_entry(store, "nodes", "test_outcomes.jsonld", **{"seg:result": "green"})
     with pytest.raises(case.AffirmationStoreError):
@@ -258,8 +297,9 @@ def test_a_result_outside_the_vocabulary_is_refused_on_read(tmp_path: Path) -> N
 
 def test_an_outcome_stripped_of_its_result_is_refused_on_read(tmp_path: Path) -> None:
     store = make_case(tmp_path)
-    store.write_nodes(
-        [
+    write_legacy_evidence(
+        store,
+        nodes=[
             records.NodeRecord(
                 local_id="run-0002/SEG-TS-001",
                 kind="TestOutcome",
@@ -267,7 +307,7 @@ def test_an_outcome_stripped_of_its_result_is_refused_on_read(tmp_path: Path) ->
                 result=records.TestResult.PASSED,
                 revision="r1",
             )
-        ]
+        ],
     )
     edit_entry(store, "nodes", "test_outcomes.jsonld", **{"seg:result": None})
     with pytest.raises(case.AffirmationStoreError):
@@ -434,7 +474,9 @@ def test_review_events_read_back_as_written_and_in_recorded_order(tmp_path: Path
 def test_identifiers_read_back_case_local(tmp_path: Path) -> None:
     """Read-back is where minting is undone (ADR-0007), including the encoding."""
     store = make_case(tmp_path)
-    store.write_nodes(one_node_of_every_kind())
+    nodes = one_node_of_every_kind()
+    store.write_nodes(stored_kinds(nodes))
+    write_legacy_evidence(store, nodes=[n for n in nodes if n not in stored_kinds(nodes)])
     store.write_edges([refines(from_id="run-0001/SEG-TS-001", to_id="a.dotted.path")])
     read_ids = {node.local_id for node in store.nodes()}
     assert "run-0001/SEG-TS-001" in read_ids
@@ -450,8 +492,8 @@ def test_reading_then_writing_back_leaves_every_document_byte_identical(
 ) -> None:
     """Round-trip composed with the write face's determinism: a fixpoint."""
     store = make_case(tmp_path)
-    store.write_nodes(one_node_of_every_kind())
-    store.write_edges(one_edge_of_every_kind())
+    store.write_nodes(stored_kinds(one_node_of_every_kind()))
+    store.write_edges(stored_edges(one_edge_of_every_kind()))
     before = {path: path.read_bytes() for path in store.root.rglob("*.jsonld")}
     store.write_nodes(list(store.nodes()))
     store.write_edges(list(store.edges()))
@@ -471,8 +513,14 @@ def test_a_record_written_between_two_reads_appears_in_the_second(tmp_path: Path
 
 def test_two_reads_yield_the_same_sequence(tmp_path: Path) -> None:
     store = make_case(tmp_path)
-    store.write_nodes(one_node_of_every_kind())
-    store.write_edges(one_edge_of_every_kind())
+    nodes, edges = one_node_of_every_kind(), one_edge_of_every_kind()
+    store.write_nodes(stored_kinds(nodes))
+    store.write_edges(stored_edges(edges))
+    write_legacy_evidence(
+        store,
+        nodes=[n for n in nodes if n not in stored_kinds(nodes)],
+        edges=[e for e in edges if e not in stored_edges(edges)],
+    )
     assert list(store.nodes()) == list(store.nodes())
     assert list(store.edges()) == list(store.edges())
 

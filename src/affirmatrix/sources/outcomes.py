@@ -1,15 +1,31 @@
-"""The outcome extractor — TestOutcome records from run artifacts.
+"""The outcome extractor — TestOutcome records from run bundles.
 
-Reads one run artifact per configured run and supplies a TestOutcome for every
-test result the artifact records (SEG-SREQ-176). The artifact is the authority
+Reads one run bundle per configured run and supplies a TestOutcome for every
+test result the bundle's run artifact records (SEG-SREQ-176, SEG-SREQ-219). The
+bundle is the only record of a run that is read. The artifact is the authority
 on what a test did. The test-case export is the authority on which
 specification a result belongs to. The implementation export, when it is
 given, is the authority on which implementations a result witnesses.
 
-The one format built is a twister report: a JSON object with a ``testsuites``
-list. Each suite names a scenario and a platform and lists its test cases,
-each with a test identifier and a status. A pytest run is a second format of
-the same component. It is not built.
+A run bundle is a flat directory (see the architecture page). It holds the run
+artifact ``twister.json``, the run's name in ``run.name``, the command in
+``command.txt``, and for each checkout the run used a revision record
+``<checkout>.sha`` and a dirty flag ``<checkout>.dirty``. Any other file of the
+directory belongs to the bundle's identity and is not read.
+
+The identity of a bundle is its digest (:func:`bundle_digest`), not its name. The
+configuration gives the digest each bundle must have, and a bundle whose digest
+differs is refused (SEG-SREQ-220, SEG-SREQ-221). The checkout that decides is
+the one the configuration names as the implementation checkout: its revision
+record is the revision of every outcome of the run, and a run whose
+implementation checkout was dirty is refused (SEG-SREQ-222, SEG-SREQ-186,
+SEG-SREQ-187). The checks apply to every configured bundle, whatever its
+revision.
+
+The one run format built is a JSON test report: an object with a
+``testsuites`` list. Each suite names a scenario and a platform and lists its
+test cases, each with a test identifier and a status. A pytest run is a second
+format of the same component. It is not built.
 
 An outcome's identity is ``<name>-<platform>-<scenario>/<specification>``. The
 run identifier before the slash joins the run's name, the platform and the
@@ -29,25 +45,24 @@ A status maps onto the closed result set by a fixed table. A status outside
 the table is an error (SEG-SREQ-183, SEG-SREQ-184). A skipped result is
 recorded as a skipped outcome (SEG-SREQ-185).
 
-The name of the run and its full revision are not in the artifact. Each is
-read from a one-line record kept beside the artifact. The name is the
-operator's own and is unique per run. A run with no recorded revision is
-refused (SEG-SREQ-186, SEG-SREQ-187). The recorded revision is the freshness
-mechanism: a later step compares it with the current revision. The extractor
-only records it. It runs no version-control command.
+The name of the run is the operator's own and a run with no recorded name is
+refused (SEG-SREQ-223). The recorded revision is the freshness mechanism: a
+later step compares it with the current revision. The extractor only records
+it. It runs no version-control command.
 
 The content hash covers the specification identifier, the run identifier and
 the result, and no other field of the artifact's record (SEG-SREQ-182). The
-execution time and the reason of a result are not hashed. Recomputing a hash
-needs the run's name and the specification export as well as the artifact.
-The anchor names the repository, the artifact's path in it and the locator
-``nodeid:<test identifier>`` (SEG-SREQ-190).
+execution time and the reason of a result are not hashed, and neither are the
+revision and the bundle's digest. Recomputing a hash needs the run's name and
+the specification export as well as the artifact. The anchor names the
+repository, the artifact's path in it and the locator ``nodeid:<test
+identifier>`` (SEG-SREQ-190).
 
 Every check that the inputs alone decide runs when the extractor is built, and
 so does the mapping of every result. Two results that give one outcome identity,
-in one run or in two, are refused and the message names both runs. The stream that :meth:`nodes` and
-:meth:`edges` supply is therefore never short. An error names the run, and
-for one result it names the result.
+in one run or in two, are refused and the message names both runs. The stream
+that :meth:`nodes` and :meth:`edges` supply is therefore never short. An error
+names the bundle, and for one result it names the result.
 """
 
 from __future__ import annotations
@@ -63,7 +78,7 @@ from affirmatrix._hashing import content_hash
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord, TestResult
 from affirmatrix.sources import SourceError, _exports
 
-__all__ = ["OutcomeError", "TwisterOutcomeExtractor", "canonical_record"]
+__all__ = ["OutcomeError", "TwisterOutcomeExtractor", "bundle_digest", "canonical_record"]
 
 _TEST_OUTCOME = "TestOutcome"
 _CONFIRMS = "Confirms"
@@ -72,6 +87,11 @@ _CONTENT_HASH = "contentHash"
 _SPECIFICATION_LABEL = "test-case export"
 _IMPLEMENTATION_LABEL = "implementation export"
 _TEST_PREFIX = "test_"
+_ARTIFACT_FILE = "twister.json"
+_NAME_FILE = "run.name"
+_REVISION_SUFFIX = ".sha"
+_DIRTY_SUFFIX = ".dirty"
+_DIGEST_PREFIX = "sha256:"
 
 #: The statuses a run artifact records, and the member of the closed result set
 #: each corresponds to (SEG-SREQ-183). A status not in this table has no
@@ -116,6 +136,43 @@ def canonical_record(specification: str, run: str, result: TestResult) -> bytes:
     )
 
 
+def bundle_digest(path: Path) -> str:
+    """The digest of a run bundle: ``sha256:`` and the 64 hex digits of its file list.
+
+    The list has one line for each regular file under ``path``: the SHA-256 of
+    the file's bytes in lowercase hex, two blanks, the file's path relative to
+    ``path`` with ``/`` as separator, and a line feed. The lines are in the
+    byte order of the UTF-8 paths. The digest is the SHA-256 of all the lines.
+    It changes with a byte, a name or a file, and with nothing else: not the
+    order of the files on disk, the location of the bundle, a modification
+    time or an empty directory. A link, a file that is neither regular nor a
+    directory, an unreadable file, and a path with a backslash or a line feed
+    are refused, because the shell recipe on the architecture page lists
+    none of them as the tool does.
+
+    :implements: SEG-SREQ-220
+    """
+    if not path.is_dir():
+        raise OutcomeError(f"run bundle {path}: is not a directory")
+    listed: list[tuple[bytes, str]] = []
+    try:
+        for entry in sorted(path.rglob("*")):
+            name = entry.relative_to(path).as_posix()
+            if entry.is_symlink() or not (entry.is_dir() or entry.is_file()):
+                raise OutcomeError(f"run bundle {path}: {name!r} is a link or not a regular file")
+            if entry.is_dir():
+                continue
+            if "\\" in name or "\n" in name:
+                raise OutcomeError(
+                    f"run bundle {path}: the path {name!r} holds a backslash or a line feed"
+                )
+            listed.append((name.encode("utf-8"), content_hash(entry.read_bytes()).hex()))
+    except OSError as cause:
+        raise OutcomeError(f"run bundle {path}: cannot be read: {cause}") from cause
+    lines = "".join(f"{digest}  {name.decode('utf-8')}\n" for name, digest in sorted(listed))
+    return _DIGEST_PREFIX + content_hash(lines.encode("utf-8")).hex()
+
+
 def _read_record(path: Path, what: str) -> str:
     """The one line that the record at ``path`` holds, without its line terminator.
 
@@ -138,7 +195,7 @@ def _read_record(path: Path, what: str) -> str:
 
 
 def _read_revision(path: Path) -> str:
-    """The full revision recorded beside a run, verbatim, or a refusal of the run.
+    """The full revision recorded for a checkout, verbatim, or a refusal of the run.
 
     The extractor pins no length and no spelling: any one-line text is a
     revision. A run whose record is missing, empty or blank is refused, and
@@ -148,6 +205,28 @@ def _read_revision(path: Path) -> str:
     :implements: SEG-SREQ-187
     """
     return _read_record(path, "revision record")
+
+
+def _check_clean(path: Path, checkout: str) -> None:
+    """Refuse a run whose implementation checkout was dirty.
+
+    The dirty flag of a checkout is a file that is empty when the checkout was
+    clean and holds the output of the status command when it was not. A flag
+    that is missing is refused too: a bundle that says nothing about the
+    implementation checkout does not show it clean.
+
+    :implements: SEG-SREQ-222
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, ValueError) as cause:
+        raise OutcomeError(f"dirty flag {path}: cannot be read: {cause}") from cause
+    if text.strip():
+        first = next(line for line in text.splitlines() if line.strip())
+        raise OutcomeError(
+            f"dirty flag {path}: the implementation checkout {checkout!r} was dirty "
+            f"when the run was made: {first!r}"
+        )
 
 
 def _run_identifier(name: str, platform: str, scenario: str) -> str:
@@ -181,6 +260,7 @@ class _Outcome:
     revision: str
     anchor: ContentAnchor
     witnesses: tuple[str, ...]
+    digest: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,27 +291,31 @@ class _Specifications:
 
 @dataclass(frozen=True, slots=True)
 class TwisterOutcomeExtractor:
-    """TestOutcome records from twister run artifacts, with their Confirms and Witnesses edges.
+    """TestOutcome records from run bundles, with their Confirms and Witnesses edges.
 
     ``root`` is the directory that the anchors' paths are relative to, and
-    every artifact must lie under it. ``runs`` gives, for each run, the
-    artifact and the two records kept beside it. ``repository`` is the
-    configured name of the repository ``root`` belongs to (a name, never a
-    path). ``specifications`` names the test-case export that maps each
-    result to its need. ``implementations`` names the implementation export;
-    when it is ``None``, no Witnesses edge is supplied. The Doxygen directory
-    that each of the two input records names is not used here.
+    every bundle must lie under it. ``runs`` gives each run's bundle and the
+    digest the bundle must have. ``repository`` is the configured name of the
+    repository ``root`` belongs to (a name, never a path). ``checkout`` is the
+    name of the implementation checkout: the bundle's record of that checkout
+    gives the revision and the dirty flag that decide. ``specifications``
+    names the test-case export that maps each result to its need.
+    ``implementations`` names the implementation export; when it is ``None``,
+    no Witnesses edge is supplied. The Doxygen directory that each of the two
+    input records names is not used here.
 
-    The artifacts, the records and the exports are read and checked once,
-    here, and every result is mapped here.
+    The bundles and the exports are read and checked once, here, and every
+    result is mapped here.
 
     :implements: SEG-SREQ-176
+    :implements: SEG-SREQ-219
     """
 
     root: Path
     runs: Sequence[config.RunInputs]
     _: KW_ONLY
     repository: str
+    checkout: str | None
     specifications: config.SpecificationInputs
     implementations: config.ImplementationInputs | None
     _outcomes: tuple[_Outcome, ...] = field(init=False, repr=False, compare=False)
@@ -246,10 +330,10 @@ class TwisterOutcomeExtractor:
             for outcome in self._read_run(run, specifications, implementers):
                 if outcome.local_id in supplied_by:
                     raise OutcomeError(
-                        f"run artifact {run.artifact}: the outcome identity {outcome.local_id!r} "
-                        f"is already supplied by the run artifact {supplied_by[outcome.local_id]}"
+                        f"run bundle {run.bundle}: the outcome identity {outcome.local_id!r} "
+                        f"is already supplied by the run bundle {supplied_by[outcome.local_id]}"
                     )
-                supplied_by[outcome.local_id] = run.artifact
+                supplied_by[outcome.local_id] = run.bundle
                 outcomes.append(outcome)
         object.__setattr__(self, "runs", tuple(self.runs))
         object.__setattr__(self, "_outcomes", tuple(outcomes))
@@ -303,21 +387,36 @@ class TwisterOutcomeExtractor:
         specifications: _Specifications,
         implementers: Mapping[str, tuple[str, ...]],
     ) -> Iterator[_Outcome]:
-        """Every result of one run, mapped and hashed, in artifact order."""
-        path = self._relative(run.artifact)
-        revision = _read_revision(run.revision)
-        name = _read_record(run.name, "name record")
+        """Every result of one run, mapped and hashed, in artifact order.
+
+        The checks come first and apply to every bundle: the digest, then the
+        implementation checkout's dirty flag and revision, then the name.
+        """
+        actual = bundle_digest(run.bundle)
+        if actual != run.digest:
+            raise OutcomeError(
+                f"run bundle {run.bundle}: its digest is {actual}, not the configured "
+                f"digest {run.digest}"
+            )
+        checkout = self._checkout_name()
+        revision = _read_revision(run.bundle / f"{checkout}{_REVISION_SUFFIX}")
+        _check_clean(run.bundle / f"{checkout}{_DIRTY_SUFFIX}", checkout)
+        name = _read_record(run.bundle / _NAME_FILE, "name record")
         if "/" in name:
-            raise OutcomeError(f"name record {run.name}: the name {name!r} holds a slash")
-        for suite in self._read_suites(run.artifact):
+            raise OutcomeError(
+                f"name record {run.bundle / _NAME_FILE}: the name {name!r} holds a slash"
+            )
+        artifact = run.bundle / _ARTIFACT_FILE
+        path = self._relative(artifact)
+        for suite in self._read_suites(artifact):
             scenario, platform = suite["name"], suite["platform"]
             identifiers = specifications.formed(scenario)
             run_identifier = _run_identifier(name, platform, scenario)
             for case in suite["testcases"]:
                 identifier, status = case["identifier"], case["status"]
-                result = self._result(run.artifact, identifier, status)
+                result = self._result(artifact, identifier, status)
                 specification = self._specification(
-                    run.artifact, identifier, identifiers.get(identifier, [])
+                    artifact, identifier, identifiers.get(identifier, [])
                 )
                 yield _Outcome(
                     local_id=_identity(run_identifier, specification),
@@ -326,7 +425,20 @@ class TwisterOutcomeExtractor:
                     revision=revision,
                     anchor=self._anchor(path, identifier, specification, run_identifier, result),
                     witnesses=self._witnesses(specifications, implementers, specification),
+                    digest=actual,
                 )
+
+    def _checkout_name(self) -> str:
+        """The name of the implementation checkout, which must be one file-name stem."""
+        name = self.checkout
+        if not name:
+            raise OutcomeError(
+                "no implementation checkout is configured; the revision of a run is the "
+                "revision its bundle records for that checkout"
+            )
+        if Path(name).name != name or name in {".", ".."}:
+            raise OutcomeError(f"the implementation checkout {name!r} is not a plain name")
+        return name
 
     def _relative(self, artifact: Path) -> str:
         """The artifact's path relative to ``root``, in posix form; one outside ``root`` is refused.
@@ -438,11 +550,19 @@ class TwisterOutcomeExtractor:
             locator=f"nodeid:{identifier}",
         )
 
+    def evidence_bundles(self) -> Mapping[str, str]:
+        """For each outcome's local identifier, the digest of the bundle that supplied it.
+
+        :implements: SEG-SREQ-226
+        """
+        return {outcome.local_id: outcome.digest for outcome in self._outcomes}
+
     def nodes(self) -> Iterator[NodeRecord]:
         """A TestOutcome record per result, in the order of the runs and of each artifact.
 
         The result is the one the status maps to, and a skipped result is
-        recorded like any other. The revision is the one recorded beside the run.
+        recorded like any other. The revision is the one the bundle records for the
+        implementation checkout.
 
         :implements: SEG-SREQ-185
         """

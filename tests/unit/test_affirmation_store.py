@@ -387,17 +387,16 @@ def test_a_waiver_missing_its_approver_is_refused_by_the_schema(
         store.write_nodes([waiver()])
 
 
-def test_a_test_outcome_document_carries_its_revision(tmp_path: Path) -> None:
+def test_a_test_outcome_document_carries_its_revision() -> None:
     """SEG-SREQ-062: a producer-recorded claim, written beside the digest
-    exactly as a waiver's expiry and approver are."""
-    store = make_case(tmp_path)
-    store.write_nodes([outcome(revision="a1b2c3")])
-    (entry,) = entries_of(store, "nodes", "test_outcomes.jsonld")
+    exactly as a waiver's expiry and approver are. The store no longer writes
+    a test outcome, but the document form is what a case from before reads."""
+    entry = _documents.node_entry(outcome(revision="a1b2c3"))
     assert entry["seg:revision"] == "a1b2c3"
     assert "seg:contentHash" in entry
 
 
-def test_a_test_outcome_missing_its_revision_is_refused_by_the_schema(
+def test_a_test_outcome_missing_its_revision_is_refused_on_read(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     original = _documents.node_entry
@@ -407,10 +406,14 @@ def test_a_test_outcome_missing_its_revision_is_refused_by_the_schema(
         entry.pop("seg:revision", None)
         return entry
 
-    monkeypatch.setattr(_documents, "node_entry", without_revision)
     store = make_case(tmp_path)
+    store.initialize()
+    monkeypatch.setattr(_documents, "node_entry", without_revision)
+    document = _layout.node_document(store.root, "TestOutcome")
+    payload = _documents.collection([_documents.node_entry(outcome())], _layout.COLLECTION_CONTEXT)
+    _atomic.replace_file(document, payload)
     with pytest.raises(case.AffirmationStoreError, match="seg:revision"):
-        store.write_nodes([outcome()])
+        list(store.nodes())
 
 
 def test_a_node_document_locates_the_content_behind_each_digest(tmp_path: Path) -> None:
@@ -1367,3 +1370,52 @@ def test_the_write_root_is_a_parameter_and_never_a_default() -> None:
     """Relocating the whole store is passing a different path, and nothing else."""
     with pytest.raises(TypeError):
         case.AffirmationStore()  # type: ignore[call-arg]
+
+
+def test_the_store_refuses_a_test_outcome_and_an_evidence_edge_by_name(tmp_path: Path) -> None:
+    """SEG-SREQ-227: the refusal names the record and says why."""
+    store = make_case(tmp_path)
+    refused = "run-1/TS-1.*TestOutcome.*no test evidence"
+    with pytest.raises(case.AffirmationStoreError, match=refused):
+        store.write_nodes([outcome()])
+    confirms = records.EdgeRecord("run-1/TS-1", "TS-1", "Confirms", records.LinkState.PENDING)
+    with pytest.raises(case.AffirmationStoreError, match="Confirms.*no test evidence"):
+        store.write_edges([confirms])
+
+
+def test_write_records_writes_nodes_and_edges_together(tmp_path: Path) -> None:
+    store = make_case(tmp_path)
+    store.write_records([requirement()], [refines()])
+    assert [node.local_id for node in store.nodes()] == ["SEG-SREQ-018"]
+    edges = [(edge.from_id, edge.to_id) for edge in store.edges()]
+    assert edges == [("SEG-SREQ-018", "SEG-SYS-007")]
+
+
+def test_write_records_writes_nothing_when_an_edge_is_refused(tmp_path: Path) -> None:
+    """SEG-SREQ-212: valid nodes are not written when an edge of the same call is refused."""
+    store = make_case(tmp_path)
+    store.initialize()
+    before = {path: path.read_bytes() for path in store.root.rglob("*") if path.is_file()}
+    confirms = records.EdgeRecord("run-1/TS-1", "TS-1", "Confirms", records.LinkState.PENDING)
+    with pytest.raises(case.AffirmationStoreError):
+        store.write_records([requirement()], [refines(), confirms])
+    assert {path: path.read_bytes() for path in store.root.rglob("*") if path.is_file()} == before
+
+
+def test_write_records_writes_nothing_when_a_node_fails_its_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = _documents.node_entry
+
+    def without_approver(record: records.NodeRecord) -> dict:
+        entry = original(record)
+        entry.pop("seg:approver", None)
+        return entry
+
+    store = make_case(tmp_path)
+    store.initialize()
+    before = {path: path.read_bytes() for path in store.root.rglob("*") if path.is_file()}
+    monkeypatch.setattr(_documents, "node_entry", without_approver)
+    with pytest.raises(case.AffirmationStoreError, match="seg:approver"):
+        store.write_records([requirement(), waiver()], [refines()])
+    assert {path: path.read_bytes() for path in store.root.rglob("*") if path.is_file()} == before

@@ -1,27 +1,83 @@
 The outcome extractor
 =====================
 
-The engine consumes records. A test run leaves a report and two short records
-beside it. :class:`affirmatrix.sources.outcomes.TwisterOutcomeExtractor` turns
-them into one TestOutcome record for each test result the report holds, and
-into the edges that tie each outcome to what it confirms and what it
-witnesses. The command line composes it into the current stream (see the last section).
+The engine consumes records. A test run leaves a **run bundle**: a directory
+that holds the test report, the revision and the dirty flag of each checkout
+the run used, the run name and the command.
+:class:`affirmatrix.sources.outcomes.TwisterOutcomeExtractor` turns each bundle
+into one TestOutcome record for each test result the report holds, and into
+the edges that tie each outcome to what it confirms and what it witnesses. The
+command line composes it into the current stream, and only for the verbs that
+judge evidence (see the last section).
 
-What it reads
--------------
+The case stores none of these records. They are built when a verdict is made,
+from the bundles the configuration names, and they are not kept
+(:need:`SEG-SYS-013`).
+
+The run bundle
+--------------
+
+A run bundle is a flat directory. The extractor reads these files and no other
+(:need:`SEG-SREQ-219`):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 72
+
+   * - File
+     - Content
+   * - ``twister.json``
+     - the run artifact: a JSON object with a ``testsuites`` list
+   * - ``run.name``
+     - the name of the run, one line
+   * - ``<checkout>.sha``
+     - the full revision of the checkout, one line, for each checkout the run used
+   * - ``<checkout>.dirty``
+     - empty when the checkout was clean; otherwise the output of the status command
+   * - ``command.txt``
+     - the command of the run (provenance only; not read)
+
+Every other file of the directory belongs to the identity of the bundle (see
+the next section) and is not read. A bundle that the repository ``evidence``
+holds, for example, looks like this:
+
+.. code-block:: text
+
+   clean/
+     command.txt
+     run.name
+     testplan.json
+     twister.json
+     twister_report.xml
+     twister_suite_report.xml
+     toolbox.dirty
+     toolbox.sha
+     zdocs.sha
+     zephyr.dirty
+     zephyr.sha
+
+The top-level configuration key ``implementation`` names the checkout that
+decides. Its ``.sha`` file is the revision of every outcome of the run
+(:need:`SEG-SREQ-186`), and its ``.dirty`` file decides whether the run is
+refused (:need:`SEG-SREQ-222`). A dirty flag of any other checkout is accepted:
+the bundle records it and nothing judges it. A missing ``.sha`` file of the
+implementation checkout refuses the run (:need:`SEG-SREQ-187`). So does a missing
+``.dirty`` file of it, because a bundle that says nothing about that checkout
+does not show it clean. A flag that holds only blanks is clean. When no
+``implementation`` is configured, a configured run is refused.
 
 .. code-block:: python
 
    extractor = TwisterOutcomeExtractor(
-       Path("checkout"),
+       Path("evidence"),
        [
            config.RunInputs(
-               artifact=Path("checkout/run/report.json"),
-               revision=Path("checkout/run/revision"),
-               name=Path("checkout/run/name"),
+               bundle=Path("evidence/clean"),
+               digest="sha256:f960023c5eacbe8c4a2fc2867d4d78c38bede4c02b1df6ac150f5804c8ca0043",
            )
        ],
-       repository="product",
+       repository="evidence",
+       checkout="toolbox",
        specifications=config.SpecificationInputs(
            export=Path("needs/test-specification/needs.json"),
            doxygen=Path("xml/dox-safe-data-testspec"),
@@ -37,10 +93,10 @@ Each input has one purpose:
 * the **run artifact** is the authority on what a test did. Its ``testsuites``
   list holds one suite for each scenario. A suite names its scenario and its
   platform and lists its results, each with a test identifier and a status
-  (:need:`SEG-SREQ-176`);
-* the **revision record** and the **name record** are one-line files beside the
-  artifact. The artifact holds neither the full revision nor the name of the
-  run;
+  (:need:`SEG-SREQ-176`, :need:`SEG-SREQ-224`);
+* the **name** and the **revision** come from the bundle's own records, never
+  from a loose file beside it. The artifact holds neither the full revision nor
+  the name of the run (:need:`SEG-SREQ-223`);
 * the **test-case export** is the authority on which specification a result
   belongs to (:need:`SEG-SREQ-180`);
 * the **implementation export** gives the witnesses (:need:`SEG-SREQ-189`). When
@@ -48,10 +104,50 @@ Each input has one purpose:
 
 ``repository`` is the configured name of the repository ``root`` belongs to,
 never a path (:need:`SEG-SREQ-134`). The ``doxygen`` field of the two input classes
-is not used. ``root`` must hold every artifact.
+is not used. ``root`` must hold every bundle. The report format built is a JSON
+test report; a pytest run would be a second format of the same component. It is
+not built.
 
-Twister is the format of the artifact. A pytest run would be a second format of
-the same component. It is not built.
+The digest of a bundle
+----------------------
+
+A bundle is identified by its digest, not by its name. A name is chosen by a
+person and can repeat; a digest follows the bytes. The configuration gives the
+digest each bundle must have, and the extractor refuses a bundle whose digest
+differs (:need:`SEG-SREQ-221`). It does this for every configured bundle,
+whatever its revision, on every run of a verb that reads bundles. It reads every
+file each time.
+
+The digest is built from a list with one line for each regular file under the
+bundle directory:
+
+* the SHA-256 of the file's bytes, in 64 lowercase hex digits;
+* two blanks;
+* the path of the file relative to the bundle directory, with ``/`` as the
+  separator;
+* one line feed.
+
+The lines are in the byte order of the UTF-8 paths (``LC_ALL=C`` order). The
+digest is the SHA-256 of all the lines, written as ``sha256:`` and 64 hex
+digits (:need:`SEG-SREQ-220`). A changed byte, a renamed file and an added
+file, an empty one included, each change the digest. The order of the files on
+disk, the location of the bundle and the modification times do not.
+
+Anyone can make the same digest without the tool. From the bundle directory:
+
+.. code-block:: sh
+
+   find . -type f -printf '%P\n' | LC_ALL=C sort | xargs -d '\n' sha256sum | sha256sum
+
+For the bundle ``clean`` above the command prints
+``f960023c5eacbe8c4a2fc2867d4d78c38bede4c02b1df6ac150f5804c8ca0043``.
+
+The function :func:`~affirmatrix.sources.outcomes.bundle_digest` makes the same
+value. Some cases would make the shell recipe and the tool differ, so the tool
+refuses them: a link, a file that is neither regular nor a directory, a file
+it cannot read, and a path that holds a backslash or a line feed (``sha256sum``
+writes such a name in an escaped form). An empty directory holds no file and
+does not count.
 
 Identity
 --------
@@ -70,8 +166,8 @@ The identity is never split to recover its parts. A scenario name can hold
 dots and hyphens, and a platform can do so as well, so the parts do not show
 where they end.
 
-The name record must hold one line, without a slash and without blanks around
-it. The operator chooses the name and keeps it unique for each run.
+The name must be one line, without a slash and without blanks around it. The
+operator chooses it and keeps it unique for each run.
 
 Mapping a result to its need
 ----------------------------
@@ -166,7 +262,8 @@ Each outcome has one Confirms edge to the test-case need its result maps to
 satisfies a requirement that the test-case need verifies (:need:`SEG-SREQ-189`). A
 skipped outcome has the same edges as a passed one. All edges are pending. A
 target that an export does not hold is emitted all the same, and the graph
-reports it as a broken edge. On the evidence fixture the four scenarios give 76
+reports it as a broken edge, and ``graph status`` exits with status 1 for it.
+On the evidence fixture the four scenarios give 76
 outcomes and 152 edges.
 
 Errors
@@ -175,21 +272,27 @@ Errors
 :class:`~affirmatrix.sources.outcomes.OutcomeError` is raised when the
 extractor is built, and never later. The extractor reads every input and maps
 every result there, so the records it supplies are never a short stream. The
-message names the run artifact and, for one result, the result. The extractor
+message names the bundle and, for one result, the result. The extractor
 refuses:
 
+* a bundle whose digest differs from the configured digest
+  (:need:`SEG-SREQ-221`), or that holds a link or an unreadable file;
+* a dirty implementation checkout, or a missing dirty flag of it
+  (:need:`SEG-SREQ-222`);
 * a revision record that is missing, empty or holds only a line feed
   (:need:`SEG-SREQ-187`), or that holds two lines or has blanks around its text;
-* a name record that is missing, empty, has two lines or holds a slash;
+* a name record that is missing, empty, has two lines or holds a slash
+  (:need:`SEG-SREQ-223`);
 * an artifact that cannot be read, is not a JSON object, has no
-  ``testsuites`` list or holds a suite or a result without the fields it needs;
+  ``testsuites`` list or holds a suite or a result without the fields it needs
+  (:need:`SEG-SREQ-224`);
 * an artifact outside ``root``;
 * an export that cannot be read, holds no or several versions or carries a
-  build timestamp;
+  build timestamp (:need:`SEG-SREQ-225`);
 * a result with a status outside the table, a result that maps to no need and
   a result that maps to more than one need;
 * two results, in one run or in two, that give the same outcome identity. The
-  message names both run artifacts.
+  message names both bundles.
 
 A failure in one run stops the whole extractor. The operator corrects the
 input and builds it again.
@@ -198,11 +301,26 @@ How the command line composes it
 --------------------------------
 
 The command line chains the requirements reader, the content extractor and
-this extractor into the current stream, in that order. Each run in
-``producer.outcomes`` has an optional ``repository`` key. The key names the
-configured repository that the files of the run lie under, and the producer's
-repository is the default. The composition builds one extractor for each
-repository that the runs name. The ``root`` of the extractor is the path of that
-repository. The runs keep their order in the configuration. The extractor needs
-the test-case export, so ``producer.specifications`` must be set. The
-implementation export is optional. Without it, no Witnesses edge is supplied.
+this extractor into the current stream, in that order, but it builds this
+extractor only for ``graph status``, ``proof check`` and ``proof generate``
+(:need:`SEG-SREQ-229`). ``case sync``, ``case check``, ``graph check``,
+``edge show`` and ``edge affirm`` read no bundle (:need:`SEG-SREQ-230`): the
+configuration names a bundle, and these verbs never open it. A bundle that the
+extractor refuses ends the verb with exit status 2 and no verdict
+(:need:`SEG-SREQ-231`).
+
+Each run in ``producer.outcomes`` gives a ``bundle`` and a ``digest``, and has
+an optional ``repository`` key. The key names the configured repository that
+the bundle of the run lies under, and the producer's repository is the
+default. The composition builds one extractor for each repository that the
+runs name. The ``root`` of the extractor is the path of that repository. The
+runs keep their order in the configuration. The extractor needs the test-case
+export, so ``producer.specifications`` must be set. The implementation export is
+optional. Without it, no Witnesses edge is supplied. A run that still gives the
+keys ``artifact``, ``revision`` or ``name`` is refused when the configuration
+is read.
+
+A proof records the digest of each bundle that supplied an outcome in its scope
+(see :doc:`proof-package`), so a reader can fetch the same bundles and build the
+same evidence again. The extractor keeps, for each outcome, the digest of the
+bundle that supplied it, for that purpose.

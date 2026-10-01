@@ -70,6 +70,8 @@ this covers a brand-new current edge the case has never seen. An edge
 touching a node absent from the current records is broken (:need:`SEG-SREQ-017`),
 whatever its kind and whether or not it was affirmed: with an endpoint gone
 there is no content to compare, so broken takes precedence over everything.
+The graph builder keeps that verdict for an edge that was never affirmed
+(:doc:`graph-builder`); it does not reset it to pending.
 
 The dependency relation
 -----------------------
@@ -99,6 +101,12 @@ machine-derived case, broken when dangling — but they are never anyone's
 dependency and never anyone's carrier: a stale outcome outdates its own
 confirms edge and nothing above it, because re-execution is what it needs,
 and marking the specification suspect would invite a re-affirmation instead.
+The edges come from the current stream only. The case stores no evidence edge,
+so the recorded stream holds none (except in a case written before that rule,
+whose evidence edges the derivation treats like any recorded edge that the
+current stream does not supply: see the section on vanished edges below, and
+``case sync``, which removes them). A dangling evidence edge is counted by
+``graph status`` and gives it exit status 1.
 
 Suspicion clears by recomputation
 ---------------------------------

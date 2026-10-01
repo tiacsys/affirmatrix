@@ -19,7 +19,10 @@ are being taken is already a :class:`~affirmatrix.sources.SourceError`.
   then the content extractor (when ``producer.implementations`` or
   ``producer.specifications`` is set), then one outcome extractor for each
   repository that the runs of ``producer.outcomes`` name, chained in that
-  order. The first two anchor every record to the repository
+  order. The outcome extractors are the evidence view. They are built only
+  when the caller asks for evidence, and building one reads and checks every
+  run bundle it is given, so a verb that needs no evidence leaves it out and
+  reads no bundle (SEG-SREQ-229, SEG-SREQ-230). The first two anchor every record to the repository
   ``producer.repository`` names, which must be a key of ``repositories``.
 * The configuration loader takes every relative path from the directory of the
   file, but the requirements reader wants its source directory relative to the
@@ -29,7 +32,7 @@ are being taken is already a :class:`~affirmatrix.sources.SourceError`.
   exist), and a source directory that does not lie under the repository is
   refused. The extractor's root is the repository's path itself, since Doxygen
   names files relative to it.
-* Each run of ``producer.outcomes`` lies under the repository its
+* Each run of ``producer.outcomes`` has a bundle that lies under the repository its
   ``repository`` key names. The producer's repository is the default. The runs
   of one repository go to one outcome extractor, rooted at the path of that
   repository, with the runs in configuration order. The anchors of its
@@ -74,17 +77,43 @@ class ComposedProducer:
         for source in self.sources:
             yield from source.edges()
 
+    def evidence_bundles(self) -> Mapping[str, str]:
+        """For each outcome a member supplies, the digest of the run bundle it came from.
 
-def from_config(config: Config) -> RecordSource:
+        Members that supply no outcomes from bundles add nothing.
+        """
+        provenance: dict[str, str] = {}
+        for source in self.sources:
+            if isinstance(source, TwisterOutcomeExtractor):
+                provenance.update(source.evidence_bundles())
+        return provenance
+
+
+def evidence_bundles(source: RecordSource) -> Mapping[str, str]:
+    """The run bundle digest of each outcome a record source supplies from a bundle.
+
+    Empty for a source that is not a composed producer, such as a would-be
+    store, whose outcomes come from no bundle.
+
+    :implements: SEG-SREQ-226
+    """
+    return source.evidence_bundles() if isinstance(source, ComposedProducer) else {}
+
+
+def from_config(config: Config, *, evidence: bool = True) -> RecordSource:
     """The producer the configuration describes, or a refusal.
+
+    With ``evidence`` false no outcome extractor is built, so no run bundle is
+    read and a bundle that cannot be read refuses nothing. The shape of the
+    configuration is checked either way.
 
     Raises :class:`~affirmatrix.sources.SourceError` when no producer is
     configured, when ``producer.repository`` is missing or not a configured
     repository, when the requirements source directory does not lie under
     that repository, when runs are configured without
     ``producer.specifications``, when a run names a repository that is not
-    configured, and (from the readers themselves) when a configured input
-    cannot be read.
+    configured, and (from the readers, and from the outcome extractors when
+    ``evidence`` is true) when a configured input cannot be read.
     """
     producer = config.producer
     content_configured = producer is not None and (
@@ -139,7 +168,14 @@ def from_config(config: Config) -> RecordSource:
         )
     if producer.outcomes and producer.specifications is not None:
         members.extend(
-            _outcome_extractors(producer, producer.specifications, name, config.repositories)
+            _outcome_extractors(
+                producer,
+                producer.specifications,
+                name,
+                config.repositories,
+                checkout=config.implementation,
+                evidence=evidence,
+            )
         )
     return ComposedProducer(members)
 
@@ -149,8 +185,15 @@ def _outcome_extractors(
     specifications: SpecificationInputs,
     default: str,
     repositories: Mapping[str, Path],
+    *,
+    checkout: str | None,
+    evidence: bool,
 ) -> list[RecordSource]:
-    """One outcome extractor for each repository the runs name, in order of first appearance."""
+    """One outcome extractor for each repository the runs name, in order of first appearance.
+
+    The names are checked in every case, since that reads nothing. Without
+    ``evidence`` no extractor is built, and so no bundle is read.
+    """
     groups: dict[str, list[RunInputs]] = {}
     for run in producer.outcomes:
         groups.setdefault(run.repository or default, []).append(run)
@@ -160,14 +203,17 @@ def _outcome_extractors(
         if path is None:
             known = ", ".join(sorted(repositories)) or "none"
             raise SourceError(
-                f"producer.outcomes: the run artifact {runs[0].artifact} names repository "
+                f"producer.outcomes: the run bundle {runs[0].bundle} names repository "
                 f"{name!r}, which is not a configured repository (configured: {known})"
             )
+        if not evidence:
+            continue
         extractors.append(
             TwisterOutcomeExtractor(
                 path,
                 runs,
                 repository=name,
+                checkout=checkout,
                 specifications=specifications,
                 implementations=producer.implementations,
             )
@@ -192,4 +238,4 @@ def _under(source: Path, repository_path: Path, name: str) -> Path:
     return relative
 
 
-__all__ = ["ComposedProducer", "from_config"]
+__all__ = ["ComposedProducer", "evidence_bundles", "from_config"]

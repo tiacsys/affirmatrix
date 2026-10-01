@@ -779,8 +779,8 @@ def test_assembling_leaves_the_input_graph_unchanged() -> None:
 def test_generation_leaves_the_stores_node_edge_and_event_streams_unchanged(tmp_path) -> None:
     nodes, edges = ready_fixture()
     store = case.AffirmationStore(root=tmp_path / "case")
-    store.write_nodes(nodes)
-    store.write_edges(edges)
+    store.write_nodes([n for n in nodes if n.kind != "TestOutcome"])
+    store.write_edges([e for e in edges if e.kind in {"Verifies", "Implements"}])
 
     nodes_before = list(store.nodes())
     edges_before = list(store.edges())
@@ -802,3 +802,47 @@ def test_assemble_and_persist_are_pure_and_repeatable() -> None:
     first = assembled(nodes, edges, {"SREQ-1"})
     second = assembled(nodes, edges, {"SREQ-1"})
     assert first.documents == second.documents
+
+
+# ── The run bundles a package records (SEG-SREQ-226) ────────────────────────
+
+
+def _manifest(nodes, edges, bundles) -> dict:
+    built = graph.build(Source(nodes, edges))
+    package = proof.assemble(
+        built,
+        {"SREQ-1"},
+        snapshot_timestamp=TIMESTAMP,
+        evaluation_date=EVALUATION_DATE,
+        current_revision=CURRENT_REVISION,
+        evidence_bundles=bundles,
+    )
+    return package.documents[proof.EVIDENCE_MANIFEST]
+
+
+def test_the_manifest_lists_the_digests_of_the_bundles_of_outcomes_in_scope() -> None:
+    nodes, edges = ready_fixture()
+    other = outcome("run-9/TS-9")
+    manifest = _manifest(
+        [*nodes, other],
+        edges,
+        {"run-1/TS-1": "sha256:" + "a" * 64, "run-9/TS-9": "sha256:" + "b" * 64},
+    )
+    assert manifest["runBundles"] == ["sha256:" + "a" * 64]
+
+
+def test_the_manifest_lists_each_digest_once_and_sorted() -> None:
+    nodes, edges = ready_fixture()
+    second = outcome("run-2/TS-1")
+    edges = [*edges, edge("Confirms", "run-2/TS-1", "TS-1")]
+    manifest = _manifest(
+        [*nodes, second],
+        edges,
+        {"run-1/TS-1": "sha256:" + "b" * 64, "run-2/TS-1": "sha256:" + "b" * 64},
+    )
+    assert manifest["runBundles"] == ["sha256:" + "b" * 64]
+
+
+def test_the_manifest_lists_no_digest_when_no_bundle_is_given() -> None:
+    nodes, edges = ready_fixture()
+    assert _manifest(nodes, edges, None)["runBundles"] == []

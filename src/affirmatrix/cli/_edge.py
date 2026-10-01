@@ -170,7 +170,7 @@ def handle_affirm(args: argparse.Namespace, config: Config, store: AffirmationSt
 def _build(args: argparse.Namespace, config: Config, store: AffirmationStore):
     """The built graph over both streams, or ``(None, exit_status)`` on refusal."""
     try:
-        current = _judgement.resolve_current(args.current, config)
+        current = _judgement.resolve_current(args.current, config, evidence=False)
     except _judgement.JudgementError as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return None, _outcome.exit_for(_outcome.INDETERMINATE)

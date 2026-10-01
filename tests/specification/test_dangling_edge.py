@@ -28,8 +28,6 @@ import json
 from datetime import date
 from pathlib import Path
 
-import pytest
-
 from affirmatrix import drift, gates, graph, records
 from affirmatrix.records import LinkState
 
@@ -69,9 +67,6 @@ def _strong_rows(document: dict) -> dict[tuple[str, str, str], str]:
     }
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-016: the builder resets a hashless broken edge to pending"
-)
 def test_the_builder_keeps_a_broken_edge_that_was_never_affirmed() -> None:
     """The graph builder reports a never-affirmed edge its record reports as broken as broken.
 
@@ -124,9 +119,6 @@ def test_the_builder_still_resets_other_unaffirmed_edges_to_pending() -> None:
     assert by_pair[("A", "C")].edge_hash == digest
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-016: the built graph shows a dangling edge as pending"
-)
 def test_a_never_affirmed_edge_to_an_absent_node_is_broken_after_the_derivation_and_the_build() -> (
     None
 ):
@@ -151,9 +143,6 @@ def test_a_never_affirmed_edge_to_an_absent_node_is_broken_after_the_derivation_
     assert edge.state is LinkState.BROKEN
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-083: a dangling strong edge reads pending and exits 0"
-)
 def test_graph_status_lists_a_dangling_strong_edge_as_broken_and_exits_1(
     tmp_path: Path, capsys
 ) -> None:
@@ -226,9 +215,6 @@ def test_graph_status_lists_an_affirmed_edge_whose_endpoint_left_as_broken(
     assert _strong_rows(json.loads(out))[("Verifies", "TS-1", "SREQ-1")] == "broken"
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-083: graph status takes no revision and counts no dangling edge"
-)
 def test_graph_status_counts_a_dangling_confirms_edge_and_exits_1(tmp_path: Path, capsys) -> None:
     """A Confirms edge to an absent specification gives exit status 1 and one dangling count.
 
@@ -275,9 +261,6 @@ def test_graph_status_lists_pending_strong_edges_as_pending_and_exits_0(
     }
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-016: the gate reports a never-affirmed broken edge as pending"
-)
 def test_the_gate_names_a_broken_strong_edge_as_broken() -> None:
     """The gate lists a broken strong edge as not ready, with the detail broken.
 

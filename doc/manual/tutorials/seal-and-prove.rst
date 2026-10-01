@@ -1,6 +1,16 @@
 Sealing a proof
 ===============
 
+.. warning::
+
+   The console blocks on this page were taken before test evidence came from
+   run bundles, and you cannot reproduce them now. This repository's own
+   case has no test evidence until its own test run is read as a run bundle.
+   So the proof over its scope is blocked (every requirement in it reports
+   an incomplete coverage), and no package can be sealed here now. A later
+   change will bring this page up to date. Read it as a description of the
+   workflow, not as a transcript that you can repeat today.
+
 .. admonition:: Prerequisites
 
    - The affirmed, committed graph from :doc:`affirm-an-edge` — fourteen

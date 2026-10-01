@@ -82,6 +82,7 @@ from importlib.resources.abc import Traversable
 from pathlib import Path
 from types import MappingProxyType
 
+from affirmatrix import taxonomy
 from affirmatrix.case import _atomic, _documents, _layout, _validation
 from affirmatrix.case._errors import AffirmationStoreError, DemotionNotRequestedError
 from affirmatrix.identity import edge_iri, node_iri
@@ -228,17 +229,13 @@ class AffirmationStore:
             yield _documents.review_event_record(entry, document)
 
     def write_nodes(self, records: Iterable[NodeRecord]) -> None:
-        """Persist node records, one document rewritten per kind touched."""
+        """Persist node records, one document rewritten per kind touched.
+
+        :implements: SEG-SREQ-227
+        """
         schemas = self._prepared()
-        batch: dict[str, list[_documents.Entry]] = {}
-        for record in records:
-            entry = _documents.node_entry(record)
-            _validation.validate_entry(
-                schemas, entry, _layout.node_schema(record.kind), f"node {record.local_id!r}"
-            )
-            batch.setdefault(record.kind, []).append(entry)
-        for kind, entries in batch.items():
-            self._rewrite(_layout.node_document(self.root, kind), entries)
+        batch = self._node_batch(schemas, records)
+        self._rewrite_nodes(batch)
 
     def write_edges(
         self, records: Iterable[EdgeRecord], *, demote: Iterable[EdgeReference] = ()
@@ -246,6 +243,7 @@ class AffirmationStore:
         """Persist edge records, one document rewritten per kind touched.
 
         :implements: SEG-SREQ-051
+        :implements: SEG-SREQ-227
 
         A record that would replace an incumbent carrying the hash it was
         affirmed against with one carrying none is a demotion, and a demotion
@@ -258,8 +256,64 @@ class AffirmationStore:
         the whole batch before a byte lands, as validation already does.
         """
         schemas = self._prepared()
+        batch = self._edge_batch(schemas, records)
+        self._check_demotions(batch, frozenset(demote))
+        self._rewrite_edges(batch)
+
+    def write_records(
+        self,
+        nodes: Iterable[NodeRecord],
+        edges: Iterable[EdgeRecord],
+        *,
+        demote: Iterable[EdgeReference] = (),
+    ) -> None:
+        """Persist node and edge records together, or persist nothing.
+
+        :implements: SEG-SREQ-227
+
+        Both batches are validated, and the demotions are checked, before the
+        first document is rewritten. A refusal anywhere therefore leaves every
+        document as it was, which :meth:`write_nodes` followed by
+        :meth:`write_edges` cannot promise, because the nodes would already
+        be written when the edges are refused.
+        """
+        schemas = self._prepared()
+        node_batch = self._node_batch(schemas, nodes)
+        edge_batch = self._edge_batch(schemas, edges)
+        self._check_demotions(edge_batch, frozenset(demote))
+        self._rewrite_nodes(node_batch)
+        self._rewrite_edges(edge_batch)
+
+    def _node_batch(
+        self, schemas: _validation.SchemaSet, records: Iterable[NodeRecord]
+    ) -> dict[str, list[_documents.Entry]]:
+        """The entries to write, by node kind, each validated; a test outcome is refused."""
+        batch: dict[str, list[_documents.Entry]] = {}
+        for record in records:
+            if record.kind in taxonomy.evidence_node_kinds():
+                raise AffirmationStoreError(
+                    f"node {record.local_id!r} is a {record.kind}: the case stores no test "
+                    "evidence, which is built from run bundles when a verdict is made"
+                )
+            entry = _documents.node_entry(record)
+            _validation.validate_entry(
+                schemas, entry, _layout.node_schema(record.kind), f"node {record.local_id!r}"
+            )
+            batch.setdefault(record.kind, []).append(entry)
+        return batch
+
+    def _edge_batch(
+        self, schemas: _validation.SchemaSet, records: Iterable[EdgeRecord]
+    ) -> dict[str, list[tuple[EdgeRecord, _documents.Entry]]]:
+        """The entries to write, by edge kind, each validated; an evidence edge is refused."""
         batch: dict[str, list[tuple[EdgeRecord, _documents.Entry]]] = {}
         for record in records:
+            if record.kind in taxonomy.evidence_edge_kinds():
+                raise AffirmationStoreError(
+                    f"edge {record.from_id!r} -> {record.to_id!r} is of kind {record.kind}: "
+                    "the case stores no test evidence, which is built from run bundles "
+                    "when a verdict is made"
+                )
             entry = _documents.edge_entry(record)
             _validation.validate_entry(
                 schemas,
@@ -268,11 +322,17 @@ class AffirmationStore:
                 f"edge {record.from_id!r} -> {record.to_id!r}",
             )
             batch.setdefault(record.kind, []).append((record, entry))
-        self._check_demotions(batch, frozenset(demote))
+        return batch
+
+    def _rewrite_nodes(self, batch: Mapping[str, list[_documents.Entry]]) -> None:
+        for kind, entries in batch.items():
+            self._rewrite(_layout.node_document(self.root, kind), entries)
+
+    def _rewrite_edges(
+        self, batch: Mapping[str, list[tuple[EdgeRecord, _documents.Entry]]]
+    ) -> None:
         for kind, pairs in batch.items():
-            self._rewrite(
-                _layout.edge_document(self.root, kind), [entry for _, entry in pairs]
-            )
+            self._rewrite(_layout.edge_document(self.root, kind), [entry for _, entry in pairs])
 
     def _check_demotions(
         self,

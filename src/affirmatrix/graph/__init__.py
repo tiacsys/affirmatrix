@@ -9,8 +9,10 @@ looks complete, seals to a perfectly valid root, and is wrong.
 
 An edge that was never affirmed is reported as pending (SEG-SREQ-016), judged
 by whether it carries a hash it was affirmed against rather than by what its
-record claims. Beyond that the builder carries recorded state rather than
-recomputing it: the builder assembles, the suspect detector derives (ADR-0004).
+record claims. The one exception is an edge whose record reports it as broken:
+that verdict does not depend on an affirmation, so the builder keeps it. Beyond
+that the builder carries recorded state rather than recomputing it: the
+builder assembles, the suspect detector derives (ADR-0004).
 
 What it deliberately does *not* refuse is as important. An edge pointing at a
 node that is not present is built, not rejected — a dangling endpoint is a
@@ -174,12 +176,19 @@ def _check_content_hashes(record: NodeRecord) -> None:
 
 
 def _admit_edge(record: EdgeRecord) -> EdgeRecord:
+    """Admit one edge record, with its state as the builder reports it.
+
+    An edge that carries no hash was never affirmed, and the builder reports
+    it as pending. The one exception is an edge whose record reports it as
+    broken: that verdict does not depend on an affirmation, so the builder
+    keeps it.
+    """
     if record.kind not in taxonomy.edge_kinds():
         raise GraphError(
             f"edge {record.from_id!r} -> {record.to_id!r} declares kind "
             f"{record.kind!r}, which the vocabulary does not contain"
         )
-    if record.edge_hash is None and record.state is not LinkState.PENDING:
+    if record.edge_hash is None and record.state not in (LinkState.PENDING, LinkState.BROKEN):
         # An edge carrying nothing it was affirmed against was never affirmed,
         # whatever its record claims. Believing the label over the evidence
         # would let a producer assert a history that never happened.

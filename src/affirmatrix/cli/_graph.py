@@ -1,8 +1,9 @@
-"""The graph noun: judge consistency, and derive every edge's state (SEG-SREQ-076).
+"""The graph noun: judge consistency, and derive every strong edge's state (SEG-SREQ-076).
 
 ``graph check`` builds one record stream and reports what the builder
-knows; ``graph status`` derives every edge's state from both the recorded
-and the current streams.
+knows; it reads no run bundle. ``graph status`` derives every strong edge's
+state from both the recorded and the current streams, and reports the test
+evidence of the configured run bundles apart, with its own counts.
 """
 
 from __future__ import annotations
@@ -10,11 +11,11 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 
-from affirmatrix import drift, graph
+from affirmatrix import drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore
 from affirmatrix.cli import _judgement, _outcome
 from affirmatrix.config import Config
-from affirmatrix.records import EdgeReference, LinkState, RecordSource
+from affirmatrix.records import EdgeReference, LinkState, NodeRecord, RecordSource
 from affirmatrix.sources import SourceError
 
 _SUSPECT_OR_BROKEN = frozenset(
@@ -33,10 +34,11 @@ def add_check_arguments(parser: argparse.ArgumentParser) -> None:
 
 def add_status_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--current", help="the producer supplying the current stream")
+    parser.add_argument("--revision", help="the implementation repository's revision, given as is")
 
 
 def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
-    """Report node and edge counts by kind, and the count of pending edges.
+    """Report node and edge counts by kind, and the count of pending strong edges.
 
     :implements: SEG-SREQ-077
     :implements: SEG-SREQ-078
@@ -54,7 +56,10 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
         return _outcome.exit_for(_outcome.NEGATIVE)
     node_counts = Counter(built.node(local_id).kind for local_id in built.node_ids())
     edge_counts = Counter(edge.kind for edge in built.edges)
-    pending = sum(1 for edge in built.edges if edge.state is LinkState.PENDING)
+    strong = taxonomy.propagating_edge_kinds()
+    pending = sum(
+        1 for edge in built.edges if edge.state is LinkState.PENDING and edge.kind in strong
+    )
     report = {
         "nodesByKind": dict(sorted(node_counts.items())),
         "edgesByKind": dict(sorted(edge_counts.items())),
@@ -70,21 +75,30 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
 
 
 def handle_status(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
-    """Derive every edge's state from both the recorded and current streams.
+    """Derive every strong edge's state from both streams, and report the evidence apart.
 
     :implements: SEG-SREQ-080
     :implements: SEG-SREQ-081
     :implements: SEG-SREQ-082
     :implements: SEG-SREQ-083
+    :implements: SEG-SREQ-112
     :implements: SEG-SREQ-137
     :implements: SEG-SREQ-138
+    :implements: SEG-SREQ-208
+    :implements: SEG-SREQ-210
+    :implements: SEG-SREQ-231
 
-    Every recorded edge the current stream no longer has is listed after the
-    rest, with no state, and takes no part in the verdict, which reads the
-    derived edges alone.
+    The rows are the strong edges. Every recorded edge the current stream no
+    longer has is listed after them, with no state, and takes no part in the
+    verdict. The evidence section counts the test outcomes recorded at the
+    current revision, those recorded at another revision, and the evidence
+    edges that touch an absent node. The current revision is asked for only
+    when the current stream holds a test outcome. The verdict is negative for
+    a strong edge that is suspect or broken and for a dangling evidence edge,
+    and never for an outcome at any revision.
     """
     try:
-        current = _judgement.resolve_current(args.current, config)
+        current = _judgement.resolve_current(args.current, config, evidence=True)
     except _judgement.JudgementError as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return _outcome.exit_for(_outcome.INDETERMINATE)
@@ -94,26 +108,66 @@ def handle_status(args: argparse.Namespace, config: Config, store: AffirmationSt
     except (graph.GraphError, drift.DriftError, SourceError) as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return _outcome.exit_for(_outcome.INDETERMINATE)
-    rows = [_status_row(built, edge, store, verbose=args.verbose) for edge in built.edges]
+    outcomes = _outcome_nodes(built)
+    revision = None
+    if outcomes:
+        try:
+            revision = _judgement.resolve_gate_revision(config, given=args.revision)
+        except _judgement.JudgementError as error:
+            _outcome.render_refusal(str(error), as_json=args.json)
+            return _outcome.exit_for(_outcome.INDETERMINATE)
+    strong = taxonomy.propagating_edge_kinds()
+    strong_edges = [edge for edge in built.edges if edge.kind in strong]
+    rows = [_status_row(built, edge, store, verbose=args.verbose) for edge in strong_edges]
     rows += [
         _vanished_row(edge)
         for edge in sorted(derivation.vanished, key=lambda e: (e.from_id, e.to_id, e.kind))
+        if edge.kind in strong
     ]
+    evidence = _evidence_counts(built, outcomes, revision)
     if args.json:
-        _outcome.render_json({"edges": rows})
+        _outcome.render_json({"edges": rows, "evidence": evidence})
     else:
         _print_status(rows)
-    not_active = {edge.state for edge in built.edges if edge.state is not LinkState.ACTIVE}
-    if not_active & _SUSPECT_OR_BROKEN:
+        print(
+            f"evidence: {evidence['current']} at the current revision, "
+            f"{evidence['stale']} at another revision, {evidence['dangling']} dangling"
+        )
+    not_active = {edge.state for edge in strong_edges if edge.state is not LinkState.ACTIVE}
+    if not_active & _SUSPECT_OR_BROKEN or evidence["dangling"]:
         return _outcome.exit_for(_outcome.NEGATIVE)
     return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def _outcome_nodes(built: graph.Graph) -> list[NodeRecord]:
+    """Every test outcome node of the built graph."""
+    return [node for kind in taxonomy.evidence_node_kinds() for node in built.nodes_of_kind(kind)]
+
+
+def _evidence_counts(
+    built: graph.Graph, outcomes: list[NodeRecord], revision: str | None
+) -> dict[str, int]:
+    """Outcomes at ``revision``, outcomes at another one, and evidence edges to an absent node.
+
+    ``revision`` is ``None`` only when ``outcomes`` is empty, so both outcome
+    counts are then zero.
+    """
+    present = built.node_ids()
+    current = sum(1 for node in outcomes if node.revision == revision)
+    dangling = sum(
+        1
+        for edge in built.edges
+        if edge.kind in taxonomy.evidence_edge_kinds()
+        and (edge.from_id not in present or edge.to_id not in present)
+    )
+    return {"current": current, "stale": len(outcomes) - current, "dangling": dangling}
 
 
 def _current_or_case(
     args: argparse.Namespace, config: Config, store: AffirmationStore
 ) -> RecordSource:
     if args.current is not None:
-        return _judgement.resolve_current(args.current, config)
+        return _judgement.resolve_current(args.current, config, evidence=False)
     return store
 
 

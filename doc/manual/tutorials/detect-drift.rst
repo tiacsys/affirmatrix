@@ -4,7 +4,7 @@ Detecting drift
 .. admonition:: Prerequisites
 
    - The affirmed, committed graph from :doc:`affirm-an-edge` — fourteen
-     edges active, the other 287 pending.
+     edges active, the other 265 pending.
 
 An affirmation binds a judgement to content *as it stood*. The moment the
 content moves, the judgement is stale — and the point of this tool is that
@@ -29,15 +29,15 @@ them, one line per edge:
    $ affirmatrix graph status | grep -c '(active)'
    14
    $ affirmatrix graph status | grep -c '(pending)'
-   287
+   265
    $ affirmatrix graph status > /dev/null; echo $?
    0
 
 The line shape is the one ``edge show`` prints: source, the kind between
 ``--[`` and ``]-->``, target, and the derived state in parentheses. That
-is 301 lines, and this page never prints them all; where it needs the
-interesting ones it filters, and says so. The graph you have affirmed is
-clean in the only sense that matters here: no line is anything but
+is 279 lines and a last line of evidence counts, and this page never prints
+them all; where it needs the interesting ones it filters, and says so. The graph you have affirmed is
+clean in the only sense that matters here: no edge line is anything but
 ``active`` or ``pending``, and pending is not drift. An edge nobody has
 affirmed has nothing to have drifted from, so it does not fail the verdict
 (:need:`SEG-SREQ-082`). The exit code is the contract, and ``--json``
@@ -270,7 +270,7 @@ the verdict (:need:`SEG-SREQ-138`):
    $ affirmatrix graph status --case ./case-copy --current ./store-copy | grep '^SEG-TS-003 --'
    SEG-TS-003 --[Verifies]--> SEG-SREQ-032  vanished from the current stream
    $ affirmatrix graph status --case ./case-copy --current ./store-copy | wc -l
-   301
+   280
    $ affirmatrix graph status --case ./case-copy --current ./store-copy | grep -c '(active)'
    13
    $ affirmatrix graph status --case ./case-copy --current ./store-copy > /dev/null; echo $?
@@ -281,8 +281,8 @@ the verdict (:need:`SEG-SREQ-138`):
    2
 
 The vanished edge is listed last, outside the parentheses that hold a
-state: 301 lines, the 300 the current stream supplies and the one it does
-not, and one active edge fewer. Its listing does not turn the verdict,
+state: 280 lines: the 278 edges the current stream supplies, the one it does not,
+and the last line of evidence counts. One active edge is fewer. Its listing does not turn the verdict,
 which reads only the edges that have a state. ``edge show`` does not
 select it, since it is no edge of the current stream. Removal is your
 decision, and it is by name

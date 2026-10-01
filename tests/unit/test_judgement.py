@@ -177,3 +177,12 @@ def test_resolve_timestamp_defaults_to_now_and_is_timezone_aware() -> None:
 
 def test_resolve_evaluation_date_parses_an_explicit_iso_date() -> None:
     assert _judgement.resolve_evaluation_date("2030-01-02").isoformat() == "2030-01-02"
+
+
+def test_the_gates_revision_of_a_repository_git_cannot_read_is_a_judgement_error(
+    tmp_path: Path,
+) -> None:
+    """SEG-SREQ-208: no obtainable revision is a request the command line cannot judge."""
+    cfg = config.Config(repositories={"implementation": tmp_path}, implementation="implementation")
+    with pytest.raises(_judgement.JudgementError, match="cannot be read"):
+        _judgement.resolve_gate_revision(cfg, given=None)

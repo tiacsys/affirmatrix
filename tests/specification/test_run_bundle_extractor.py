@@ -58,7 +58,6 @@ def _refused(tmp_path: Path, bundle: Path, word: str, **options) -> None:
         streams(write_config(tmp_path, [bundle], **options))
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-219: the extractor reads three loose records")
 def test_a_run_is_read_from_its_bundle_and_from_no_other_record(tmp_path: Path) -> None:
     """A run is read from its bundle and from no other record.
 
@@ -86,7 +85,6 @@ def test_a_run_is_read_from_its_bundle_and_from_no_other_record(tmp_path: Path) 
     assert {node.result.value for node in outcomes} == {"passed", "skipped"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-221: the extractor checks no digest")
 def test_a_digest_that_differs_from_the_configured_one_is_refused(tmp_path: Path) -> None:
     """A bundle whose digest differs from the configured digest is refused.
 
@@ -111,7 +109,6 @@ def test_a_digest_that_differs_from_the_configured_one_is_refused(tmp_path: Path
     _refused(tmp_path, bundle, "digest", digests=[right])
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-222: no code reads a dirty flag")
 def test_a_run_whose_implementation_checkout_was_dirty_is_refused(tmp_path: Path) -> None:
     """A bundle that records a dirty implementation checkout is refused.
 
@@ -140,9 +137,6 @@ def test_a_run_whose_implementation_checkout_was_dirty_is_refused(tmp_path: Path
     assert len(_accepted(tmp_path, own, implementation="zephyr")) == OUTCOMES_PER_RUN
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-223: the extractor reads the name from a loose record"
-)
 def test_a_run_with_no_recorded_name_is_refused(tmp_path: Path) -> None:
     """A bundle that records no run name is refused.
 
@@ -164,7 +158,6 @@ def test_a_run_with_no_recorded_name_is_refused(tmp_path: Path) -> None:
         _refused(tmp_path, variant, "name")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-224: the extractor is given the artifact path")
 def test_a_bundle_with_no_readable_run_artifact_is_refused(tmp_path: Path) -> None:
     """A bundle that holds no readable run artifact is refused.
 
@@ -188,7 +181,6 @@ def test_a_bundle_with_no_readable_run_artifact_is_refused(tmp_path: Path) -> No
     _refused(tmp_path, unreadable, "artifact")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-225: the extractor takes no bundle")
 def test_an_export_with_a_build_timestamp_is_refused(tmp_path: Path) -> None:
     """A need export that carries a build timestamp is refused.
 
@@ -216,7 +208,6 @@ def test_an_export_with_a_build_timestamp_is_refused(tmp_path: Path) -> None:
         _refused(tmp_path, bundle, "timestamp", **{option: stamped})
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-186: the revision comes from a loose record")
 def test_an_outcomes_revision_is_the_implementation_checkouts_revision_in_the_bundle(
     tmp_path: Path,
 ) -> None:
@@ -245,7 +236,6 @@ def test_an_outcomes_revision_is_the_implementation_checkouts_revision_in_the_bu
     assert {node.revision for node in _accepted(tmp_path, word)} == {"a-word"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-187: the revision comes from a loose record")
 def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     """A bundle that records no revision for the implementation checkout is refused.
 
@@ -300,9 +290,6 @@ def _without_digest(tmp_path: Path, file: str) -> Path:
     return path
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-197: a run carries an artifact, a revision and a name"
-)
 def test_a_run_carries_a_bundle_and_a_digest_and_an_old_run_entry_is_refused(
     tmp_path: Path,
 ) -> None:
