@@ -13,12 +13,13 @@ state an edge carries before anyone has affirmed it.
    If the refines edges form a cycle or a self-loop, then the graph builder
    shall report a graph-level error.
 
-.. sreq:: Unaffirmed edges are pending
+.. sreq:: Unaffirmed edges are pending, and a broken edge stays broken
    :id: SEG-SREQ-016
    :refines: SEG-SYS-001
 
    The graph builder shall report an edge that has never been affirmed as
-   pending.
+   pending, except an edge its record reports as broken, which it shall
+   report as broken.
 
 .. sreq:: Unrecognized kinds are rejected
    :id: SEG-SREQ-031

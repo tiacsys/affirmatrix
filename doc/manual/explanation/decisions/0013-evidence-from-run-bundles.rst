@@ -13,8 +13,10 @@ the text above leaves out.
 - Only strong edges are counted as ``pending``. A report gives no evidence
   edge a link state.
 - A current or stale outcome never turns ``graph status`` negative. A dangling
-  evidence edge still does: an edge of kind ``Confirms``, ``Witnesses`` or
-  ``Excuses`` that touches an absent node gives exit status 1, as before.
+  edge of any kind does. An edge that touches an absent node is ``broken``, and
+  ``graph status`` exits with status 1 for it. Before this change the graph
+  builder reset a never-affirmed ``broken`` edge to ``pending``, so such an
+  edge gave exit status 0. The builder now keeps ``broken``.
 - ``case sync`` removes the stored test outcome nodes and evidence edges, after
   it has written the derived stream. This is the one exception to "a sync never
   removes a record". The removal needs no revision and no bundle, and a case
