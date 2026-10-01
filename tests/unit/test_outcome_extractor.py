@@ -88,23 +88,15 @@ def _tree(tmp_path: Path, *, suites: list[dict[str, Any]] | None = None) -> Path
     return tmp_path
 
 
-def _run(root: Path, directory: str = "run") -> config.RunInputs:
-    """The configured run over a bundle of ``root``, with the digest the bundle has now."""
-    bundle = root / directory
-    return config.RunInputs(bundle=bundle, digest=bundle_digest(bundle))
-
-
 def _extractor(
     root: Path,
     *,
-    runs: list[config.RunInputs] | None = None,
+    bundles: list[Path] | None = None,
     implementations: bool = True,
     checkout: str | None = "impl",
 ) -> TwisterOutcomeExtractor:
     return TwisterOutcomeExtractor(
-        root,
-        [_run(root)] if runs is None else runs,
-        repository="repo",
+        [root / "run"] if bundles is None else bundles,
         checkout=checkout,
         specifications=config.SpecificationInputs(export=root / "specs.json", doxygen=root),
         implementations=(
@@ -189,8 +181,8 @@ def test_two_runs_supply_their_outcomes_in_order_each_with_its_own_revision(
     _bundle(
         root / "later", [_suite("sc", {"sc.s.a": "failed"})], revision="def456", name="second"
     )
-    runs = [_run(root), _run(root, "later")]
-    nodes = list(_extractor(root, runs=runs).nodes())
+    bundles = [root / "run", root / "later"]
+    nodes = list(_extractor(root, bundles=bundles).nodes())
     assert [(node.local_id, node.revision) for node in nodes] == [
         ("first-plat-one-sc/TC_A", "abc123"),
         ("first-plat-one-sc/TC_B", "abc123"),
@@ -263,11 +255,17 @@ def test_a_run_artifact_without_testsuites_is_refused(tmp_path: Path) -> None:
         _extractor(root)
 
 
-def test_a_run_artifact_outside_the_root_is_refused(tmp_path: Path) -> None:
+def test_a_bundle_anywhere_is_read_and_anchored_by_its_digest(tmp_path: Path) -> None:
+    """SEG-SREQ-190: the bundle needs no root; its digest is the repository member."""
     root = _tree(tmp_path / "root")
     outside = _tree(tmp_path / "elsewhere")
-    with pytest.raises(OutcomeError, match="outside the root"):
-        _extractor(root, runs=[_run(outside)])
+    nodes = list(_extractor(root, bundles=[outside / "run"]).nodes())
+    digest = bundle_digest(outside / "run")
+    anchors = {
+        (n.content_anchors["contentHash"].repository, n.content_anchors["contentHash"].path)
+        for n in nodes
+    }
+    assert anchors == {(digest, "twister.json")}
 
 
 @pytest.mark.parametrize("status", ["blocked", "", None, 3])
@@ -378,9 +376,9 @@ def test_two_runs_that_give_one_outcome_identity_are_refused_naming_both_runs(
 ) -> None:
     root = _tree(tmp_path)
     _bundle(root / "twin", [_suite("sc", {"sc.s.a": "passed"})], revision="def456")
-    runs = [_run(root), _run(root, "twin")]
+    bundles = [root / "run", root / "twin"]
     with pytest.raises(OutcomeError, match=r"twin.*already supplied.*run bundle .*run$"):
-        _extractor(root, runs=runs)
+        _extractor(root, bundles=bundles)
 
 
 def test_a_bundle_digest_has_the_form_sha256_and_64_hex_digits(tmp_path: Path) -> None:
@@ -441,7 +439,7 @@ def test_an_unusable_implementation_checkout_is_refused(
 def test_each_outcome_names_the_digest_of_the_bundle_that_supplied_it(tmp_path: Path) -> None:
     root = _tree(tmp_path)
     _bundle(root / "later", [_suite("sc", {"sc.s.a": "failed"})], name="second")
-    extractor = _extractor(root, runs=[_run(root), _run(root, "later")])
+    extractor = _extractor(root, bundles=[root / "run", root / "later"])
     assert extractor.evidence_bundles() == {
         f"{RUN_NAME}-plat-one-sc/TC_A": bundle_digest(root / "run"),
         f"{RUN_NAME}-plat-one-sc/TC_B": bundle_digest(root / "run"),

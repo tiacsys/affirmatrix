@@ -99,7 +99,7 @@ def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStor
     vanished evidence edge is not reported: the removal covers it.
     """
     try:
-        current = _judgement.resolve_current(args.current, config, evidence=False)
+        current = _judgement.resolve_current(args.current, config)
     except _judgement.JudgementError as error:
         return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
     try:
@@ -212,7 +212,7 @@ def _record_counts(store: AffirmationStore) -> dict[str, int]:
 
 def _producer_readable(args: argparse.Namespace, config: Config) -> bool:
     try:
-        current = _judgement.resolve_current(args.current, config, evidence=False)
+        current = _judgement.resolve_current(args.current, config)
         list(current.nodes())
     except (_judgement.JudgementError, SourceError):
         return False

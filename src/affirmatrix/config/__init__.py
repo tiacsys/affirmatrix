@@ -34,12 +34,12 @@ The file is real YAML, read with ``yaml.safe_load``:
 The producer block may also name the inputs the extraction readers consume —
 ``repository``, ``requirements`` (``export``, ``types``, ``source``),
 ``specifications`` and ``implementations`` (each ``export`` and ``doxygen``),
-and a list of ``outcomes`` (each ``bundle`` and ``digest``, and optionally
-``repository``). Every named field of a sub-block present is required, except
-the ``repository`` of a run. It names the configured repository that the
-bundle of the run lies under, and the producer's repository is the default. A
-run that gives the keys ``artifact``, ``revision`` or ``name`` is refused:
-those keys are no longer read. A missing or mistyped field raises, naming its dotted key.
+Every named field of a sub-block present is required. A missing or mistyped
+field raises, naming its dotted key.
+
+The file names no run. Run bundles are named when a command is run, with
+``--bundle``, so a ``producer`` block that holds the key ``outcomes`` is
+refused, whatever the key holds.
 
 A relative path the file gives (``case``, ``producer.root``, every
 ``repositories`` value and every location under the producer's readers) is
@@ -60,7 +60,6 @@ carried elsewhere and is no part of this component's own.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -115,26 +114,11 @@ class ImplementationInputs:
 
 
 @dataclass(frozen=True, slots=True)
-class RunInputs:
-    """Where one run to be extracted is recorded, and the digest its record must have.
-
-    ``bundle`` is the run bundle, a directory. ``digest`` is the digest the
-    bundle is expected to have, as ``sha256:`` and 64 lowercase hex digits.
-    ``repository`` names the configured repository that the bundle lies
-    under, or is ``None`` for the producer's own repository.
-    """
-
-    bundle: Path
-    digest: str
-    repository: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class ProducerConfig:
     """The inputs of every stream of records the producer supplies.
 
-    Each reader's block is ``None`` when the file does not configure it;
-    ``outcomes`` is empty when no run is configured. ``repository`` names the
+    Each reader's block is ``None`` when the file does not configure it.
+    ``repository`` names the
     repository against which the producer's anchors and paths are resolved.
     """
 
@@ -142,7 +126,6 @@ class ProducerConfig:
     requirements: RequirementsInputs | None = None
     specifications: SpecificationInputs | None = None
     implementations: ImplementationInputs | None = None
-    outcomes: tuple[RunInputs, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -315,16 +298,23 @@ def _producer(values: Mapping[str, object], base: Path) -> ProducerConfig | None
     """The producer's reader inputs, or none when the file names no reader key.
 
     :implements: SEG-SREQ-191
+    :implements: SEG-SREQ-234
 
     A ``producer`` block holding only ``root`` (the store loader's own key)
-    configures no reader and yields ``None``.
+    configures no reader and yields ``None``. A block that holds the key
+    ``outcomes`` is refused whatever it holds.
     """
     producer = values.get("producer")
     if producer is None:
         return None
     if not isinstance(producer, Mapping):
         raise ConfigError("'producer' must be a mapping")
-    reader_keys = ("repository", "requirements", "specifications", "implementations", "outcomes")
+    if "outcomes" in producer:
+        raise ConfigError(
+            "'producer.outcomes' is not read: run bundles are named at invocation, "
+            "with --bundle, and the file names none"
+        )
+    reader_keys = ("repository", "requirements", "specifications", "implementations")
     if not any(producer.get(key) is not None for key in reader_keys):
         return None
     return ProducerConfig(
@@ -332,7 +322,6 @@ def _producer(values: Mapping[str, object], base: Path) -> ProducerConfig | None
         requirements=_requirements_inputs(producer, base),
         specifications=_specification_inputs(producer, base),
         implementations=_implementation_inputs(producer, base),
-        outcomes=_outcome_inputs(producer, base),
     )
 
 
@@ -403,61 +392,6 @@ def _implementation_inputs(
     )
 
 
-_OLD_RUN_KEYS = ("artifact", "revision", "name")
-_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
-
-
-def _outcome_inputs(producer: Mapping[str, object], base: Path) -> tuple[RunInputs, ...]:
-    """Each run's bundle, digest and repository name, in file order.
-
-    :implements: SEG-SREQ-197
-    """
-    runs = producer.get("outcomes")
-    if runs is None:
-        return ()
-    if not isinstance(runs, list):
-        raise ConfigError("'producer.outcomes' must be a list")
-    result = []
-    for index, run in enumerate(runs):
-        where = f"producer.outcomes[{index}]"
-        if not isinstance(run, Mapping):
-            raise ConfigError(f"'{where}' must be a mapping")
-        old = [key for key in _OLD_RUN_KEYS if key in run]
-        if old:
-            raise ConfigError(
-                f"'{where}' gives the keys {', '.join(map(repr, old))}, which are no longer "
-                "read; a run gives 'bundle' and 'digest'"
-            )
-        result.append(
-            RunInputs(
-                bundle=_path(run, where, "bundle", base),
-                digest=_digest(run, where),
-                repository=_run_repository(run, where),
-            )
-        )
-    return tuple(result)
-
-
-def _digest(run: Mapping[str, object], where: str) -> str:
-    """The digest a run's bundle is expected to have: ``sha256:`` and 64 hex digits."""
-    value = _required(run, where, "digest")
-    if not isinstance(value, str) or not _DIGEST_PATTERN.fullmatch(value):
-        raise ConfigError(
-            f"'{where}.digest' must be 'sha256:' and 64 lowercase hex digits, not {value!r}"
-        )
-    return value
-
-
-def _run_repository(run: Mapping[str, object], where: str) -> str | None:
-    """The name of the repository a run's files lie under, or ``None`` when not given."""
-    value = run.get("repository")
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise ConfigError(f"'{where}.repository' must be a string, not {value!r}")
-    return value
-
-
 def _block(producer: Mapping[str, object], key: str) -> Mapping[str, object] | None:
     block = producer.get(key)
     if block is None:
@@ -497,7 +431,6 @@ __all__ = [
     "ImplementationInputs",
     "ProducerConfig",
     "RequirementsInputs",
-    "RunInputs",
     "SpecificationInputs",
     "load",
 ]

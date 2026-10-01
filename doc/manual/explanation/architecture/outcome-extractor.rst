@@ -11,7 +11,7 @@ command line composes it into the current stream, and only for the verbs that
 judge evidence (see the last section).
 
 The case stores none of these records. They are built when a verdict is made,
-from the bundles the configuration names, and they are not kept
+from the bundles the command line names, and they are not kept
 (:need:`SEG-SYS-013`).
 
 The run bundle
@@ -64,19 +64,12 @@ the bundle records it and nothing judges it. A missing ``.sha`` file of the
 implementation checkout refuses the run (:need:`SEG-SREQ-187`). So does a missing
 ``.dirty`` file of it, because a bundle that says nothing about that checkout
 does not show it clean. A flag that holds only blanks is clean. When no
-``implementation`` is configured, a configured run is refused.
+``implementation`` is configured, a named bundle is refused.
 
 .. code-block:: python
 
    extractor = TwisterOutcomeExtractor(
-       Path("evidence"),
-       [
-           config.RunInputs(
-               bundle=Path("evidence/clean"),
-               digest="sha256:f960023c5eacbe8c4a2fc2867d4d78c38bede4c02b1df6ac150f5804c8ca0043",
-           )
-       ],
-       repository="evidence",
+       [Path("evidence/clean")],
        checkout="toolbox",
        specifications=config.SpecificationInputs(
            export=Path("needs/test-specification/needs.json"),
@@ -102,21 +95,20 @@ Each input has one purpose:
 * the **implementation export** gives the witnesses (:need:`SEG-SREQ-189`). When
   ``implementations`` is ``None``, no Witnesses edge is supplied.
 
-``repository`` is the configured name of the repository ``root`` belongs to,
-never a path (:need:`SEG-SREQ-134`). The ``doxygen`` field of the two input classes
-is not used. ``root`` must hold every bundle. The report format built is a JSON
-test report; a pytest run would be a second format of the same component. It is
-not built.
+The ``doxygen`` field of the two input classes is not used. A bundle can lie
+anywhere; the extractor needs no root and no repository name for it
+(:need:`SEG-SREQ-134`). The report format built is a JSON test report; a pytest
+run would be a second format of the same component. It is not built.
 
 The digest of a bundle
 ----------------------
 
 A bundle is identified by its digest, not by its name. A name is chosen by a
-person and can repeat; a digest follows the bytes. The configuration gives the
-digest each bundle must have, and the extractor refuses a bundle whose digest
-differs (:need:`SEG-SREQ-221`). It does this for every configured bundle,
-whatever its revision, on every run of a verb that reads bundles. It reads every
-file each time.
+person and can repeat; a digest follows the bytes. Nobody gives the extractor
+a digest to check: it computes the digest of every bundle it is given,
+whatever its revision, on every run of a verb that reads bundles, and it reads
+every file each time. The digest is the repository member of the anchor of each
+outcome (see below), and a proof records it (see :doc:`proof-package`).
 
 The digest is built from a list with one line for each regular file under the
 bundle directory:
@@ -247,12 +239,14 @@ The anchor
 ----------
 
 Each outcome has one content hash, ``contentHash``, with an anchor of three
-parts (:need:`SEG-SREQ-190`): the configured repository name; the path of the artifact
-relative to ``root``, in posix form; and the locator ``nodeid:`` followed by
-the result's test identifier, for example
-``nodeid:safe_data.api.safe_data.init_and_verify``. An artifact that lies
-outside ``root`` is refused. Links are resolved first, so the path names the
-file that the extractor reads.
+parts (:need:`SEG-SREQ-190`): the digest of the run bundle, written as
+``sha256:`` and 64 hex digits, as the repository member; the path of the run
+artifact within the bundle, ``twister.json``; and the locator ``nodeid:``
+followed by the result's test identifier, for example
+``nodeid:safe_data.api.safe_data.init_and_verify``. The bundle can lie anywhere:
+a copy in another directory under another name gives the same anchors, and a
+copy with one added file has another digest and so another repository member.
+The path never depends on where the bundle is.
 
 The edges
 ---------
@@ -275,8 +269,8 @@ every result there, so the records it supplies are never a short stream. The
 message names the bundle and, for one result, the result. The extractor
 refuses:
 
-* a bundle whose digest differs from the configured digest
-  (:need:`SEG-SREQ-221`), or that holds a link or an unreadable file;
+* a path that is not a directory, or a bundle that holds a link or an unreadable
+  file (:need:`SEG-SREQ-224`, :need:`SEG-SREQ-220`);
 * a dirty implementation checkout, or a missing dirty flag of it
   (:need:`SEG-SREQ-222`);
 * a revision record that is missing, empty or holds only a line feed
@@ -286,7 +280,6 @@ refuses:
 * an artifact that cannot be read, is not a JSON object, has no
   ``testsuites`` list or holds a suite or a result without the fields it needs
   (:need:`SEG-SREQ-224`);
-* an artifact outside ``root``;
 * an export that cannot be read, holds no or several versions or carries a
   build timestamp (:need:`SEG-SREQ-225`);
 * a result with a status outside the table, a result that maps to no need and
@@ -302,23 +295,28 @@ How the command line composes it
 
 The command line chains the requirements reader, the content extractor and
 this extractor into the current stream, in that order, but it builds this
-extractor only for ``graph status``, ``proof check`` and ``proof generate``
-(:need:`SEG-SREQ-229`). ``case sync``, ``case check``, ``graph check``,
-``edge show`` and ``edge affirm`` read no bundle (:need:`SEG-SREQ-230`): the
-configuration names a bundle, and these verbs never open it. A bundle that the
-extractor refuses ends the verb with exit status 2 and no verdict
-(:need:`SEG-SREQ-231`).
+extractor only for ``graph status``, ``proof check`` and ``proof generate``,
+and only when the operator names bundles with the option ``--bundle PATH``
+(:need:`SEG-SREQ-229`). The option may be given more than once. A relative path
+is taken from the working directory. With no ``--bundle``, the stream holds no
+test evidence. The same directory named twice, also through a link, is read
+once (:need:`SEG-SREQ-232`); two copies of one bundle give the same outcome
+identities and are refused.
 
-Each run in ``producer.outcomes`` gives a ``bundle`` and a ``digest``, and has
-an optional ``repository`` key. The key names the configured repository that
-the bundle of the run lies under, and the producer's repository is the
-default. The composition builds one extractor for each repository that the
-runs name. The ``root`` of the extractor is the path of that repository. The
-runs keep their order in the configuration. The extractor needs the test-case
-export, so ``producer.specifications`` must be set. The implementation export is
-optional. Without it, no Witnesses edge is supplied. A run that still gives the
-keys ``artifact``, ``revision`` or ``name`` is refused when the configuration
-is read.
+``case sync``, ``case check``, ``graph check``, ``edge show`` and ``edge
+affirm`` take no ``--bundle`` (:need:`SEG-SREQ-230`): the option is an argument
+error for them, with exit status 2, and they never open a bundle. A bundle that
+the extractor refuses ends the verb with exit status 2 and no verdict
+(:need:`SEG-SREQ-231`). Naming bundles together with ``--current`` is refused
+with exit status 2, because a given stream holds its own evidence
+(:need:`SEG-SREQ-233`). Naming bundles with no test-case export in the
+configuration, or with a store at ``producer.root``, is refused with exit status
+2 (:need:`SEG-SREQ-235`): the extractor needs ``producer.specifications``. The
+implementation export is optional; without it, no Witnesses edge is supplied.
+
+The configuration names no run. A ``producer`` block that holds the key
+``outcomes`` is refused when the file is read, whatever the key holds
+(:need:`SEG-SREQ-234`).
 
 A proof records the digest of each bundle that supplied an outcome in its scope
 (see :doc:`proof-package`), so a reader can fetch the same bundles and build the

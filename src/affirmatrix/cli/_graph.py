@@ -3,7 +3,7 @@
 ``graph check`` builds one record stream and reports what the builder
 knows; it reads no run bundle. ``graph status`` derives every strong edge's
 state from both the recorded and the current streams, and reports the test
-evidence of the configured run bundles apart, with its own counts.
+evidence of the run bundles named with ``--bundle`` apart, with its own counts.
 """
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ def add_check_arguments(parser: argparse.ArgumentParser) -> None:
 def add_status_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--current", help="the producer supplying the current stream")
     parser.add_argument("--revision", help="the implementation repository's revision, given as is")
+    _judgement.add_bundle_argument(parser)
 
 
 def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
@@ -98,7 +99,7 @@ def handle_status(args: argparse.Namespace, config: Config, store: AffirmationSt
     and never for an outcome at any revision.
     """
     try:
-        current = _judgement.resolve_current(args.current, config, evidence=True)
+        current = _judgement.resolve_current(args.current, config, bundles=args.bundle)
     except _judgement.JudgementError as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return _outcome.exit_for(_outcome.INDETERMINATE)
@@ -167,7 +168,7 @@ def _current_or_case(
     args: argparse.Namespace, config: Config, store: AffirmationStore
 ) -> RecordSource:
     if args.current is not None:
-        return _judgement.resolve_current(args.current, config, evidence=False)
+        return _judgement.resolve_current(args.current, config)
     return store
 
 

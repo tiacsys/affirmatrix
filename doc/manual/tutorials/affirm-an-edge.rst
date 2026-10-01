@@ -267,7 +267,7 @@ recorded and the current stream — 279 lines, of which the head is quoted
 here; fourteen are active, the other 265 remain pending. Pending edges do not
 fail the verdict, so it exits 0 (:need:`SEG-SREQ-082`). The last line is not
 an edge. It reports the test evidence apart from the edges, with its counts
-(:need:`SEG-SREQ-210`); this repository's case has no run bundle configured,
+(:need:`SEG-SREQ-210`); no run bundle is named here (a bundle is named with ``--bundle``),
 so all three are zero.
 
 What is not affirmable

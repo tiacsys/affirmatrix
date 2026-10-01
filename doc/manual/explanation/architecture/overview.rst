@@ -17,7 +17,8 @@ both endpoints. A human affirms an edge, once, by recording a judgement that
 the two ends belong together; from then on the tool recomputes hashes and says
 whether the content the judgement was made over still holds. Test evidence is
 not kept in the graph's store: a verdict builds it, at that time, from run
-bundles that the configuration names and identifies by digest.
+bundles that the command line names, with ``--bundle``, and that a digest
+identifies.
 
 Three workflows sit on that mechanism:
 
@@ -81,9 +82,9 @@ Four things stand around the tool.
   the content extractor and the outcome extractor are composed by the command
   line from the configured ``producer`` block into one current stream, which is
   how a project with a sphinx-needs export, Doxygen output and run bundles
-  builds its case. The outcome extractor reads each run bundle under a
-  configured repository, checks its digest, and it is built only for the
-  verbs that judge evidence. The case stores no outcome and no evidence edge.
+  builds its case. The outcome extractor reads each run bundle that the
+  operator names with ``--bundle``, computes its digest, and it is built only for
+  the verbs that judge evidence. The case stores no outcome and no evidence edge.
 
 Outside the tool: any write to git, continuous integration, and storage of
 content of any kind. A pipeline that wants to run the tool runs the command

@@ -62,9 +62,6 @@ def _refused(tmp_path: Path, bundle: Path, word: str, **options) -> None:
         streams(write_config(tmp_path, **options), [bundle])
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-219: the producer takes no bundles named by the caller"
-)
 def test_a_run_is_read_from_its_bundle_and_from_no_other_record(tmp_path: Path) -> None:
     """A run is read from its bundle and from no other record.
 
@@ -92,9 +89,6 @@ def test_a_run_is_read_from_its_bundle_and_from_no_other_record(tmp_path: Path) 
     assert {node.result.value for node in outcomes} == {"passed", "skipped"}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-222: the producer takes no bundles named by the caller"
-)
 def test_a_run_whose_implementation_checkout_was_dirty_is_refused(tmp_path: Path) -> None:
     """A bundle that records a dirty implementation checkout is refused.
 
@@ -123,9 +117,6 @@ def test_a_run_whose_implementation_checkout_was_dirty_is_refused(tmp_path: Path
     assert len(_accepted(tmp_path, own, implementation="zephyr")) == OUTCOMES_PER_RUN
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-223: the producer takes no bundles named by the caller"
-)
 def test_a_run_with_no_recorded_name_is_refused(tmp_path: Path) -> None:
     """A bundle that records no run name is refused.
 
@@ -147,9 +138,6 @@ def test_a_run_with_no_recorded_name_is_refused(tmp_path: Path) -> None:
         _refused(tmp_path, variant, "name")
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-224: the producer takes no bundles named by the caller"
-)
 def test_a_bundle_with_no_readable_run_artifact_is_refused(tmp_path: Path) -> None:
     """A bundle that holds no readable run artifact is refused.
 
@@ -173,9 +161,6 @@ def test_a_bundle_with_no_readable_run_artifact_is_refused(tmp_path: Path) -> No
     _refused(tmp_path, unreadable, "artifact")
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-225: the producer takes no bundles named by the caller"
-)
 def test_an_export_with_a_build_timestamp_is_refused(tmp_path: Path) -> None:
     """A need export that carries a build timestamp is refused.
 
@@ -203,9 +188,6 @@ def test_an_export_with_a_build_timestamp_is_refused(tmp_path: Path) -> None:
         _refused(tmp_path, bundle, "timestamp", **{option: stamped})
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-186: the producer takes no bundles named by the caller"
-)
 def test_an_outcomes_revision_is_the_implementation_checkouts_revision_in_the_bundle(
     tmp_path: Path,
 ) -> None:
@@ -234,9 +216,6 @@ def test_an_outcomes_revision_is_the_implementation_checkouts_revision_in_the_bu
     assert {node.revision for node in _accepted(tmp_path, word)} == {"a-word"}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-187: the producer takes no bundles named by the caller"
-)
 def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     """A bundle that records no revision for the implementation checkout is refused.
 
@@ -267,7 +246,6 @@ def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     assert len(_accepted(tmp_path, other)) == OUTCOMES_PER_RUN
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-234: the configuration still accepts a run entry")
 def test_a_configuration_that_names_a_run_is_refused(tmp_path: Path, capsys) -> None:
     """A configuration that names a run is refused, whatever the entry holds.
 
@@ -302,9 +280,6 @@ def test_a_configuration_that_names_a_run_is_refused(tmp_path: Path, capsys) -> 
             assert out.strip()
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-224: the producer takes no bundles named by the caller"
-)
 def test_a_path_that_is_not_a_directory_is_refused(tmp_path: Path, capsys) -> None:
     """A path named as a run bundle that is not a directory with a readable artifact is refused.
 
@@ -331,9 +306,6 @@ def test_a_path_that_is_not_a_directory_is_refused(tmp_path: Path, capsys) -> No
     assert out.strip()
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-190: the anchor names a repository, not the bundle"
-)
 def test_an_anchor_names_the_bundle_by_its_digest(tmp_path: Path) -> None:
     """An outcome's anchor names its run bundle by the digest, wherever the bundle lies.
 

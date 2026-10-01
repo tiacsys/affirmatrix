@@ -26,6 +26,7 @@ def add_check_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--evaluation-date", help="ISO date a waiver's expiry is judged against")
     parser.add_argument("--timestamp", help="ISO timestamp the snapshot identifier is minted from")
     parser.add_argument("--revision", help="the implementation repository's revision, given as is")
+    _judgement.add_bundle_argument(parser)
 
 
 def add_generate_arguments(parser: argparse.ArgumentParser) -> None:
@@ -131,10 +132,10 @@ def _build(args: argparse.Namespace, config: Config, store: AffirmationStore):
     """The built graph and the current stream, or ``(None, None, exit_status)`` on refusal.
 
     Both proof verbs judge test evidence, so the current stream includes the
-    configured run bundles and a bundle that is refused ends the verb here.
+    run bundles named with ``--bundle`` and a bundle that is refused ends the verb here.
     """
     try:
-        current = _judgement.resolve_current(args.current, config, evidence=True)
+        current = _judgement.resolve_current(args.current, config, bundles=args.bundle)
     except _judgement.JudgementError as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return None, None, _outcome.exit_for(_outcome.INDETERMINATE)

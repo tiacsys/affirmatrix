@@ -9,6 +9,8 @@ that depends on it.
 
 from __future__ import annotations
 
+import argparse
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -148,27 +150,51 @@ def resolve_gate_revision(config: Config, *, given: str | None) -> str:
     return str(revision)
 
 
-def resolve_current(current: str | None, config: Config, *, evidence: bool = True) -> RecordSource:
+def add_bundle_argument(parser: argparse.ArgumentParser) -> None:
+    """``--bundle PATH``, repeatable: a run bundle that supplies the test evidence.
+
+    Only the verbs that judge evidence register it. A relative path is taken
+    from the working directory. Without it, the stream holds no test evidence.
+    """
+    parser.add_argument(
+        "--bundle",
+        action="append",
+        default=[],
+        type=Path,
+        metavar="PATH",
+        help="a run bundle that supplies test evidence; repeatable",
+    )
+
+
+def resolve_current(
+    current: str | None, config: Config, *, bundles: Sequence[Path] = ()
+) -> RecordSource:
     """The producer supplying the current stream: given, configured, or refused.
 
     :implements: SEG-SREQ-142
     :implements: SEG-SREQ-229
-    :implements: SEG-SREQ-230
+    :implements: SEG-SREQ-233
 
     ``current`` names a would-be store explicitly and wins when given.
     Otherwise the producer is composed from the configuration: the configured
     readers when any is set, the would-be store at ``producer.root`` when none
-    is (see :func:`affirmatrix.sources.composed.from_config`). ``evidence``
-    says whether the verb judges test evidence: only then are the configured
-    run bundles read, and a verb that passes false reads none. Absent all of
+    is (see :func:`affirmatrix.sources.composed.from_config`). ``bundles`` are
+    the run bundles the caller names with ``--bundle``: only they are read, and
+    a verb that names none reads none. Naming bundles together with a given
+    stream is refused, because the stream holds its own evidence. Absent all of
     them, or when a configured input cannot be read, the request cannot be
     judged — every such failure is a source error, folded into one exception
     here rather than asking each call site to catch several.
     """
     try:
         if current is not None:
+            if bundles:
+                raise SourceError(
+                    "run bundles are named and a current stream is given; a given stream "
+                    "holds its own test evidence, so name one or the other"
+                )
             return StoreLoader(root=Path(current))
-        return composed.from_config(config, evidence=evidence)
+        return composed.from_config(config, bundles=bundles)
     except SourceError as error:
         raise JudgementError(str(error)) from error
 

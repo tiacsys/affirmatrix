@@ -1,6 +1,6 @@
 """The outcome extractor — TestOutcome records from run bundles.
 
-Reads one run bundle per configured run and supplies a TestOutcome for every
+Reads each run bundle the caller names and supplies a TestOutcome for every
 test result the bundle's run artifact records (SEG-SREQ-176, SEG-SREQ-219). The
 bundle is the only record of a run that is read. The artifact is the authority
 on what a test did. The test-case export is the authority on which
@@ -13,14 +13,15 @@ artifact ``twister.json``, the run's name in ``run.name``, the command in
 ``<checkout>.sha`` and a dirty flag ``<checkout>.dirty``. Any other file of the
 directory belongs to the bundle's identity and is not read.
 
-The identity of a bundle is its digest (:func:`bundle_digest`), not its name. The
-configuration gives the digest each bundle must have, and a bundle whose digest
-differs is refused (SEG-SREQ-220, SEG-SREQ-221). The checkout that decides is
+The identity of a bundle is its digest (:func:`bundle_digest`), not its name
+(SEG-SREQ-220). The extractor computes it and expects none: it is the
+repository member of every outcome's anchor and the proof's record of the
+bundle (SEG-SREQ-190). The checkout that decides is
 the one the configuration names as the implementation checkout: its revision
 record is the revision of every outcome of the run, and a run whose
 implementation checkout was dirty is refused (SEG-SREQ-222, SEG-SREQ-186,
-SEG-SREQ-187). The checks apply to every configured bundle, whatever its
-revision.
+SEG-SREQ-187). The checks apply to every named bundle, whatever its revision. A bundle
+named twice is read once (SEG-SREQ-232).
 
 The one run format built is a JSON test report: an object with a
 ``testsuites`` list. Each suite names a scenario and a platform and lists its
@@ -173,6 +174,20 @@ def bundle_digest(path: Path) -> str:
     return _DIGEST_PREFIX + content_hash(lines.encode("utf-8")).hex()
 
 
+def _named_once(bundles: Sequence[Path]) -> tuple[Path, ...]:
+    """The bundles in the order named, each once.
+
+    Two names for one directory (a link, a path that goes through another
+    directory and back) are one bundle, and it is read once.
+
+    :implements: SEG-SREQ-232
+    """
+    seen: dict[Path, Path] = {}
+    for bundle in bundles:
+        seen.setdefault(bundle.resolve(), bundle)
+    return tuple(seen.values())
+
+
 def _read_record(path: Path, what: str) -> str:
     """The one line that the record at ``path`` holds, without its line terminator.
 
@@ -293,10 +308,8 @@ class _Specifications:
 class TwisterOutcomeExtractor:
     """TestOutcome records from run bundles, with their Confirms and Witnesses edges.
 
-    ``root`` is the directory that the anchors' paths are relative to, and
-    every bundle must lie under it. ``runs`` gives each run's bundle and the
-    digest the bundle must have. ``repository`` is the configured name of the
-    repository ``root`` belongs to (a name, never a path). ``checkout`` is the
+    ``bundles`` are the run bundles, directories, in the order named; a bundle
+    may lie anywhere. ``checkout`` is the
     name of the implementation checkout: the bundle's record of that checkout
     gives the revision and the dirty flag that decide. ``specifications``
     names the test-case export that maps each result to its need.
@@ -311,10 +324,8 @@ class TwisterOutcomeExtractor:
     :implements: SEG-SREQ-219
     """
 
-    root: Path
-    runs: Sequence[config.RunInputs]
+    bundles: Sequence[Path]
     _: KW_ONLY
-    repository: str
     checkout: str | None
     specifications: config.SpecificationInputs
     implementations: config.ImplementationInputs | None
@@ -326,16 +337,17 @@ class TwisterOutcomeExtractor:
         implementers = self._read_implementers()
         outcomes: list[_Outcome] = []
         supplied_by: dict[str, Path] = {}
-        for run in self.runs:
-            for outcome in self._read_run(run, specifications, implementers):
+        named = _named_once(self.bundles)
+        for bundle in named:
+            for outcome in self._read_run(bundle, specifications, implementers):
                 if outcome.local_id in supplied_by:
                     raise OutcomeError(
-                        f"run bundle {run.bundle}: the outcome identity {outcome.local_id!r} "
+                        f"run bundle {bundle}: the outcome identity {outcome.local_id!r} "
                         f"is already supplied by the run bundle {supplied_by[outcome.local_id]}"
                     )
-                supplied_by[outcome.local_id] = run.bundle
+                supplied_by[outcome.local_id] = bundle
                 outcomes.append(outcome)
-        object.__setattr__(self, "runs", tuple(self.runs))
+        object.__setattr__(self, "bundles", named)
         object.__setattr__(self, "_outcomes", tuple(outcomes))
 
     def _read_specifications(self) -> _Specifications:
@@ -383,7 +395,7 @@ class TwisterOutcomeExtractor:
 
     def _read_run(
         self,
-        run: config.RunInputs,
+        bundle: Path,
         specifications: _Specifications,
         implementers: Mapping[str, tuple[str, ...]],
     ) -> Iterator[_Outcome]:
@@ -392,22 +404,16 @@ class TwisterOutcomeExtractor:
         The checks come first and apply to every bundle: the digest, then the
         implementation checkout's dirty flag and revision, then the name.
         """
-        actual = bundle_digest(run.bundle)
-        if actual != run.digest:
-            raise OutcomeError(
-                f"run bundle {run.bundle}: its digest is {actual}, not the configured "
-                f"digest {run.digest}"
-            )
+        actual = bundle_digest(bundle)
         checkout = self._checkout_name()
-        revision = _read_revision(run.bundle / f"{checkout}{_REVISION_SUFFIX}")
-        _check_clean(run.bundle / f"{checkout}{_DIRTY_SUFFIX}", checkout)
-        name = _read_record(run.bundle / _NAME_FILE, "name record")
+        revision = _read_revision(bundle / f"{checkout}{_REVISION_SUFFIX}")
+        _check_clean(bundle / f"{checkout}{_DIRTY_SUFFIX}", checkout)
+        name = _read_record(bundle / _NAME_FILE, "name record")
         if "/" in name:
             raise OutcomeError(
-                f"name record {run.bundle / _NAME_FILE}: the name {name!r} holds a slash"
+                f"name record {bundle / _NAME_FILE}: the name {name!r} holds a slash"
             )
-        artifact = run.bundle / _ARTIFACT_FILE
-        path = self._relative(artifact)
+        artifact = bundle / _ARTIFACT_FILE
         for suite in self._read_suites(artifact):
             scenario, platform = suite["name"], suite["platform"]
             identifiers = specifications.formed(scenario)
@@ -423,7 +429,7 @@ class TwisterOutcomeExtractor:
                     specification=specification,
                     result=result,
                     revision=revision,
-                    anchor=self._anchor(path, identifier, specification, run_identifier, result),
+                    anchor=self._anchor(actual, identifier, specification, run_identifier, result),
                     witnesses=self._witnesses(specifications, implementers, specification),
                     digest=actual,
                 )
@@ -439,18 +445,6 @@ class TwisterOutcomeExtractor:
         if Path(name).name != name or name in {".", ".."}:
             raise OutcomeError(f"the implementation checkout {name!r} is not a plain name")
         return name
-
-    def _relative(self, artifact: Path) -> str:
-        """The artifact's path relative to ``root``, in posix form; one outside ``root`` is refused.
-
-        Links are resolved first, so the path names the file that is read.
-        """
-        try:
-            return artifact.resolve().relative_to(self.root.resolve()).as_posix()
-        except ValueError:
-            raise OutcomeError(
-                f"run artifact {artifact}: lies outside the root {self.root}"
-            ) from None
 
     @staticmethod
     def _read_suites(artifact: Path) -> list[Mapping[str, Any]]:
@@ -528,7 +522,7 @@ class TwisterOutcomeExtractor:
 
     def _anchor(
         self,
-        path: str,
+        bundle_digest_text: str,
         identifier: str,
         specification: str,
         run_identifier: str,
@@ -536,17 +530,18 @@ class TwisterOutcomeExtractor:
     ) -> ContentAnchor:
         """The content hash of one outcome, anchored at the run artifact and the result.
 
-        The repository is named by its configured name. The path is the
-        artifact's, relative to ``root``. The locator is ``nodeid:`` and the
-        result's test identifier.
+        The repository member is the digest of the bundle, ``sha256:`` and 64
+        hex digits, wherever the bundle lies. The path is the run artifact
+        within the bundle. The locator is ``nodeid:`` and the result's test
+        identifier.
 
         :implements: SEG-SREQ-190
         :implements: SEG-SREQ-134
         """
         return ContentAnchor(
             digest=content_hash(canonical_record(specification, run_identifier, result)),
-            repository=self.repository,
-            path=path,
+            repository=bundle_digest_text,
+            path=_ARTIFACT_FILE,
             locator=f"nodeid:{identifier}",
         )
 

@@ -43,14 +43,15 @@ Noun          Verb                Library call
 
 A verb that needs the current stream (every one but ``case init``) resolves
 it in one order. Only ``graph status``, ``proof check`` and ``proof generate``
-read run bundles into it (see "Test evidence" below). ``--current <path>`` names a would-be store explicitly and
-wins. Otherwise the producer is composed from the configuration: the
-requirements reader when ``producer.requirements`` is set, then the content
-extractor when ``producer.implementations`` or ``producer.specifications`` is
-set, then the outcome extractor when ``producer.outcomes`` lists a run, chained
-in that order into one stream
-(:func:`affirmatrix.sources.composed.from_config`). Only when the
-configuration names no reader and no run does ``producer.root`` (the would-be
+read run bundles into it (see "Test evidence" below).
+
+``--current <path>`` names a would-be store explicitly and wins. Otherwise the
+producer is composed from the configuration: the requirements reader when
+``producer.requirements`` is set, then the content extractor when
+``producer.implementations`` or ``producer.specifications`` is set, then the
+outcome extractor over the bundles named with ``--bundle``, chained in that
+order into one stream (:func:`affirmatrix.sources.composed.from_config`). Only
+when the configuration names no reader does ``producer.root`` (the would-be
 store) apply. Absent all of them, or when a configured input cannot be read, the
 command exits 2: it was asked to judge something with no second stream to
 compare against.
@@ -62,62 +63,49 @@ the requirements source directory relative to the repository's path. A source
 directory that does not lie under the repository, a ``producer.repository``
 that is missing or not in ``repositories``, an unreadable export and a source
 file that cannot be read are each a request it could not judge (exit 2).
-Each run in ``producer.outcomes`` lies under the repository that its
-``repository`` key names. The producer's repository is the default. The
-composition reads the runs of one repository with one outcome extractor,
-rooted at the path of that repository, and the anchor of an outcome names that
-repository. The outcomes need ``producer.specifications``, because a result
-cannot map to a test specification without that export. A run that names a
-repository missing from ``repositories``, and outcomes without
-``producer.specifications``, are each a request it could not judge (exit 2).
+The configuration names no run bundle. A ``producer`` block that holds the key
+``outcomes`` is refused when the file is read (exit 2). The operator names the
+bundles with ``--bundle`` when a command runs, so a new run is a new option
+value and needs no change to the file.
 
 A run bundle often lies outside the source checkout, for example in a build
-directory. Map that directory to a repository name and give each run that name:
+directory. It needs no repository name and no entry in ``repositories``:
 
-.. code-block:: yaml
+.. code-block:: console
 
-   repositories:
-     source: /path/to/source
-     results: /path/to/build/bundles
-   implementation: source
-   producer:
-     repository: source
-     specifications:
-       export: /path/to/needs/test-specification/needs.json
-       doxygen: /path/to/xml/dox-testspec
-     implementations:
-       export: /path/to/needs/api-traceability/needs.json
-       doxygen: /path/to/xml/dox-api
-     outcomes:
-       - bundle: /path/to/build/bundles/run-2026-09-29
-         digest: sha256:f960023c5eacbe8c4a2fc2867d4d78c38bede4c02b1df6ac150f5804c8ca0043
-         repository: results
+   $ affirmatrix graph status --bundle /path/to/build/bundles/run-2026-09-29 --revision <revision>
 
-The bundle lies under the path of ``results``, so the anchor of an outcome
-reads ``run-2026-09-29/twister.json`` in the repository ``results``. The
-``digest`` is the one the bundle must have (:doc:`outcome-extractor`). The
+The bundle needs ``producer.specifications`` in the configuration, because a
+result cannot map to a test specification without the test-case export. The
 revision of each outcome is the revision the bundle records for the checkout
-that the top-level key ``implementation`` names (here ``source``, so the file
-``source.sha`` in the bundle). A new run is a new bundle and a new digest in the
-configuration. A run that still gives ``artifact``, ``revision`` or ``name`` is
-a refusal when the file is read. The key ``implementations`` is optional.
+that the top-level key ``implementation`` names (for ``implementation: source``,
+the file ``source.sha`` in the bundle). The key ``implementations`` is optional.
 Without it, no Witnesses edge is supplied.
 
 Test evidence
 -------------
 
 Test evidence is not stored in the case. A verb that judges evidence builds it
-from the configured run bundles every time it runs
+from the run bundles that the operator names, every time it runs
 (:need:`SEG-SREQ-229`, :need:`SEG-SREQ-230`):
 
-* ``graph status``, ``proof check`` and ``proof generate`` read every
-  configured bundle and check its digest. Every bundle is checked, whatever
-  revision it records. A bundle that is refused (a wrong digest, a dirty
-  implementation checkout, no name, no run artifact, no revision) ends the verb
-  with exit status 2 and no verdict (:need:`SEG-SREQ-231`).
+* ``graph status``, ``proof check`` and ``proof generate`` take the option
+  ``--bundle PATH``, which may be given more than once. A relative path is taken
+  from the working directory, while every path in the configuration file is
+  taken from the file's directory. With no ``--bundle``, the stream holds no test
+  evidence. Each named bundle is read and its digest is computed, whatever
+  revision it records. The same directory named twice, also through a link, is
+  read once (:need:`SEG-SREQ-232`). A bundle that is refused (a path that is not a
+  directory, a dirty implementation checkout, no name, no run artifact, no
+  revision) ends the verb with exit status 2 and no verdict
+  (:need:`SEG-SREQ-231`).
+* ``--bundle`` together with ``--current`` is refused with exit status 2: a given
+  stream holds its own evidence (:need:`SEG-SREQ-233`). ``--bundle`` with no
+  test-case export in the configuration, or with a store at ``producer.root``,
+  is refused with exit status 2 (:need:`SEG-SREQ-235`).
 * ``case sync``, ``case check``, ``graph check``, ``edge show`` and ``edge
-  affirm`` read no bundle. A configuration that names a bundle that does not
-  exist does not disturb them.
+  affirm`` take no ``--bundle``. The option is an argument error for them, with
+  exit status 2, and they read no bundle.
 
 The proof verbs always need the implementation revision (:need:`SEG-SREQ-112`).
 ``graph status`` needs it only where the current stream holds a test outcome,
@@ -249,15 +237,11 @@ Key                                   Carries
 ====================================  ===============================================================
 ``case``                              the case root (default ``./case``)
 ``producer.root``                     the current stream's producer (default: none configured)
-``producer.repository``, the reader   the readers' inputs; when any reader or run is set it supplies
-blocks and ``producer.outcomes``      the current stream and ``producer.root`` is ignored
-``producer.outcomes[].bundle``        the run bundle, a directory
-``producer.outcomes[].digest``        the digest the bundle must have, ``sha256:`` and 64 hex digits
-``producer.outcomes[].repository``    the repository a run's bundle lies under (default: the
-                                      producer's repository)
+``producer.repository`` and the       the readers' inputs; when any reader is set it supplies
+reader blocks                         the current stream and ``producer.root`` is ignored
 ``repositories.<name>``               a repository name an anchor may carry, mapped to its path
 ``implementation``                    which configured repository is the implementation one, and
-                                      the checkout of a run bundle whose revision and dirty flag
+                                      the checkout of a named run bundle whose revision and dirty flag
                                       decide
 ``roles``                             a list, the accepted affirmation roles
 ====================================  ===============================================================

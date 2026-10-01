@@ -100,9 +100,6 @@ def _naming(opened: Session, *bundles: Path) -> Session:
     return Session(config=opened.config, case=opened.case, bundles=tuple(bundles))
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-231: no verb takes a bundle named on the command line"
-)
 def test_a_refused_bundle_gives_exit_status_2_and_no_verdict(tmp_path: Path, capsys) -> None:
     """A run bundle that the extractor refuses gives exit status 2 and no verdict.
 
@@ -148,9 +145,6 @@ def test_a_refused_bundle_gives_exit_status_2_and_no_verdict(tmp_path: Path, cap
     assert not (tmp_path / "out" / "proofs").exists()
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-230: the three evidence verbs take no --bundle yet"
-)
 def test_the_other_verbs_take_no_run_bundle(tmp_path: Path, capsys) -> None:
     """Case sync, case check, graph check, edge show and edge affirm take no run bundle.
 
@@ -201,9 +195,6 @@ def test_the_other_verbs_take_no_run_bundle(tmp_path: Path, capsys) -> None:
         assert run(capsys, *command, *opened.args())[0] == 0
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-229: no verb takes a bundle named on the command line"
-)
 def test_the_verbs_that_judge_evidence_include_exactly_the_named_bundles(
     tmp_path: Path, capsys
 ) -> None:
@@ -253,7 +244,6 @@ def test_the_verbs_that_judge_evidence_include_exactly_the_named_bundles(
     assert document["evidence"]["current"] + document["evidence"]["stale"] == 2 * OUTCOMES_PER_RUN
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-210: graph status takes no --bundle yet")
 def test_graph_status_reports_the_evidence_apart_with_its_counts(tmp_path: Path, capsys) -> None:
     """Graph status reports outcomes at the current revision and at another, and dangling edges.
 
@@ -537,9 +527,6 @@ def test_graph_check_counts_pending_strong_edges_only(
     assert set(document) == {"nodesByKind", "edgesByKind", "pending"}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-232: no verb takes a bundle named on the command line"
-)
 def test_a_bundle_named_twice_is_read_once(tmp_path: Path, capsys) -> None:
     """A bundle named more than once in one invocation is read once.
 
@@ -571,9 +558,6 @@ def test_a_bundle_named_twice_is_read_once(tmp_path: Path, capsys) -> None:
     assert status == 2
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-233: no verb takes a bundle named on the command line"
-)
 def test_a_named_bundle_and_a_given_stream_cannot_be_judged_together(
     tmp_path: Path, capsys
 ) -> None:
@@ -609,9 +593,6 @@ def test_a_named_bundle_and_a_given_stream_cannot_be_judged_together(
     assert not (tmp_path / "out" / "proofs").exists()
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-235: no verb takes a bundle named on the command line"
-)
 def test_a_named_bundle_needs_a_test_case_export(tmp_path: Path, capsys) -> None:
     """A run bundle named with no test-case export in the configuration gives exit status 2.
 

@@ -19,6 +19,7 @@ REVISION = ["--revision", "a-revision"]
 
 #: The revision the clean run bundle records for the implementation checkout.
 BUNDLE_REVISION = "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+CLEAN_BUNDLE = Path(__file__).resolve().parents[1] / "fixtures" / "run_bundles" / "clean"
 
 
 def _design_nodes(current: StoreLoader) -> list[NodeRecord]:
@@ -377,25 +378,13 @@ def test_graph_status_over_a_composed_producer_exits_0_with_every_edge_pending(
     assert {row["state"] for row in rows} == {"pending"}
 
 
-def test_graph_check_over_a_case_synced_with_outcomes_configured_reports_62_pending(
-    tmp_path: Path, composed_config, capsys
-) -> None:
-    """SEG-SREQ-077, SEG-SREQ-227: the case holds no outcome, so no evidence edge is counted."""
-    _, root = _synced_from_composed(tmp_path, composed_config, outcomes=True)
-    capsys.readouterr()
-    status = main(["graph", "check", "--case", str(root), "--json"])
-    report = json.loads(capsys.readouterr().out)
-    assert status == 0
-    assert report["pending"] == 62
-    assert "TestOutcome" not in report["nodesByKind"]
-    assert set(report["edgesByKind"]) == {"Implements", "Refines", "Verifies"}
 
 
-def test_graph_status_over_a_producer_with_outcomes_lists_strong_edges_and_counts_evidence(
+def test_graph_status_over_a_named_bundle_lists_strong_edges_and_counts_evidence(
     tmp_path: Path, composed_config, capsys
 ) -> None:
     """SEG-SREQ-080, SEG-SREQ-210: the 62 strong edges are the rows; the 76 outcomes are counted."""
-    config_path, root = _synced_from_composed(tmp_path, composed_config, outcomes=True)
+    config_path, root = _synced_from_composed(tmp_path, composed_config)
     capsys.readouterr()
     status = main(
         [
@@ -406,6 +395,8 @@ def test_graph_status_over_a_producer_with_outcomes_lists_strong_edges_and_count
             "--case",
             str(root),
             "--json",
+            "--bundle",
+            str(CLEAN_BUNDLE),
             "--revision",
             BUNDLE_REVISION,
         ]

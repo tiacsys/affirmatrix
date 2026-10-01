@@ -28,7 +28,7 @@ def would_be_store_copy(tmp_path: Path) -> Path:
 
 TOOLBOX_EVIDENCE = Path(__file__).resolve().parents[1] / "fixtures" / "toolbox_evidence"
 RUN_BUNDLES = Path(__file__).resolve().parents[1] / "fixtures" / "run_bundles"
-CLEAN_BUNDLE_DIGEST = "sha256:f960023c5eacbe8c4a2fc2867d4d78c38bede4c02b1df6ac150f5804c8ca0043"
+CLEAN_BUNDLE = RUN_BUNDLES / "clean"
 
 
 @pytest.fixture
@@ -39,10 +39,9 @@ def composed_config(tmp_path: Path) -> Callable[..., Path]:
     written; nothing is copied and nothing under the fixture is written. The
     repository is the fixture's ``sources`` tree (where the extractor finds the
     C files Doxygen names) and the requirement source directory is a path under
-    it that need not exist. Each keyword overrides one part. ``outcomes=True``
-    adds the repository ``evidence`` (the directory of the run bundle fixtures,
-    so the clean bundle lies under it), one run that names the clean bundle and
-    its digest, and the implementation checkout the bundle holds records for.
+    it that need not exist. Each keyword overrides one part. The file names no run
+    bundle: a test names it where the command line would, and the top-level key
+    ``implementation`` names the checkout whose records the bundle holds.
     """
 
     def write(
@@ -52,7 +51,6 @@ def composed_config(tmp_path: Path) -> Callable[..., Path]:
         producer: dict | None = None,
         requirements: bool = True,
         content: bool = True,
-        outcomes: bool = False,
     ) -> Path:
         evidence = TOOLBOX_EVIDENCE
         block: dict = {"repository": "toolbox"}
@@ -74,15 +72,6 @@ def composed_config(tmp_path: Path) -> Callable[..., Path]:
         mapped = (
             repositories if repositories is not None else {"toolbox": str(evidence / "sources")}
         )
-        if outcomes:
-            mapped = {"evidence": str(RUN_BUNDLES), **mapped}
-            block["outcomes"] = [
-                {
-                    "bundle": str(RUN_BUNDLES / "clean"),
-                    "digest": CLEAN_BUNDLE_DIGEST,
-                    "repository": "evidence",
-                }
-            ]
         block.update(producer or {})
         document = {"repositories": mapped, "implementation": "toolbox", "producer": block}
         path = (where or tmp_path) / "affirmatrix.yaml"
