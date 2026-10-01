@@ -82,13 +82,13 @@ case's own copy of the schemas.
    against with a record carrying no such hash, and demotion of that edge was
    not requested, then the affirmation store shall refuse the write.
 
-.. sreq:: A case's schema copy is rewritten from the packaged schemas on request
+.. sreq:: A case's schema copy is rewritten from the packaged schemas, and its stored evidence edges migrate, on request
    :id: SEG-SREQ-139
    :refines: SEG-SYS-007
 
    When the refresh of a case's schema copy is requested, the affirmation
-   store shall rewrite that copy from the packaged schemas and write
-   nothing else in the case.
+   store shall rewrite that copy from the packaged schemas and, apart from the
+   migration of stored evidence edges, write nothing else in the case.
 
 .. sreq:: A refresh reports each schema that differed
    :id: SEG-SREQ-140
@@ -96,3 +96,32 @@ case's own copy of the schemas.
 
    When the affirmation store refreshes a case's schema copy, it shall
    report each schema whose copy differed from the packaged one.
+
+.. sreq:: Refresh sets every stored pending evidence edge to stale
+   :id: SEG-SREQ-215
+   :refines: SEG-SREQ-139
+
+   When the affirmation store refreshes a case's schema copy, it shall rewrite
+   every evidence edge it holds in the state pending to the state stale.
+
+.. sreq:: Refresh leaves strong edges and hashed edges as they are
+   :id: SEG-SREQ-216
+   :refines: SEG-SREQ-139
+
+   When the affirmation store refreshes a case's schema copy, it shall leave
+   unchanged every strong edge and every edge record that carries an edge hash.
+
+.. sreq:: A refresh that cannot validate changes nothing
+   :id: SEG-SREQ-217
+   :refines: SEG-SREQ-139
+
+   If any node, edge or review event of the case, or any edge the refresh would
+   rewrite, does not validate against the refreshed schema copy, then the
+   affirmation store shall refuse the refresh and change nothing in the case.
+
+.. sreq:: The refresh report counts the migrated edges
+   :id: SEG-SREQ-218
+   :refines: SEG-SREQ-139
+
+   When the affirmation store refreshes a case's schema copy, it shall report
+   the number of evidence edges it rewrote.

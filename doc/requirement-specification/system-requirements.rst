@@ -78,3 +78,10 @@ beneath it, wherever those live in this document.
 
    affirmatrix shall change the recorded affirmation state only as the direct
    result of an act the operator performs.
+
+.. sys:: Evidence currency against a revision
+   :id: SEG-SYS-012
+
+   affirmatrix shall derive whether each evidence edge is current or stale from
+   the revision carried by the test outcome it touches, measured against the
+   current revision of the implementation repository.

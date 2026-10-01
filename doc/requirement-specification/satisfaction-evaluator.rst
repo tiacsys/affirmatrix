@@ -12,6 +12,9 @@ A skipped outcome is the runner's statement that the test did not run under
 one configuration. It adds no evidence and takes none away. A specification
 that every run skipped has no evidence, so its leaf is not satisfied.
 
+The evaluator does not read the state of an evidence edge. The gate has already
+cut the stale outcomes from the graph it hands over.
+
 .. sreq:: Leaf satisfaction rule
    :id: SEG-SREQ-006
    :refines: SEG-SYS-002

@@ -4,7 +4,7 @@ Graph Builder
 The graph builder turns node and edge records into the graph every other
 component reads. Its requirements cover what it must refuse — a cycle in the
 refines relation, a record of a kind the vocabulary does not contain — and the
-state an edge carries before anyone has affirmed it.
+state an edge carries when it arrives.
 
 .. sreq:: Refines cycles are a graph-level error
    :id: SEG-SREQ-004
@@ -13,12 +13,12 @@ state an edge carries before anyone has affirmed it.
    If the refines edges form a cycle or a self-loop, then the graph builder
    shall report a graph-level error.
 
-.. sreq:: Unaffirmed edges are pending
+.. sreq:: Unaffirmed edges that are not evidence edges are pending
    :id: SEG-SREQ-016
    :refines: SEG-SYS-001
 
-   The graph builder shall report an edge that has never been affirmed as
-   pending.
+   The graph builder shall report an edge that is not an evidence edge and has
+   never been affirmed as pending.
 
 .. sreq:: Unrecognized kinds are rejected
    :id: SEG-SREQ-031
@@ -26,3 +26,10 @@ state an edge carries before anyone has affirmed it.
 
    If a record declares a kind the taxonomy provider does not declare, then
    the graph builder shall reject that record.
+
+.. sreq:: The builder keeps an evidence edge's state
+   :id: SEG-SREQ-206
+   :refines: SEG-SYS-012
+
+   The graph builder shall report an evidence edge in the state its record
+   carries.

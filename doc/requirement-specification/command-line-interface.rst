@@ -76,6 +76,14 @@ Case
    The command-line interface shall report every vanished edge case sync's
    derivation finds, without removing it from the case.
 
+.. sreq:: case sync writes all or nothing
+   :id: SEG-SREQ-212
+   :refines: SEG-SREQ-072
+
+   If a record of the derived stream does not validate against the case's schema
+   copy, then the command-line interface shall write nothing to the case in
+   response to case sync and exit with status 2, a request it could not judge.
+
 .. sreq:: case remove takes only what its selector names
    :id: SEG-SREQ-075
    :refines: SEG-SREQ-069
@@ -88,8 +96,8 @@ Case
    :refines: SEG-SREQ-069
 
    The command-line interface shall let the operator request the refresh of
-   a case's schema copy, rendering the differences the affirmation store
-   reports.
+   a case's schema copy, rendering what the affirmation store reports about
+   it.
 
 Graph
 -----
@@ -107,8 +115,8 @@ Graph
    :refines: SEG-SREQ-076
 
    The command-line interface shall have graph check report node and edge
-   counts by kind and the count of pending edges, never a count of dangling
-   endpoints.
+   counts by kind and the count of pending edges that are not evidence edges,
+   never a count of dangling endpoints and never the state of an evidence edge.
 
 .. sreq:: An unbuildable current stream is graph check's verdict
    :id: SEG-SREQ-078
@@ -141,12 +149,13 @@ Graph
    given, then the command-line interface shall exit with status 2, a
    request it could not judge.
 
-.. sreq:: Pending edges do not affect graph status's verdict
+.. sreq:: Pending, current, and stale edges do not affect graph status's verdict
    :id: SEG-SREQ-082
    :refines: SEG-SREQ-080
 
-   While the only edges graph status reports as not active are pending, the
-   command-line interface shall exit with status 0, its positive verdict.
+   While every edge that graph status reports as not active is pending,
+   current or stale, the command-line interface shall exit with status 0, its
+   positive verdict.
 
 .. sreq:: Graph status's negative verdict names the suspect states and broken
    :id: SEG-SREQ-083
@@ -169,6 +178,14 @@ Graph
 
    The command-line interface shall leave a recorded edge that is absent
    from the current stream out of graph status's verdict.
+
+.. sreq:: graph status reports evidence edges apart
+   :id: SEG-SREQ-210
+   :refines: SEG-SREQ-080
+
+   The command-line interface shall have graph status report evidence edges
+   apart from the other edges, with the count of current evidence edges and the
+   count of stale evidence edges.
 
 Edge
 ----
@@ -299,6 +316,13 @@ Outcome vocabulary
    machine-readable rendering that structures the same report its
    human-readable rendering presents.
 
+.. sreq:: A refused store read is a request it could not judge
+   :id: SEG-SREQ-211
+   :refines: SEG-SREQ-095
+
+   If the affirmation store refuses a read, then the command-line interface shall
+   render that refusal and exit with status 2, a request it could not judge.
+
 Edge selection
 --------------
 
@@ -355,8 +379,9 @@ Judgement inputs
 
    The command-line interface shall supply every value a judgement depends
    on — an affirmation's role, reason, and source revisions, the package
-   gate's implementation revision, and the current stream a comparison is
-   made against — either as an explicit input, as
+   gate's implementation revision, the current revision that evidence edges
+   are derived against, and the current stream a comparison is made
+   against — either as an explicit input, as
    a value it discovers under one checked rule, or as a refusal when
    neither is available.
 
@@ -441,6 +466,48 @@ Judgement inputs
    take it from the first of these that is present: the stream the operator
    gives, the streams read from the producer's configured inputs, the
    producer at its configured location.
+
+.. sreq:: The current revision of edge-state derivation is given or discovered
+   :id: SEG-SREQ-207
+   :refines: SEG-SREQ-105
+
+   Where the current records hold an evidence edge, the command-line interface
+   shall obtain the current revision for every derivation of edge states as
+   given when it is given, and otherwise from the implementation repository.
+
+.. sreq:: No obtainable revision cannot be judged
+   :id: SEG-SREQ-208
+   :refines: SEG-SREQ-207
+
+   If the current records hold an evidence edge and the command-line interface
+   can obtain no current revision, then it shall exit with status 2, a request
+   it could not judge.
+
+.. sreq:: One revision serves the derivation and the gate
+   :id: SEG-SREQ-209
+   :refines: SEG-SREQ-207
+
+   When one invocation both derives edge states and evaluates a gate, the
+   command-line interface shall give the derivation and the gate the same
+   current revision.
+
+.. sreq:: A dirty implementation repository refuses a discovered revision for the recording verbs
+   :id: SEG-SREQ-213
+   :refines: SEG-SREQ-207
+
+   If case sync, proof check or proof generate would use a discovered current
+   revision and the implementation repository's content differs from its
+   committed content, then the command-line interface shall refuse to use that
+   revision, naming the differing paths, and exit with status 2, a request it
+   could not judge.
+
+.. sreq:: A dirty implementation repository does not refuse the display verbs
+   :id: SEG-SREQ-214
+   :refines: SEG-SREQ-207
+
+   While graph status, edge show or edge affirm uses a discovered current
+   revision, the command-line interface shall use that revision whatever the
+   state of the implementation repository's content.
 
 Draft posture
 -------------
