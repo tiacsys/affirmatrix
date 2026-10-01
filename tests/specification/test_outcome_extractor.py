@@ -1,12 +1,15 @@
-"""Verification suite for the outcome extractor over a twister run.
+"""Verification suite for the outcome extractor over a twister run, read from a run bundle.
 
 Each function below realizes one test specification (``SEG-TS-nnn``) and
 demonstrates the software requirement named in its ``:verifies:`` marker. The
 tests read the frozen evidence fixture under ``tests/fixtures/toolbox_evidence/``:
-the run artifact (a twister report), the two records kept beside it (the full
-revision and the run name), and the two need exports that give the mapping and
-the witnesses. The fixture holds four scenarios of 19 results each, 76 in all:
-65 passed and 11 skipped.
+the two need exports that give the mapping and the witnesses. The run itself is
+supplied as a flat run bundle, a copy of ``tests/fixtures/run_bundles/clean/``:
+the run artifact (a twister report), the full revision and the dirty flag of each
+checkout the run used, and the run name. The top-level key ``implementation`` of
+the configuration names the checkout whose revision the outcomes record; here
+that checkout is ``toolbox``. The fixture holds four scenarios of 19 results
+each, 76 in all: 65 passed and 11 skipped.
 
 The tests compute every expected value from the fixture files, never by calling
 the extractor. A result reaches its test-case need when the scenario, the suite
@@ -16,10 +19,17 @@ never split an identifier or an outcome identity to recover its parts. An
 expected content digest is the SHA-256 of the canonical record, a JSON object
 of ``result``, ``run`` and ``specification`` with sorted keys and no blanks.
 Every variant of an input is built in the test, in a temporary directory, by
-copying the whole fixture tree (the test cannot know which of its files the
-extractor opens) and editing the copy. The extractor is imported inside the
+copying the whole fixture tree and the clean bundle (the test cannot know which
+of their files the extractor opens) and editing the copy. The digest the run is
+given is computed after the edit, with the recipe of the architecture page
+written in plain Python (``evidence_support.recipe_digest``), so an edited
+bundle is never refused for its digest. The extractor is imported inside the
 helper that builds it, so an extractor that does not exist yet is an expected
 failure of the test, not of the collection.
+
+Without a copy, the tests read the clean bundle in place, the exports in the
+fixture, and the root ``tests/fixtures/run_bundles/``. With a copy, the root is
+the copy and the bundle is its directory ``bundle``.
 
 An error for what the inputs alone show (a missing revision record) is raised
 when the extractor is built. An error for one result is raised before the
@@ -44,10 +54,16 @@ import pytest
 from affirmatrix import config
 from affirmatrix.records import TestResult
 
+from .evidence_support import CLEAN_BUNDLE, recipe_digest
+
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "toolbox_evidence"
-ARTIFACT = Path("twister") / "twister.json"
-REVISION_RECORD = Path("revisions") / "toolbox.sha"
-NAME_RECORD = Path("revisions") / "run.name"
+#: The files of a bundle, relative to the bundle.
+ARTIFACT = Path("twister.json")
+REVISION_RECORD = Path("toolbox.sha")
+NAME_RECORD = Path("run.name")
+#: The directory of the bundle inside a copy of the fixture tree.
+BUNDLE_DIRECTORY = "bundle"
+CHECKOUT = "toolbox"
 SPECIFICATION_EXPORT = Path("needs") / "test-specification" / "needs.json"
 SPECIFICATION_XML = Path("xml") / "dox-safe-data-testspec"
 IMPLEMENTATION_EXPORT = Path("needs") / "api-traceability" / "needs.json"
@@ -94,10 +110,26 @@ def _edit_json(tree: Path, relative: Path, edit: Callable[[Any], None]) -> None:
 
 
 def _tree(tmp_path: Path, name: str = "tree") -> Path:
-    """A copy of the whole fixture, to be edited."""
+    """A copy of the whole fixture and of the clean bundle, to be edited."""
     copy = tmp_path / name
     shutil.copytree(FIXTURE, copy)
+    shutil.copytree(CLEAN_BUNDLE, copy / BUNDLE_DIRECTORY)
     return copy
+
+
+def _base(tree: Path | None) -> Path:
+    """The directory of the exports: the fixture, or a copy of it."""
+    return FIXTURE if tree is None else tree
+
+
+def _root(tree: Path | None) -> Path:
+    """The root of the anchors' paths: the directory of the clean bundle, or a copy."""
+    return CLEAN_BUNDLE.parent if tree is None else tree
+
+
+def _bundle(tree: Path | None) -> Path:
+    """The run bundle: the clean bundle in place, or the copy's own."""
+    return CLEAN_BUNDLE if tree is None else tree / BUNDLE_DIRECTORY
 
 
 def _edit_needs(edit: Callable[[dict[str, dict[str, Any]]], None]) -> Callable[[Any], None]:
@@ -132,15 +164,15 @@ def _run_identifier(scenario: str, platform: str = PLATFORM, name: str = RUN_NAM
     return f"{name}-{platform}-{scenario}"
 
 
-def _expected(tree: Path = FIXTURE) -> list[Result]:
+def _expected(tree: Path | None = None) -> list[Result]:
     """Every result of the tree's artifact with its need, formed and compared, never split.
 
     A need's test identifier is the scenario, the suite and the test function
     without ``test_``, joined by dots. Exactly one need must form each result's.
     """
-    needs = _needs(tree / SPECIFICATION_EXPORT)
+    needs = _needs(_base(tree) / SPECIFICATION_EXPORT)
     results = []
-    for suite in _load(tree / ARTIFACT)["testsuites"]:
+    for suite in _load(_bundle(tree) / ARTIFACT)["testsuites"]:
         scenario = suite["name"]
         formed = {
             f"{scenario}.{need['suite']}.{need['test_function'].removeprefix('test_')}": need_id
@@ -171,16 +203,14 @@ def _canonical(specification: str, run: str, result: str) -> bytes:
     return hashlib.sha256(text.encode()).digest()
 
 
-def _runs(tree: Path = FIXTURE) -> list[config.RunInputs]:
-    return [
-        config.RunInputs(
-            artifact=tree / ARTIFACT, revision=tree / REVISION_RECORD, name=tree / NAME_RECORD
-        )
-    ]
+def _runs(tree: Path | None = None) -> list[config.RunInputs]:
+    """The one run of the tree, given as its bundle and the bundle's digest as it is now."""
+    bundle = _bundle(tree)
+    return [config.RunInputs(bundle=bundle, digest=f"sha256:{recipe_digest(bundle)}")]
 
 
 def _extractor(
-    tree: Path = FIXTURE,
+    tree: Path | None = None,
     *,
     runs: list[config.RunInputs] | None = None,
     repository: str = REPOSITORY,
@@ -189,16 +219,18 @@ def _extractor(
     """An outcome extractor over the tree, its root. ``implementations=False`` drops that input."""
     from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
 
+    base = _base(tree)
     return TwisterOutcomeExtractor(
-        tree,
+        _root(tree),
         _runs(tree) if runs is None else runs,
         repository=repository,
+        checkout=CHECKOUT,
         specifications=config.SpecificationInputs(
-            export=tree / SPECIFICATION_EXPORT, doxygen=tree / SPECIFICATION_XML
+            export=base / SPECIFICATION_EXPORT, doxygen=base / SPECIFICATION_XML
         ),
         implementations=(
             config.ImplementationInputs(
-                export=tree / IMPLEMENTATION_EXPORT, doxygen=tree / IMPLEMENTATION_XML
+                export=base / IMPLEMENTATION_EXPORT, doxygen=base / IMPLEMENTATION_XML
             )
             if implementations
             else None
@@ -206,14 +238,14 @@ def _extractor(
     )
 
 
-def _nodes(tree: Path = FIXTURE, **inputs: Any) -> dict[str, Any]:
+def _nodes(tree: Path | None = None, **inputs: Any) -> dict[str, Any]:
     """Construct, then drain ``nodes()``. Keyed by local identifier, each identifier once."""
     nodes = list(_extractor(tree, **inputs).nodes())
     assert len({node.local_id for node in nodes}) == len(nodes)
     return {node.local_id: node for node in nodes}
 
 
-def _edges(tree: Path = FIXTURE, **inputs: Any) -> list[Any]:
+def _edges(tree: Path | None = None, **inputs: Any) -> list[Any]:
     return list(_extractor(tree, **inputs).edges())
 
 
@@ -239,26 +271,26 @@ def _pairs(edges: list[Any], kind: str) -> list[tuple[str, str]]:
     return sorted((edge.from_id, edge.to_id) for edge in edges if edge.kind == kind)
 
 
-def _witnessed(specification: str, tree: Path = FIXTURE) -> set[str]:
+def _witnessed(specification: str, tree: Path | None = None) -> set[str]:
     """The implementations whose need satisfies a requirement the specification verifies."""
-    verified = set(_needs(tree / SPECIFICATION_EXPORT)[specification]["verifies"])
-    needs = _needs(tree / IMPLEMENTATION_EXPORT)
+    verified = set(_needs(_base(tree) / SPECIFICATION_EXPORT)[specification]["verifies"])
+    needs = _needs(_base(tree) / IMPLEMENTATION_EXPORT)
     return {need_id for need_id, need in needs.items() if verified & set(need["satisfies"])}
 
 
 def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_path: Path) -> None:
     """A run identifier joins the run's name, platform and scenario, in that order.
 
-    The fixture records the run name twister-run-2026-09-29. It records four scenarios, all
-    on the platform native_sim/native/64.
+    The bundle records the run name twister-run-2026-09-29. Its run artifact records four
+    scenarios, all on the platform native_sim/native/64.
 
     Extracting supplies outcomes of exactly four run identifiers. Each is the name, the
     platform as native_sim-native-64 and one scenario name, joined by hyphens. Each run
     identifier starts the identities of 19 outcomes. The nested scenarios stay apart.
 
-    When the name record holds another-run, every run identifier starts with another-run.
-    When one scenario records the platform qemu_x86, the run identifier of that scenario
-    holds qemu_x86.
+    When the name record of the bundle holds another-run, every run identifier starts with
+    another-run. When one scenario records the platform qemu_x86, the run identifier of that
+    scenario holds qemu_x86.
 
     :verifies: SEG-SREQ-178
     :test-id: SEG-TS-053
@@ -271,7 +303,7 @@ def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_p
     assert len(nodes) == 4 * 19
 
     renamed = _tree(tmp_path, "renamed")
-    (renamed / NAME_RECORD).write_text("another-run\n", encoding="utf-8")
+    (_bundle(renamed) / NAME_RECORD).write_text("another-run\n", encoding="utf-8")
     assert set(_nodes(renamed)) == {_identity(r, "another-run") for r in _expected(renamed)}
 
     moved = _tree(tmp_path, "moved")
@@ -280,7 +312,7 @@ def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_p
         (suite,) = [s for s in document["testsuites"] if s["name"] == "safe_data.api.timeout"]
         suite["platform"] = "qemu_x86"
 
-    _edit_json(moved, ARTIFACT, move_timeout)
+    _edit_json(_bundle(moved), ARTIFACT, move_timeout)
     after = _nodes(moved)
     assert set(after) == {_identity(r) for r in _expected(moved)}
     assert f"{_run_identifier('safe_data.api.timeout', 'qemu_x86')}/{INIT_AND_VERIFY}" in after
@@ -376,7 +408,7 @@ def test_a_result_maps_to_the_need_with_its_scenario_suite_and_test_function(
             )
 
     renamed = _tree(tmp_path, "renamed")
-    _edit_json(renamed, ARTIFACT, rename_scenario)
+    _edit_json(_bundle(renamed), ARTIFACT, rename_scenario)
     mapped = _nodes(renamed)
     assert set(mapped) == {_identity(r) for r in _expected(renamed)}
     assert f"{_run_identifier('zz.api')}/{INIT_AND_VERIFY}" in mapped
@@ -449,11 +481,11 @@ def test_a_content_hash_covers_the_specification_the_run_and_the_result_only(
                 case["execution_time"] = "99.99"
                 case["reason"] = "changed reason"
 
-    _edit_json(timed, ARTIFACT, retime)
+    _edit_json(_bundle(timed), ARTIFACT, retime)
     assert _digests(_nodes(timed)) == before
 
     failed = _tree(tmp_path, "failed")
-    _edit_json(failed, ARTIFACT, _set_status(INIT_RESULT, "failed"))
+    _edit_json(_bundle(failed), ARTIFACT, _set_status(INIT_RESULT, "failed"))
     after = _digests(_nodes(failed))
     assert {key for key in after if after[key] != before[key]} == {identity}
     assert after[identity] == _canonical(INIT_AND_VERIFY, _run_identifier(BASE), "failed")
@@ -478,8 +510,8 @@ def test_a_recorded_status_maps_onto_the_closed_result_set(tmp_path: Path) -> No
     assert {node.result for node in nodes.values()} == {TestResult.PASSED, TestResult.SKIPPED}
 
     changed = _tree(tmp_path)
-    _edit_json(changed, ARTIFACT, _set_status(INIT_RESULT, "failed"))
-    _edit_json(changed, ARTIFACT, _set_status(SELFTEST_RESULT, "error"))
+    _edit_json(_bundle(changed), ARTIFACT, _set_status(INIT_RESULT, "failed"))
+    _edit_json(_bundle(changed), ARTIFACT, _set_status(SELFTEST_RESULT, "error"))
     after = _nodes(changed)
     run = _run_identifier(BASE)
     assert after[f"{run}/{INIT_AND_VERIFY}"].result == TestResult.FAILED
@@ -502,7 +534,7 @@ def test_a_status_with_no_counterpart_is_an_error_for_that_result(tmp_path: Path
     """
     for status in ("blocked", "no-such-status"):
         variant = _tree(tmp_path, status)
-        _edit_json(variant, ARTIFACT, _set_status(INIT_RESULT, status))
+        _edit_json(_bundle(variant), ARTIFACT, _set_status(INIT_RESULT, status))
         _refused(variant, INIT_RESULT)
 
 
@@ -533,12 +565,14 @@ def test_a_skipped_result_is_recorded_as_a_skipped_outcome() -> None:
     assert {identity for identity, node in nodes.items() if node.result == "skipped"} == skipped
 
 
-def test_an_outcomes_revision_is_the_revision_recorded_beside_the_run(tmp_path: Path) -> None:
-    """An outcome's revision is the full revision recorded beside the run artifact.
+def test_an_outcomes_revision_is_the_revision_the_bundle_records_for_the_checkout(
+    tmp_path: Path,
+) -> None:
+    """An outcome's revision is the revision the bundle records for the implementation checkout.
 
-    The revision record of the fixture holds 5847f3fdca777b8d62615d84b8926fdc8ce125ed and a
-    line feed. Each of the 76 outcomes has that text, without the line feed, as its
-    revision.
+    The record of the implementation checkout (toolbox) in the bundle holds
+    5847f3fdca777b8d62615d84b8926fdc8ce125ed and a line feed. Each of the 76 outcomes has
+    that text, without the line feed, as its revision.
 
     When the record holds 77e25d8f3cb2e94adb5a44426b98e088f1bef3fe, every outcome has that
     revision.
@@ -546,34 +580,34 @@ def test_an_outcomes_revision_is_the_revision_recorded_beside_the_run(tmp_path: 
     :verifies: SEG-SREQ-186
     :test-id: SEG-TS-061
     """
-    assert (FIXTURE / REVISION_RECORD).read_text(encoding="utf-8") == REVISION + "\n"
+    assert (CLEAN_BUNDLE / REVISION_RECORD).read_text(encoding="utf-8") == REVISION + "\n"
     nodes = _nodes()
     assert len(nodes) == 76
     assert {node.revision for node in nodes.values()} == {REVISION}
 
     other = "77e25d8f3cb2e94adb5a44426b98e088f1bef3fe"
     changed = _tree(tmp_path)
-    (changed / REVISION_RECORD).write_text(other + "\n", encoding="utf-8")
+    (_bundle(changed) / REVISION_RECORD).write_text(other + "\n", encoding="utf-8")
     assert {node.revision for node in _nodes(changed).values()} == {other}
 
 
 def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     """A run with no recorded full revision is refused, and no outcome is supplied.
 
-    Building the extractor raises an error when the revision record of the run is missing.
-    It raises the same error when the record is empty. It raises the same error when the
-    record holds only a line feed.
+    Building the extractor raises an error when the bundle holds no revision record of the
+    implementation checkout. It raises the same error when the record is empty. It raises the
+    same error when the record holds only a line feed.
 
     :verifies: SEG-SREQ-187
     :test-id: SEG-TS-062
     """
     missing = _tree(tmp_path, "missing")
-    (missing / REVISION_RECORD).unlink()
+    (_bundle(missing) / REVISION_RECORD).unlink()
     with pytest.raises(_error()):
         _extractor(missing)
     for name, text in (("empty", ""), ("blank", "\n")):
         variant = _tree(tmp_path, name)
-        (variant / REVISION_RECORD).write_text(text, encoding="utf-8")
+        (_bundle(variant) / REVISION_RECORD).write_text(text, encoding="utf-8")
         with pytest.raises(_error()):
             _extractor(variant)
 
@@ -650,15 +684,15 @@ def test_a_witnesses_edge_runs_to_each_implementation_of_what_the_specification_
 def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path) -> None:
     """An outcome's anchor names the run artifact's path in its repository and the result.
 
-    The extractor is given the fixture directory as its root and the repository as the
-    configured name toolbox. The artifact is twister/twister.json under that root. Each of
-    the 76 outcomes has exactly one content hash, contentHash. Its anchor names the
-    repository toolbox and the path twister/twister.json, relative to the root. Its locator
+    The extractor is given the directory that holds the clean bundle as its root and the
+    repository as the configured name toolbox. The artifact is clean/twister.json under that
+    root. Each of the 76 outcomes has exactly one content hash, contentHash. Its anchor names
+    the repository toolbox and the path clean/twister.json, relative to the root. Its locator
     is nodeid: followed by the identifier of the result, for example
     nodeid:safe_data.api.safe_data.init_and_verify.
 
-    In a copy of the fixture, the artifact is moved to out/run1/twister.json. Then every
-    anchor has that path.
+    In a copy of the fixture, the bundle is moved to out/run1. Then every anchor has the path
+    out/run1/twister.json.
 
     :verifies: SEG-SREQ-190
     :test-id: SEG-TS-065
@@ -670,7 +704,7 @@ def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path
         assert set(node.content_anchors) == {"contentHash"}
         anchor = node.content_anchors["contentHash"]
         assert anchor.repository == REPOSITORY
-        assert anchor.path == "twister/twister.json"
+        assert anchor.path == "clean/twister.json"
         assert anchor.locator == f"nodeid:{identifiers[identity]}"
     assert (
         nodes[f"{_run_identifier(BASE)}/{INIT_AND_VERIFY}"].content_anchors["contentHash"].locator
@@ -678,13 +712,10 @@ def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path
     )
 
     moved = _tree(tmp_path)
-    (moved / "out" / "run1").mkdir(parents=True)
-    shutil.move(moved / ARTIFACT, moved / "out" / "run1" / "twister.json")
-    relocated = [
-        config.RunInputs(
-            moved / "out" / "run1" / "twister.json", moved / REVISION_RECORD, moved / NAME_RECORD
-        )
-    ]
+    (moved / "out").mkdir()
+    shutil.move(_bundle(moved), moved / "out" / "run1")
+    bundle = moved / "out" / "run1"
+    relocated = [config.RunInputs(bundle=bundle, digest=f"sha256:{recipe_digest(bundle)}")]
     paths = {
         node.content_anchors["contentHash"].path for node in _nodes(moved, runs=relocated).values()
     }
@@ -692,42 +723,33 @@ def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path
 
 
 def test_each_runs_inputs_are_loaded_relative_to_the_file(tmp_path: Path) -> None:
-    """Each run's artifact, revision record and name record are loaded, resolved against the file.
+    """Each run's bundle and digest are loaded, the bundle resolved against the file.
 
     A configuration file in a subdirectory lists two outcomes in its producer block. Each
-    has an artifact, a revision and a name. Loading the file yields two run inputs, in the
-    order of the file. Each of their three locations is the subdirectory joined with the
-    relative path that the file gives.
+    has a bundle and a digest. Loading the file yields two run inputs, in the order of the
+    file. The location of each bundle is the subdirectory joined with the relative path that
+    the file gives. Each digest is the text the file gives.
 
     :verifies: SEG-SREQ-197
     :test-id: SEG-TS-066
     """
+    first, second = "sha256:" + "a" * 64, "sha256:" + "b" * 64
     path = tmp_path / "repo" / "affirmatrix.yaml"
     path.parent.mkdir(parents=True)
     path.write_text(
         "producer:\n"
         "  repository: sample-repo\n"
         "  outcomes:\n"
-        "    - artifact: twister/twister.json\n"
-        "      revision: revisions/toolbox.sha\n"
-        "      name: revisions/run.name\n"
-        "    - artifact: later/twister.json\n"
-        "      revision: later/toolbox.sha\n"
-        "      name: later/run.name\n",
+        "    - bundle: runs/first\n"
+        f"      digest: {first}\n"
+        "    - bundle: later/second\n"
+        f"      digest: {second}\n",
         encoding="utf-8",
     )
     producer = config.load(path).producer
     assert producer is not None
     base = tmp_path / "repo"
     assert producer.outcomes == (
-        config.RunInputs(
-            artifact=base / "twister/twister.json",
-            revision=base / "revisions/toolbox.sha",
-            name=base / "revisions/run.name",
-        ),
-        config.RunInputs(
-            artifact=base / "later/twister.json",
-            revision=base / "later/toolbox.sha",
-            name=base / "later/run.name",
-        ),
+        config.RunInputs(bundle=base / "runs/first", digest=first),
+        config.RunInputs(bundle=base / "later/second", digest=second),
     )

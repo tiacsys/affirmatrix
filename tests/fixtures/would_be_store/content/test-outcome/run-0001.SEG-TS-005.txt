@@ -1,3 +1,0 @@
-run: run-0001
-specification: SEG-TS-005
-result: passed

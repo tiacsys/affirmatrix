@@ -1,14 +1,10 @@
-# The edges found in the source tree: what implements, verifies,
-# confirms, and witnesses what. Every edge is pending, like every other
-# edge in this store.
+# The edges found in the source tree: what implements and verifies what.
+# Every edge is pending, like every other edge in this store.
 #
 # Implements pairs come from every :implements: marker found by walking
 # the source tree; Verifies pairs from every :verifies: marker in the
-# verification suite; Confirms pairs from the verification suite's run
-# against the tree this store is taken from. An outcome witnesses every
-# implementation whose marker names the requirement its specification
-# verifies — a fixture convention derived from the two marker sets, not
-# a claim about which lines the run actually exercised.
+# verification suite. The store holds no test evidence, so it holds no
+# edge between a test outcome and what the outcome confirms or witnesses.
 
 [edges]
 Implements = [
@@ -166,32 +162,4 @@ Verifies = [
     ["SEG-TS-001", "SEG-SREQ-029"],
     ["SEG-TS-002", "SEG-SREQ-030"],
     ["SEG-TS-003", "SEG-SREQ-032"],
-]
-
-Confirms = [
-    ["run-0001/SEG-TS-004", "SEG-TS-004"],
-    ["run-0001/SEG-TS-005", "SEG-TS-005"],
-    ["run-0001/SEG-TS-006", "SEG-TS-006"],
-    ["run-0001/SEG-TS-010", "SEG-TS-010"],
-    ["run-0001/SEG-TS-007", "SEG-TS-007"],
-    ["run-0001/SEG-TS-008", "SEG-TS-008"],
-    ["run-0001/SEG-TS-009", "SEG-TS-009"],
-    ["run-0001/SEG-TS-001", "SEG-TS-001"],
-    ["run-0001/SEG-TS-002", "SEG-TS-002"],
-    ["run-0001/SEG-TS-003", "SEG-TS-003"],
-]
-
-Witnesses = [
-    ["run-0001/SEG-TS-004", "affirmatrix.commitment.edge_hash"],
-    ["run-0001/SEG-TS-005", "affirmatrix.commitment.design_root"],
-    ["run-0001/SEG-TS-006", "affirmatrix.commitment.node_hash"],
-    ["run-0001/SEG-TS-010", "affirmatrix.drift.derive"],
-    ["run-0001/SEG-TS-007", "affirmatrix.graph.build"],
-    ["run-0001/SEG-TS-008", "affirmatrix.graph.build"],
-    ["run-0001/SEG-TS-009", "affirmatrix.graph.build"],
-    ["run-0001/SEG-TS-001", "affirmatrix.taxonomy.node_kinds"],
-    ["run-0001/SEG-TS-001", "affirmatrix.taxonomy.edge_kinds"],
-    ["run-0001/SEG-TS-002", "affirmatrix.taxonomy.propagating_edge_kinds"],
-    ["run-0001/SEG-TS-002", "affirmatrix.taxonomy.propagates"],
-    ["run-0001/SEG-TS-003", "affirmatrix.taxonomy.content_hash_names"],
 ]

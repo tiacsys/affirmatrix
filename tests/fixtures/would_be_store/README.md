@@ -1,16 +1,25 @@
 # The would-be store
 
 The stand-in for the source repositories an evidence graph is built over. It
-holds **content** — requirement statements, implementation spans, test
-specifications, test results — and the store loader
+holds **content** — requirement statements, implementation spans and test
+specifications — and the store loader
 (`affirmatrix.sources.store`) presents it to the engine as a record source.
 
-It is scaffolding, and it is honest about that. Record production does not
-exist yet: there is no requirements reader, no content extractor, no outcome
-extractor. Until those land, the content they would locate is written out here
-by hand, so the engine has something real to build a graph over. When they land,
-this directory and its loader are deleted, and nothing else changes — that swap
-is the point of routing every input through one record-source protocol.
+It is scaffolding, and it is honest about that. Until the readers of the real
+sources serve every input of this repository's own case, the content they would
+locate is written out here by hand, so the engine has something real to build a
+graph over. When they do, this directory and its loader are deleted, and nothing
+else changes — that swap is the point of routing every input through one
+record-source protocol.
+
+**It holds no test evidence.** An earlier version of this store also held ten
+test outcomes and the edges that tie them to the specifications and the
+implementations they confirm and witness. Test evidence now comes from run
+bundles only, read when a verdict is judged, so this store no longer carries
+test outcomes, and it no longer carries `Confirms` or `Witnesses` edges. The
+requirement, implementation and test-specification files are unchanged, byte for
+byte, so no content hash of an affirmed edge's endpoint moved. This repository's
+own case has no test evidence until its own test run is read as a run bundle.
 
 Two consequences follow from holding content, and both are deliberate:
 
@@ -49,18 +58,12 @@ The keys inside the braces are content-hash field names and must be exactly the
 ones the vocabulary declares for that kind — `contentHash` for a Requirement,
 `apiHash` and `bodyHash` for an Implementation, and so on. Paths are relative to
 `content/` and may not escape it. Nothing is derived from the filename: the
-manifest says which file covers which field, because identifiers such as
-`run-0001/SEG-TS-001` do not survive being turned into paths.
+manifest says which file covers which field, because identifiers do
+not always survive being turned into paths.
 
-Two keys are not content paths: a TestOutcome entry also carries
-`result = "passed"` — the recorded result of the execution, one of
-`passed`/`failed`/`error`/`skipped` — and `revision = "678f72f5371c…"` — the
-revision of the implementation repository the execution ran against. Both are
-record fields, not content: the content file remains the authority on what the
-run observed, a test asserts the two result spellings agree, and the
-revision's spelling is open (no format this store's fixture pins — this one
-happens to be the full commit hash because that is what the run this fixture
-stands for was made against).
+Every key inside the braces is a content path. A manifest entry carries no
+recorded result and no revision: a record that says what a test run observed
+is not content of this store.
 
 **An edge manifest** groups pairs by edge kind, source first:
 
@@ -116,12 +119,10 @@ from the package root, class-qualified for a method (for example
 one `:implements:` field, one per requirement it realizes, so the 79 nodes
 carry 141 `Implements` edges between them.
 
-**Test specifications, test outcomes — found and run.** 10 nodes each: one
-test specification per pytest function under the verification suite carrying
-both a `:verifies:` and a `:test-id:` field, and one outcome per specification
-from that suite's run against the same commit. `Verifies` (10), `Confirms`
-(10), and `Witnesses` (12 — a specification can name more than one
-implementation, see below) complete the edges between them.
+**Test specifications — found.** 10 nodes: one test specification per pytest
+function under the verification suite carrying both a `:verifies:` and a
+`:test-id:` field. `Verifies` (10) completes the edges between them and the
+requirements.
 
 **The span each content field covers is one rule, whole source lines, for all
 four hash fields a definition can carry:**
@@ -147,12 +148,6 @@ carries them — only `specHash` does. The `Verifies` edge each specification's
 marker states is also declared as a pair in `edges/coverage.toml`, so the same
 relation is stated twice in this store, and a test asserts the two agree,
 because nothing else makes them.
-
-**Witnesses is a fixture convention, not a record of what a run exercised.**
-No coverage tool produced it: an outcome witnesses every implementation whose
-`:implements:` field names the requirement its specification's `:verifies:`
-field names. Read it as "these are related", not as "this run touched that
-line".
 
 The coverage this slice carries is uneven, and reading it needs one more
 distinction than "covered" and "not":
