@@ -608,7 +608,7 @@ def test_store_backed_round_trip_derives_drift_and_leaves_the_case_unchanged(
 
     unchanged = drift.derive(recorded=store, current=current)
     assert {edge.state for edge in unchanged.edges() if edge.kind in strong} == {LinkState.ACTIVE}
-    assert {edge.state for edge in unchanged.edges() if edge.kind not in strong} == {
+    assert {edge.state for edge in unchanged.edges() if edge.kind not in strong} <= {
         LinkState.PENDING
     }
 

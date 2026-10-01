@@ -417,26 +417,43 @@ def test_graph_status_over_a_producer_with_outcomes_lists_strong_edges_and_count
     assert document["evidence"] == {"current": 76, "stale": 0, "dangling": 0}
 
 
-def test_graph_status_text_ends_with_the_evidence_counts(
-    tmp_path: Path, would_be_store_copy: Path, capsys
-) -> None:
+def _store_with_one_outcome(root: Path) -> Path:
+    """A would-be store in ``root`` that holds one requirement and one outcome at ``r1``."""
+    for name in ("nodes", "edges", "content"):
+        (root / name).mkdir(parents=True)
+    (root / "content" / "req.txt").write_text("the requirement\n", encoding="utf-8")
+    (root / "content" / "outcome.txt").write_text("passed\n", encoding="utf-8")
+    (root / "nodes" / "requirements.toml").write_text(
+        'kind = "Requirement"\n[nodes]\n"REQ-1" = { contentHash = "req.txt" }\n',
+        encoding="utf-8",
+    )
+    (root / "nodes" / "outcomes.toml").write_text(
+        'kind = "TestOutcome"\n[nodes]\n'
+        '"run-1/TS-1" = { contentHash = "outcome.txt", result = "passed", revision = "r1" }\n',
+        encoding="utf-8",
+    )
+    (root / "edges" / "coverage.toml").write_text("[edges]\n", encoding="utf-8")
+    return root
+
+
+def test_graph_status_text_ends_with_the_evidence_counts(tmp_path: Path, capsys) -> None:
     """SEG-SREQ-210: the plain rendering names the three counts after the rows."""
+    store = _store_with_one_outcome(tmp_path / "store")
     root = tmp_path / "case"
     case.AffirmationStore(root=root).initialize()
-    status = main(
-        ["graph", "status", "--case", str(root), "--current", str(would_be_store_copy), *REVISION]
-    )
+    status = main(["graph", "status", "--case", str(root), "--current", str(store), *REVISION])
     last = capsys.readouterr().out.splitlines()[-1]
     assert status == 0
-    assert last == "evidence: 0 at the current revision, 10 at another revision, 0 dangling"
+    assert last == "evidence: 0 at the current revision, 1 at another revision, 0 dangling"
 
 
 def test_graph_status_without_a_revision_over_a_stream_with_outcomes_cannot_be_judged(
-    tmp_path: Path, would_be_store_copy: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """SEG-SREQ-208: the would-be store holds outcomes, and no repository gives a revision."""
+    """SEG-SREQ-208: the stream holds an outcome, and no repository gives a revision."""
     monkeypatch.chdir(tmp_path)
+    store = _store_with_one_outcome(tmp_path / "store")
     root = tmp_path / "case"
     case.AffirmationStore(root=root).initialize()
-    status = main(["graph", "status", "--case", str(root), "--current", str(would_be_store_copy)])
+    status = main(["graph", "status", "--case", str(root), "--current", str(store)])
     assert status == 2

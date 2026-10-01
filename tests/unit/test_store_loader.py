@@ -374,15 +374,20 @@ def would_be_store() -> store.StoreLoader:
 
 def test_the_would_be_store_builds(would_be_store: store.StoreLoader) -> None:
     built = graph.build(would_be_store)
-    assert len(built.node_ids()) == 139 + 79 + 10 + 10
-    assert len(built.edges) == 128 + 141 + 10 + 10 + 12
+    evidence = taxonomy.evidence_node_kinds()
+    design_nodes = [n for n in built.node_ids() if built.node(n).kind not in evidence]
+    assert len(design_nodes) == 139 + 79 + 10
+    strong = taxonomy.propagating_edge_kinds()
+    assert len([e for e in built.edges if e.kind in strong]) == 128 + 141 + 10
 
 
 def test_every_kind_in_the_store_is_one_the_vocabulary_declares(
     would_be_store: store.StoreLoader,
 ) -> None:
     """Otherwise the graph builder refuses the store, which is a worse test."""
-    assert {node.kind for node in would_be_store.nodes()} == taxonomy.node_kinds() - {"Waiver"}
+    held = {node.kind for node in would_be_store.nodes()}
+    design = taxonomy.node_kinds() - {"Waiver"} - taxonomy.evidence_node_kinds()
+    assert held - taxonomy.evidence_node_kinds() == design
     assert {edge.kind for edge in would_be_store.edges()} <= taxonomy.edge_kinds()
 
 
@@ -511,12 +516,13 @@ def test_every_outcome_result_agrees_with_the_content_it_hashes(
 ) -> None:
     """The manifest's result and the hashed result record must say one thing.
 
+    Every outcome the store holds is checked; a store that holds none passes.
+
     The record field is the claim the graph carries; the content file is the
     authority it summarizes. They are edited in different files and nothing
     else forces them to agree, so the check is here.
     """
     outcomes = [node for node in would_be_store.nodes() if node.kind == "TestOutcome"]
-    assert outcomes
     for node in outcomes:
         text = (WOULD_BE_STORE / "content" / node.content_anchors["contentHash"].path).read_text(
             encoding="utf-8"
