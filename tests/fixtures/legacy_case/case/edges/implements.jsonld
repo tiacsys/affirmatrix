@@ -1,0 +1,28 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/edge/implements/fixture.f1/FX-SREQ-1",
+      "seg:edgeHash": "9eb8a1b64acdc4a9c32c4ccc810e64237c35dcc7dffc4446ca74ec380b58adba",
+      "seg:from": "https://affirmatrix.dev/case/node/fixture.f1",
+      "seg:linkState": "active",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "type": "seg:Implements"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/implements/fixture.f2/FX-SREQ-1",
+      "seg:edgeHash": "c7d9d4a5f5b898b7dd478fc257e7fdd1171ff8890d55240ea73c31113176c8ec",
+      "seg:from": "https://affirmatrix.dev/case/node/fixture.f2",
+      "seg:linkState": "active",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "type": "seg:Implements"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/implements/fixture.f3/FX-SREQ-2",
+      "seg:from": "https://affirmatrix.dev/case/node/fixture.f3",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-2",
+      "type": "seg:Implements"
+    }
+  ]
+}

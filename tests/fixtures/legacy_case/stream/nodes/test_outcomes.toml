@@ -1,0 +1,13 @@
+kind = "TestOutcome"
+
+[nodes]
+"run-1/FX-TS-1" = { contentHash = "run-1.FX-TS-1.txt", result = "passed", revision = "fixture-rev-1" }
+"run-1/FX-TS-2" = { contentHash = "run-1.FX-TS-2.txt", result = "passed", revision = "fixture-rev-1" }
+"run-1/FX-TS-3" = { contentHash = "run-1.FX-TS-3.txt", result = "passed", revision = "fixture-rev-1" }
+"run-1/FX-TS-4" = { contentHash = "run-1.FX-TS-4.txt", result = "passed", revision = "fixture-rev-1" }
+"run-1/FX-TS-5" = { contentHash = "run-1.FX-TS-5.txt", result = "passed", revision = "fixture-rev-1" }
+"run-2/FX-TS-1" = { contentHash = "run-2.FX-TS-1.txt", result = "passed", revision = "fixture-rev-2" }
+"run-2/FX-TS-2" = { contentHash = "run-2.FX-TS-2.txt", result = "passed", revision = "fixture-rev-2" }
+"run-2/FX-TS-3" = { contentHash = "run-2.FX-TS-3.txt", result = "passed", revision = "fixture-rev-2" }
+"run-2/FX-TS-4" = { contentHash = "run-2.FX-TS-4.txt", result = "passed", revision = "fixture-rev-2" }
+"run-2/FX-TS-5" = { contentHash = "run-2.FX-TS-5.txt", result = "passed", revision = "fixture-rev-2" }

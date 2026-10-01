@@ -1,0 +1,135 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-1",
+      "seg:contentHash": "b6c631246c2e38549fcd671f1cd8b50ccf0c14c16405fceae4972009e4f488e9",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-1.FX-TS-1.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-1/FX-TS-1",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-1",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-2",
+      "seg:contentHash": "935b2c1b8a4f243662bfb76db26fb1d3fd16291dab3080ab4b2053c424bf3413",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-1.FX-TS-2.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-1/FX-TS-2",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-1",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-3",
+      "seg:contentHash": "1887fdd40782c49ebabf648f060c6014b36aef1847fc39335e299adeb64c3d78",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-1.FX-TS-3.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-1/FX-TS-3",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-1",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-4",
+      "seg:contentHash": "3d6f99e4f0461cdf3f76345d6436eec845ded9576e1c8dcd71d473b1bf028511",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-1.FX-TS-4.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-1/FX-TS-4",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-1",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-5",
+      "seg:contentHash": "df0b62c68d437e9b9b413c0569b74307ed037744e2e5a57ea9a2e2de4af43288",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-1.FX-TS-5.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-1/FX-TS-5",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-1",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-1",
+      "seg:contentHash": "6e755da9568ae1bb7b0b58e2a0f4eadb3fcfd57047983fefd8c369d1d0a8212a",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-2.FX-TS-1.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-2/FX-TS-1",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-2",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-2",
+      "seg:contentHash": "373c772f2aaa5d0ac87649d71261ae90bf72bb2262cdb192f5cfd0374b9adaa0",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-2.FX-TS-2.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-2/FX-TS-2",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-2",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-3",
+      "seg:contentHash": "851db1a61d69e9d2020173c1894d3f2a110a2e2f52b67245029b75134e265cd3",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-2.FX-TS-3.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-2/FX-TS-3",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-2",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-4",
+      "seg:contentHash": "89381ab4fa9396364b2cc353f68bf4517bdcb5f521881302e4e1f5c88e83c078",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-2.FX-TS-4.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-2/FX-TS-4",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-2",
+      "type": "seg:TestOutcome"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-5",
+      "seg:contentHash": "81e5ada20c6d7c0b2a3d6a55d296b7f0dedd8042b77a2108bf7de6ba04b6e4b0",
+      "seg:contentHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "run-2.FX-TS-5.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "run-2/FX-TS-5",
+      "seg:result": "passed",
+      "seg:revision": "fixture-rev-2",
+      "type": "seg:TestOutcome"
+    }
+  ]
+}

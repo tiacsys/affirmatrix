@@ -1,0 +1,209 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/event/000001",
+      "seg:affirmedAt": {
+        "seg:fromRevision": "0123456789abcdef0123456789abcdef01234567",
+        "seg:toRevision": "0123456789abcdef0123456789abcdef01234567"
+      },
+      "seg:affirmingRole": "fixture-reviewer",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-1",
+      "seg:fromContentAnchors": {
+        "seg:implHash": "f42eec879bda0847ccaf2d056ed98adc1ee6c1d2e5aee77a26128d8cb91987d6",
+        "seg:implHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-TS-1.impl.txt",
+          "seg:sourceRepo": "stream/content"
+        },
+        "seg:specHash": "25a556822de47a61d007eef0cc0cc686796359a16bb91fd7f96f58b78b199720",
+        "seg:specHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-TS-1.spec.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "seg:reason": "synthetic fixture affirmation; it binds nothing",
+      "seg:relation": "seg:Verifies",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "seg:toContentAnchors": {
+        "seg:contentHash": "278ff70dbb1c8448719de4a9996aeabcdfccc8d1a1af0f9f01474aeb1e58cf2f",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SREQ-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "type": "seg:ReviewEvent"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/event/000002",
+      "seg:affirmedAt": {
+        "seg:fromRevision": "0123456789abcdef0123456789abcdef01234567",
+        "seg:toRevision": "0123456789abcdef0123456789abcdef01234567"
+      },
+      "seg:affirmingRole": "fixture-reviewer",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-2",
+      "seg:fromContentAnchors": {
+        "seg:implHash": "c38025a4817db1455c3fcc2a40d3ed733ba413e5c4aca172910cb80f8de4b86d",
+        "seg:implHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-TS-2.impl.txt",
+          "seg:sourceRepo": "stream/content"
+        },
+        "seg:specHash": "4490615b8e73671e21bedb8c22363f579fda8f688ff8ad10b2d5e0baec91ffd7",
+        "seg:specHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-TS-2.spec.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "seg:reason": "synthetic fixture affirmation; it binds nothing",
+      "seg:relation": "seg:Verifies",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "seg:toContentAnchors": {
+        "seg:contentHash": "278ff70dbb1c8448719de4a9996aeabcdfccc8d1a1af0f9f01474aeb1e58cf2f",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SREQ-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "type": "seg:ReviewEvent"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/event/000003",
+      "seg:affirmedAt": {
+        "seg:fromRevision": "0123456789abcdef0123456789abcdef01234567",
+        "seg:toRevision": "0123456789abcdef0123456789abcdef01234567"
+      },
+      "seg:affirmingRole": "fixture-reviewer",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-3",
+      "seg:fromContentAnchors": {
+        "seg:implHash": "9613606c15e96775c6c7bac8cd3f03eca48fb897435114bd3ee27e474bc0773e",
+        "seg:implHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-TS-3.impl.txt",
+          "seg:sourceRepo": "stream/content"
+        },
+        "seg:specHash": "a687096eba3ea55686b7280cb0e751e639933265dc3a975191e6e13e43f3e0d3",
+        "seg:specHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-TS-3.spec.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "seg:reason": "synthetic fixture affirmation; it binds nothing",
+      "seg:relation": "seg:Verifies",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "seg:toContentAnchors": {
+        "seg:contentHash": "278ff70dbb1c8448719de4a9996aeabcdfccc8d1a1af0f9f01474aeb1e58cf2f",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SREQ-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "type": "seg:ReviewEvent"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/event/000004",
+      "seg:affirmedAt": {
+        "seg:fromRevision": "0123456789abcdef0123456789abcdef01234567",
+        "seg:toRevision": "0123456789abcdef0123456789abcdef01234567"
+      },
+      "seg:affirmingRole": "fixture-reviewer",
+      "seg:from": "https://affirmatrix.dev/case/node/fixture.f1",
+      "seg:fromContentAnchors": {
+        "seg:apiHash": "15e0af7eeb8d01d7a40a3603c61aa8d7c888ee76153b4554f33533617e33f6db",
+        "seg:apiHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "fixture.f1.api.txt",
+          "seg:sourceRepo": "stream/content"
+        },
+        "seg:bodyHash": "74b78ce53a5d70a7cc3118ca0382997537b1896a6f72eb75a780569095aa3257",
+        "seg:bodyHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "fixture.f1.body.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "seg:reason": "synthetic fixture affirmation; it binds nothing",
+      "seg:relation": "seg:Implements",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "seg:toContentAnchors": {
+        "seg:contentHash": "278ff70dbb1c8448719de4a9996aeabcdfccc8d1a1af0f9f01474aeb1e58cf2f",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SREQ-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "type": "seg:ReviewEvent"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/event/000005",
+      "seg:affirmedAt": {
+        "seg:fromRevision": "0123456789abcdef0123456789abcdef01234567",
+        "seg:toRevision": "0123456789abcdef0123456789abcdef01234567"
+      },
+      "seg:affirmingRole": "fixture-reviewer",
+      "seg:from": "https://affirmatrix.dev/case/node/fixture.f2",
+      "seg:fromContentAnchors": {
+        "seg:apiHash": "f361a845bfb31549fb869fcc8d286791299e27991ad54dbd9d7936209110300f",
+        "seg:apiHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "fixture.f2.api.txt",
+          "seg:sourceRepo": "stream/content"
+        },
+        "seg:bodyHash": "22821b8e8d3c7672037334b89f76c48535e91e56bc2d716665b4b0dbdb64fa9a",
+        "seg:bodyHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "fixture.f2.body.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "seg:reason": "synthetic fixture affirmation; it binds nothing",
+      "seg:relation": "seg:Implements",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "seg:toContentAnchors": {
+        "seg:contentHash": "278ff70dbb1c8448719de4a9996aeabcdfccc8d1a1af0f9f01474aeb1e58cf2f",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SREQ-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "type": "seg:ReviewEvent"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/event/000006",
+      "seg:affirmedAt": {
+        "seg:fromRevision": "0123456789abcdef0123456789abcdef01234567",
+        "seg:toRevision": "0123456789abcdef0123456789abcdef01234567"
+      },
+      "seg:affirmingRole": "fixture-reviewer",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "seg:fromContentAnchors": {
+        "seg:contentHash": "278ff70dbb1c8448719de4a9996aeabcdfccc8d1a1af0f9f01474aeb1e58cf2f",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SREQ-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "seg:reason": "synthetic fixture affirmation; it binds nothing",
+      "seg:relation": "seg:Refines",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SYS-1",
+      "seg:toContentAnchors": {
+        "seg:contentHash": "b01c79a2cd3f198cc3cbd0f3dd330ec44b5ac6f94d02ac00f7e141d37dde1cef",
+        "seg:contentHashSource": {
+          "seg:sourceLocator": "file",
+          "seg:sourcePath": "FX-SYS-1.txt",
+          "seg:sourceRepo": "stream/content"
+        }
+      },
+      "type": "seg:ReviewEvent"
+    }
+  ]
+}

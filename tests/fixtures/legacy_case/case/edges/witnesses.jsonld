@@ -1,0 +1,89 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-1%2FFX-TS-1/fixture.f1",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-1",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f1",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-1%2FFX-TS-1/fixture.f2",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-1",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f2",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-1%2FFX-TS-2/fixture.f1",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-2",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f1",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-1%2FFX-TS-3/fixture.f2",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-3",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f2",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-1%2FFX-TS-4/fixture.f3",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-4",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f3",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-1%2FFX-TS-5/fixture.f3",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-5",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f3",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-2%2FFX-TS-1/fixture.f1",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-1",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f1",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-2%2FFX-TS-1/fixture.f2",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-1",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f2",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-2%2FFX-TS-2/fixture.f1",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-2",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f1",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-2%2FFX-TS-3/fixture.f2",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-3",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f2",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-2%2FFX-TS-4/fixture.f3",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-4",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f3",
+      "type": "seg:Witnesses"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/witnesses/run-2%2FFX-TS-5/fixture.f3",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-5",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/fixture.f3",
+      "type": "seg:Witnesses"
+    }
+  ]
+}

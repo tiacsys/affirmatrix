@@ -1,0 +1,8 @@
+kind = "TestSpecification"
+
+[nodes]
+"FX-TS-1" = { specHash = "FX-TS-1.spec.txt", implHash = "FX-TS-1.impl.txt" }
+"FX-TS-2" = { specHash = "FX-TS-2.spec.txt", implHash = "FX-TS-2.impl.txt" }
+"FX-TS-3" = { specHash = "FX-TS-3.spec.txt", implHash = "FX-TS-3.impl.txt" }
+"FX-TS-4" = { specHash = "FX-TS-4.spec.txt", implHash = "FX-TS-4.impl.txt" }
+"FX-TS-5" = { specHash = "FX-TS-5.spec.txt", implHash = "FX-TS-5.impl.txt" }

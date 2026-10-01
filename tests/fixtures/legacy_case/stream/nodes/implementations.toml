@@ -1,0 +1,6 @@
+kind = "Implementation"
+
+[nodes]
+"fixture.f1" = { apiHash = "fixture.f1.api.txt", bodyHash = "fixture.f1.body.txt" }
+"fixture.f2" = { apiHash = "fixture.f2.api.txt", bodyHash = "fixture.f2.body.txt" }
+"fixture.f3" = { apiHash = "fixture.f3.api.txt", bodyHash = "fixture.f3.body.txt" }

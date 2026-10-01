@@ -1,0 +1,209 @@
+{
+  "@context": "../../context.jsonld",
+  "designEdges": [
+    {
+      "from": "IMPL-safe_data_init",
+      "kind": "Implements",
+      "to": "SD-REQ-001"
+    },
+    {
+      "from": "IMPL-safe_data_read",
+      "kind": "Implements",
+      "to": "SD-REQ-005"
+    },
+    {
+      "from": "IMPL-safe_data_verify",
+      "kind": "Implements",
+      "to": "SD-REQ-003"
+    },
+    {
+      "from": "IMPL-safe_data_verify_repair",
+      "kind": "Implements",
+      "to": "SD-REQ-004"
+    },
+    {
+      "from": "IMPL-safe_data_verify_repair",
+      "kind": "Implements",
+      "to": "SD-REQ-009"
+    },
+    {
+      "from": "IMPL-safe_data_verify_repair",
+      "kind": "Implements",
+      "to": "SD-REQ-010"
+    },
+    {
+      "from": "SD-REQ-001",
+      "kind": "Refines",
+      "to": "SD-TOP-001"
+    },
+    {
+      "from": "SD-REQ-003",
+      "kind": "Refines",
+      "to": "SD-TOP-001"
+    },
+    {
+      "from": "SD-REQ-004",
+      "kind": "Refines",
+      "to": "SD-TOP-003"
+    },
+    {
+      "from": "SD-REQ-005",
+      "kind": "Refines",
+      "to": "SD-TOP-001"
+    },
+    {
+      "from": "SD-REQ-009",
+      "kind": "Refines",
+      "to": "SD-TOP-003"
+    },
+    {
+      "from": "SD-REQ-010",
+      "kind": "Refines",
+      "to": "SD-TOP-003"
+    },
+    {
+      "from": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "kind": "Verifies",
+      "to": "SD-REQ-003"
+    },
+    {
+      "from": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "kind": "Verifies",
+      "to": "SD-REQ-009"
+    },
+    {
+      "from": "TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "kind": "Verifies",
+      "to": "SD-REQ-010"
+    },
+    {
+      "from": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "kind": "Verifies",
+      "to": "SD-REQ-001"
+    },
+    {
+      "from": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "kind": "Verifies",
+      "to": "SD-REQ-003"
+    },
+    {
+      "from": "TC_SAFE_DATA_READ_ROUNDTRIP",
+      "kind": "Verifies",
+      "to": "SD-REQ-005"
+    },
+    {
+      "from": "TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "kind": "Verifies",
+      "to": "SD-REQ-009"
+    },
+    {
+      "from": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "kind": "Verifies",
+      "to": "SD-REQ-004"
+    },
+    {
+      "from": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "kind": "Verifies",
+      "to": "SD-REQ-009"
+    }
+  ],
+  "nodeManifest": [
+    {
+      "hash": "a50f87e2696b4749919ed7cbdc2fcfe868eae3b85e31d4511db9ab8034433b64",
+      "id": "IMPL-safe_data_init",
+      "kind": "Implementation"
+    },
+    {
+      "hash": "76d55fc8184ea57be1d43bb0bd834153b5219c076777b7c7ceb33a117ac1ba20",
+      "id": "IMPL-safe_data_read",
+      "kind": "Implementation"
+    },
+    {
+      "hash": "8c873016f6535675ae0ed2973baff77638c802097a7ea51d8a63641afd97e913",
+      "id": "IMPL-safe_data_verify",
+      "kind": "Implementation"
+    },
+    {
+      "hash": "57a27edb0fa9eeb7fdfdb0638cc481e49b7de183a5f259858f910b9bc509d8c7",
+      "id": "IMPL-safe_data_verify_repair",
+      "kind": "Implementation"
+    },
+    {
+      "hash": "021027dc668a84e48f91e1283d9aa90bca8026874e6c7d34385d410b63a83702",
+      "id": "SD-REQ-001",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "bdfccd9f6ca213964355ee1f9715fb614fbbaa0cab95eddd0611e2b6ac97077f",
+      "id": "SD-REQ-003",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "94036cf8d9342d26855801d8bf39bc525605e19259f9fcb1c0b9187dc4f67c2b",
+      "id": "SD-REQ-004",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "d88e87c18239c9e7d127f6fb1616177371ef81366ba0328788383a62802d72f7",
+      "id": "SD-REQ-005",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "b3e61f35c21a088a645eb27f4fb1583381c2ec7540a44d7b78ee87a4090a3a00",
+      "id": "SD-REQ-009",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "acf00cebf4d4322465c2feb7fabe489d32274fa86bccce546fa0c793a263f659",
+      "id": "SD-REQ-010",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "d751e53282d71582c4687089a01c2e09f38c65b2bc0532db67698a1517d74aee",
+      "id": "SD-TOP-001",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "ba4009c4da012eae1848f4ea4386fddcf5bbca547fe50fbff78f3cdd10ed1413",
+      "id": "SD-TOP-003",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "6024edb58c4b420b738656054336a7fd11d1d15bc6aa2ec0f0d9836b24b6efbd",
+      "id": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "6efac442356f3a01c3db115ddf807121905a206d4ebfda513e52760d380ae787",
+      "id": "TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "f456cf47edf613465c9e7765c579726b6f53cfc563cfdf3c2e6d9fd9c60b9da4",
+      "id": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "565482c7a7bc1dcdfb5f32144cb28c4b7d64808edca6de1525579d2f14780551",
+      "id": "TC_SAFE_DATA_READ_ROUNDTRIP",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "80875657a2503a2a1c080b0d480a54a368c24c6cb20a868570ee2edd797229a2",
+      "id": "TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "be8db7313cfe4736afddbf93b659cfca24968ac147a9db7ff7cae666a9e6e09c",
+      "id": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "kind": "TestSpecification"
+    }
+  ],
+  "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed",
+  "root": "38775995a0c67aaf5af404ff2f07097e6c18eb0bb5075fc0be4a6a30bd1479ae",
+  "scope": [
+    "SD-TOP-001",
+    "SD-TOP-003"
+  ],
+  "snapshotId": "20261001T000000Z-6ad39885d528"
+}

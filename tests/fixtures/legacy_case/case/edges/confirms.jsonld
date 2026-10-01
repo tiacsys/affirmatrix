@@ -1,0 +1,75 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-1%2FFX-TS-1/FX-TS-1",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-1",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-1",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-1%2FFX-TS-2/FX-TS-2",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-2",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-2",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-1%2FFX-TS-3/FX-TS-3",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-3",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-3",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-1%2FFX-TS-4/FX-TS-4",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-4",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-4",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-1%2FFX-TS-5/FX-TS-5",
+      "seg:from": "https://affirmatrix.dev/case/node/run-1%2FFX-TS-5",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-5",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-2%2FFX-TS-1/FX-TS-1",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-1",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-1",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-2%2FFX-TS-2/FX-TS-2",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-2",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-2",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-2%2FFX-TS-3/FX-TS-3",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-3",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-3",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-2%2FFX-TS-4/FX-TS-4",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-4",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-4",
+      "type": "seg:Confirms"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/confirms/run-2%2FFX-TS-5/FX-TS-5",
+      "seg:from": "https://affirmatrix.dev/case/node/run-2%2FFX-TS-5",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-TS-5",
+      "type": "seg:Confirms"
+    }
+  ]
+}

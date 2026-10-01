@@ -1,0 +1,56 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/node/fixture.f1",
+      "seg:apiHash": "15e0af7eeb8d01d7a40a3603c61aa8d7c888ee76153b4554f33533617e33f6db",
+      "seg:apiHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "fixture.f1.api.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:bodyHash": "74b78ce53a5d70a7cc3118ca0382997537b1896a6f72eb75a780569095aa3257",
+      "seg:bodyHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "fixture.f1.body.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "fixture.f1",
+      "type": "seg:Implementation"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/fixture.f2",
+      "seg:apiHash": "f361a845bfb31549fb869fcc8d286791299e27991ad54dbd9d7936209110300f",
+      "seg:apiHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "fixture.f2.api.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:bodyHash": "22821b8e8d3c7672037334b89f76c48535e91e56bc2d716665b4b0dbdb64fa9a",
+      "seg:bodyHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "fixture.f2.body.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "fixture.f2",
+      "type": "seg:Implementation"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/fixture.f3",
+      "seg:apiHash": "2fa5e63c152ef3de776762caf886a44e43218b6734c6020e77992834041833fe",
+      "seg:apiHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "fixture.f3.api.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:bodyHash": "df32cd39d4094235db366a4b7a5840b95da2b56ead684b5d7cba8c5074e20227",
+      "seg:bodyHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "fixture.f3.body.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "fixture.f3",
+      "type": "seg:Implementation"
+    }
+  ]
+}

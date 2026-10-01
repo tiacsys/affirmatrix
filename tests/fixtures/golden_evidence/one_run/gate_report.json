@@ -1,0 +1,35 @@
+{
+  "blocked": false,
+  "coverageGaps": [],
+  "designSetEmpty": false,
+  "diagnostics": [
+    {
+      "condition": "outcome was skipped",
+      "detail": "",
+      "severity": "info",
+      "subject": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE"
+    },
+    {
+      "condition": "outcome was skipped",
+      "detail": "",
+      "severity": "info",
+      "subject": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_STALE_TAG_RECOVERS"
+    },
+    {
+      "condition": "outcome was skipped",
+      "detail": "",
+      "severity": "info",
+      "subject": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE"
+    }
+  ],
+  "discardedOutcomes": [],
+  "excusedOutcomes": [],
+  "skippedOutcomes": [
+    "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+    "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_STALE_TAG_RECOVERS",
+    "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE"
+  ],
+  "staleOutcomes": [],
+  "unreadyEdges": [],
+  "unwaivedOutcomes": []
+}

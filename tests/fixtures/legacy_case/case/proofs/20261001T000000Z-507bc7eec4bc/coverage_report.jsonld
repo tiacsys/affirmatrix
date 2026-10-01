@@ -1,0 +1,36 @@
+{
+  "@context": "../../context.jsonld",
+  "blocked": false,
+  "coverageGaps": [],
+  "designSetEmpty": false,
+  "diagnostics": [
+    {
+      "condition": "outcome's recorded revision differs from the current revision",
+      "detail": "",
+      "severity": "info",
+      "subject": "run-1/FX-TS-1"
+    },
+    {
+      "condition": "outcome's recorded revision differs from the current revision",
+      "detail": "",
+      "severity": "info",
+      "subject": "run-1/FX-TS-2"
+    },
+    {
+      "condition": "outcome's recorded revision differs from the current revision",
+      "detail": "",
+      "severity": "info",
+      "subject": "run-1/FX-TS-3"
+    }
+  ],
+  "discardedOutcomes": [],
+  "excusedOutcomes": [],
+  "skippedOutcomes": [],
+  "staleOutcomes": [
+    "run-1/FX-TS-1",
+    "run-1/FX-TS-2",
+    "run-1/FX-TS-3"
+  ],
+  "unreadyEdges": [],
+  "unwaivedOutcomes": []
+}

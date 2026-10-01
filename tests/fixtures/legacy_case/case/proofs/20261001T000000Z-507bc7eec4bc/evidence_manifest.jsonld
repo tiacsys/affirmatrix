@@ -1,0 +1,26 @@
+{
+  "@context": "../../context.jsonld",
+  "coverageReport": "coverage_report.jsonld",
+  "designConsistencyProof": "design_consistency_proof.jsonld",
+  "executionCoverageRecord": "execution_coverage_record.jsonld",
+  "memberScope": [
+    "FX-SREQ-1",
+    "FX-TS-1",
+    "FX-TS-2",
+    "FX-TS-3",
+    "fixture.f1",
+    "fixture.f2",
+    "run-1/FX-TS-1",
+    "run-1/FX-TS-2",
+    "run-1/FX-TS-3",
+    "run-2/FX-TS-1",
+    "run-2/FX-TS-2",
+    "run-2/FX-TS-3"
+  ],
+  "requestedScope": [
+    "FX-SREQ-1"
+  ],
+  "revision": "fixture-rev-2",
+  "snapshotId": "20261001T000000Z-507bc7eec4bc",
+  "total": false
+}

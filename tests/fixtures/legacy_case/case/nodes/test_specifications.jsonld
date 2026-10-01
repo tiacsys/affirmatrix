@@ -1,0 +1,90 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/node/FX-TS-1",
+      "seg:implHash": "f42eec879bda0847ccaf2d056ed98adc1ee6c1d2e5aee77a26128d8cb91987d6",
+      "seg:implHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-1.impl.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "FX-TS-1",
+      "seg:specHash": "25a556822de47a61d007eef0cc0cc686796359a16bb91fd7f96f58b78b199720",
+      "seg:specHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-1.spec.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "type": "seg:TestSpecification"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/FX-TS-2",
+      "seg:implHash": "c38025a4817db1455c3fcc2a40d3ed733ba413e5c4aca172910cb80f8de4b86d",
+      "seg:implHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-2.impl.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "FX-TS-2",
+      "seg:specHash": "4490615b8e73671e21bedb8c22363f579fda8f688ff8ad10b2d5e0baec91ffd7",
+      "seg:specHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-2.spec.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "type": "seg:TestSpecification"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/FX-TS-3",
+      "seg:implHash": "9613606c15e96775c6c7bac8cd3f03eca48fb897435114bd3ee27e474bc0773e",
+      "seg:implHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-3.impl.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "FX-TS-3",
+      "seg:specHash": "a687096eba3ea55686b7280cb0e751e639933265dc3a975191e6e13e43f3e0d3",
+      "seg:specHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-3.spec.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "type": "seg:TestSpecification"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/FX-TS-4",
+      "seg:implHash": "7c8ea0483d592d4e4b066bd392f86d0eb0b9ae5be2b0db8c78b6c42903e15fcb",
+      "seg:implHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-4.impl.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "FX-TS-4",
+      "seg:specHash": "50d28cf39bbda0e9a87eecc3bc25858428406b0c2c899a6498ea77ae8cae3a95",
+      "seg:specHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-4.spec.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "type": "seg:TestSpecification"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/node/FX-TS-5",
+      "seg:implHash": "95810a5edaaa6e63b2e3093657c2515c05a63c630ded11c97b71f8a72022d2bf",
+      "seg:implHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-5.impl.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "seg:localId": "FX-TS-5",
+      "seg:specHash": "8822d1e0642f949f47171d7bd15d60238808f12313ef7704e66e1d4b400a3d46",
+      "seg:specHashSource": {
+        "seg:sourceLocator": "file",
+        "seg:sourcePath": "FX-TS-5.spec.txt",
+        "seg:sourceRepo": "stream/content"
+      },
+      "type": "seg:TestSpecification"
+    }
+  ]
+}

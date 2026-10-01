@@ -1,0 +1,6 @@
+kind = "Requirement"
+
+[nodes]
+"FX-SYS-1" = { contentHash = "FX-SYS-1.txt" }
+"FX-SREQ-1" = { contentHash = "FX-SREQ-1.txt" }
+"FX-SREQ-2" = { contentHash = "FX-SREQ-2.txt" }

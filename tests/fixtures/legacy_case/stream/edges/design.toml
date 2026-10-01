@@ -1,0 +1,17 @@
+[edges]
+Refines = [
+    ["FX-SREQ-1", "FX-SYS-1"],
+    ["FX-SREQ-2", "FX-SYS-1"],
+]
+Verifies = [
+    ["FX-TS-1", "FX-SREQ-1"],
+    ["FX-TS-2", "FX-SREQ-1"],
+    ["FX-TS-3", "FX-SREQ-1"],
+    ["FX-TS-4", "FX-SREQ-2"],
+    ["FX-TS-5", "FX-SREQ-2"],
+]
+Implements = [
+    ["fixture.f1", "FX-SREQ-1"],
+    ["fixture.f2", "FX-SREQ-1"],
+    ["fixture.f3", "FX-SREQ-2"],
+]

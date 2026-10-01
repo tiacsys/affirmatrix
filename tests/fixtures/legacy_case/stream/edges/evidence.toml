@@ -1,0 +1,27 @@
+[edges]
+Confirms = [
+    ["run-1/FX-TS-1", "FX-TS-1"],
+    ["run-1/FX-TS-2", "FX-TS-2"],
+    ["run-1/FX-TS-3", "FX-TS-3"],
+    ["run-1/FX-TS-4", "FX-TS-4"],
+    ["run-1/FX-TS-5", "FX-TS-5"],
+    ["run-2/FX-TS-1", "FX-TS-1"],
+    ["run-2/FX-TS-2", "FX-TS-2"],
+    ["run-2/FX-TS-3", "FX-TS-3"],
+    ["run-2/FX-TS-4", "FX-TS-4"],
+    ["run-2/FX-TS-5", "FX-TS-5"],
+]
+Witnesses = [
+    ["run-1/FX-TS-1", "fixture.f1"],
+    ["run-1/FX-TS-2", "fixture.f1"],
+    ["run-1/FX-TS-3", "fixture.f2"],
+    ["run-1/FX-TS-4", "fixture.f3"],
+    ["run-1/FX-TS-5", "fixture.f3"],
+    ["run-2/FX-TS-1", "fixture.f1"],
+    ["run-2/FX-TS-2", "fixture.f1"],
+    ["run-2/FX-TS-3", "fixture.f2"],
+    ["run-2/FX-TS-4", "fixture.f3"],
+    ["run-2/FX-TS-5", "fixture.f3"],
+    ["run-1/FX-TS-1", "fixture.f2"],
+    ["run-2/FX-TS-1", "fixture.f2"],
+]

@@ -1,0 +1,68 @@
+{
+  "@context": "../../context.jsonld",
+  "designEdges": [
+    {
+      "from": "fixture.f1",
+      "kind": "Implements",
+      "to": "FX-SREQ-1"
+    },
+    {
+      "from": "fixture.f2",
+      "kind": "Implements",
+      "to": "FX-SREQ-1"
+    },
+    {
+      "from": "FX-TS-1",
+      "kind": "Verifies",
+      "to": "FX-SREQ-1"
+    },
+    {
+      "from": "FX-TS-2",
+      "kind": "Verifies",
+      "to": "FX-SREQ-1"
+    },
+    {
+      "from": "FX-TS-3",
+      "kind": "Verifies",
+      "to": "FX-SREQ-1"
+    }
+  ],
+  "nodeManifest": [
+    {
+      "hash": "89d5e5b83bf25fa2d9884123e7b9d772a82430f5470d954ac4ffb7c13fb7ead1",
+      "id": "FX-SREQ-1",
+      "kind": "Requirement"
+    },
+    {
+      "hash": "e05978defd4ae6a3ef710caaf634391198086fa899a6563e4d4ce51a154502dd",
+      "id": "FX-TS-1",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "626fff91db252513cbf54f8e9328f156edf1508ed1cc31ad4caf0b199128435d",
+      "id": "FX-TS-2",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "99e79be0030e033ac32ef4a8fd8d4e9b75a8e08d931c2f29e49504e6bc974e0d",
+      "id": "FX-TS-3",
+      "kind": "TestSpecification"
+    },
+    {
+      "hash": "9b31d17e07f315b87884d8bd00a55554956eed4370728957ae9df99c96dff9e7",
+      "id": "fixture.f1",
+      "kind": "Implementation"
+    },
+    {
+      "hash": "8230b96f9ce95cf08f05f0a8b43983c597f9af45d0fac89ee4856ecb5265f879",
+      "id": "fixture.f2",
+      "kind": "Implementation"
+    }
+  ],
+  "revision": "fixture-rev-2",
+  "root": "32df0ad6aebdbcb04afc50444d4182d08f9e88c9f7bfec7e8d7c83737d721709",
+  "scope": [
+    "FX-SREQ-1"
+  ],
+  "snapshotId": "20261001T000000Z-507bc7eec4bc"
+}

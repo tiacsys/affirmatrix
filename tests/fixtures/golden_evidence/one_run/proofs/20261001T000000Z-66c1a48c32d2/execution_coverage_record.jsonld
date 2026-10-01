@@ -1,0 +1,149 @@
+{
+  "@context": "../../context.jsonld",
+  "outcomes": [
+    {
+      "confirms": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "result": "skipped",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_INIT_AND_VERIFY",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_READ_ROUNDTRIP",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_READ_ROUNDTRIP",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "result": "skipped",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.plain/TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "result": "skipped",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.strict/TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.strict/TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.strict/TC_SAFE_DATA_INIT_AND_VERIFY",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_READ_ROUNDTRIP",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.strict/TC_SAFE_DATA_READ_ROUNDTRIP",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.strict/TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.strict/TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.timeout/TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.timeout/TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.timeout/TC_SAFE_DATA_INIT_AND_VERIFY",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_READ_ROUNDTRIP",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.timeout/TC_SAFE_DATA_READ_ROUNDTRIP",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.timeout/TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api.timeout/TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_DETECTS_CORRUPTION",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_DOUBLE_FAULT_UNRECOVERABLE",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_INIT_AND_VERIFY",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_INIT_AND_VERIFY",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_READ_ROUNDTRIP",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_READ_ROUNDTRIP",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_STALE_TAG_RECOVERS",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    },
+    {
+      "confirms": "TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "id": "twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_VERIFY_REPAIR_FIXES_IN_PLACE",
+      "result": "passed",
+      "revision": "5847f3fdca777b8d62615d84b8926fdc8ce125ed"
+    }
+  ]
+}

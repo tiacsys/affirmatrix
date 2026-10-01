@@ -1,0 +1,23 @@
+{
+  "@context": "../../context.jsonld",
+  "outcomes": [
+    {
+      "confirms": "FX-TS-1",
+      "id": "run-2/FX-TS-1",
+      "result": "passed",
+      "revision": "fixture-rev-2"
+    },
+    {
+      "confirms": "FX-TS-2",
+      "id": "run-2/FX-TS-2",
+      "result": "passed",
+      "revision": "fixture-rev-2"
+    },
+    {
+      "confirms": "FX-TS-3",
+      "id": "run-2/FX-TS-3",
+      "result": "passed",
+      "revision": "fixture-rev-2"
+    }
+  ]
+}

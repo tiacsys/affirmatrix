@@ -1,0 +1,43 @@
+{
+  "@context": "../context.jsonld",
+  "@graph": [
+    {
+      "id": "https://affirmatrix.dev/case/edge/verifies/FX-TS-1/FX-SREQ-1",
+      "seg:edgeHash": "6bdbafc622db5667318f3b7e6a9bfa690008154599730ed2bfa7b77d37dc6388",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-1",
+      "seg:linkState": "active",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "type": "seg:Verifies"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/verifies/FX-TS-2/FX-SREQ-1",
+      "seg:edgeHash": "f8870910c44246aa6d64aa367734a7c9d63724338f218b2a063f5f76de8456f5",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-2",
+      "seg:linkState": "active",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "type": "seg:Verifies"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/verifies/FX-TS-3/FX-SREQ-1",
+      "seg:edgeHash": "5d918df2e6d10db970e86c9988228edd082a59ad7f0b0882c9e1adfd102497f4",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-3",
+      "seg:linkState": "active",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-1",
+      "type": "seg:Verifies"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/verifies/FX-TS-4/FX-SREQ-2",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-4",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-2",
+      "type": "seg:Verifies"
+    },
+    {
+      "id": "https://affirmatrix.dev/case/edge/verifies/FX-TS-5/FX-SREQ-2",
+      "seg:from": "https://affirmatrix.dev/case/node/FX-TS-5",
+      "seg:linkState": "pending",
+      "seg:to": "https://affirmatrix.dev/case/node/FX-SREQ-2",
+      "type": "seg:Verifies"
+    }
+  ]
+}
