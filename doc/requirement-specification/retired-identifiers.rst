@@ -79,3 +79,13 @@ needs of this table have no entry on any other page. Git holds their old text.
      - 2026-10-01
      - Refresh migrates no edge.
      - SEG-SREQ-228
+   * - SEG-SREQ-197
+     - Each run's bundle and its digest are carried
+     - 2026-10-01
+     - The configuration holds no run entries.
+     - SEG-SREQ-234
+   * - SEG-SREQ-221
+     - A digest that differs from the configured one is refused
+     - 2026-10-01
+     - No expected digest exists. The proof fixes the identity of a bundle.
+     - ADR-0013

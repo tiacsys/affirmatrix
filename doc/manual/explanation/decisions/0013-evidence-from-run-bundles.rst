@@ -41,6 +41,31 @@ the text above leaves out.
 The requirements are :need:`SEG-SYS-013` and :need:`SEG-SREQ-219` to
 :need:`SEG-SREQ-231`.
 
+Amended again 2026-10-01: the run bundles a command reads are named when the
+command is invoked, and their identity is fixed by the proof.
+
+- ``graph status``, ``proof check`` and ``proof generate`` take each run
+  bundle as an option, ``--bundle PATH``, which may be given more than once.
+  The configuration names no run bundle and no digest. The other commands
+  read no bundle, as before.
+- No digest is expected before a proof. The tool computes the digest of each
+  bundle it reads, by the rule above, and the proof records the digest of
+  every bundle it used. Until a proof fixes it, the identity of a bundle does
+  not matter: what guards the evidence is the revision rule, because only
+  outcomes recorded at the current revision of a clean implementation
+  checkout count. So the check of a bundle against an expected digest is
+  withdrawn. The dirty check, the name check and the revision rule stay.
+- This replaces the sentences above that say a command reads the configured
+  run bundles and checks each digest against the configured one, and the
+  amendment bullet on the configuration keys ``bundle`` and ``digest``.
+- Why: a digest kept in the configuration lives in the implementation
+  repository. Committing it moves the repository's head off the revision the
+  run recorded, so every outcome of that run turns stale. A configuration
+  that pins a run can never be committed at that run's revision.
+- The digests still stand beside the package root; no seal binds them yet.
+  An index of bundles kept beside the bundles themselves can later replace
+  naming each one on the command line.
+
 Context
 -------
 

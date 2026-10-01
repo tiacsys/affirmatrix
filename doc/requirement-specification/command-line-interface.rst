@@ -396,6 +396,10 @@ Edge selection
 Judgement inputs
 -----------------
 
+``graph status``, ``proof check`` and ``proof generate`` take a run bundle as the
+option ``--bundle``, which may be given more than once. A relative path is taken
+from the working directory.
+
 .. sreq:: A judgement's inputs are explicit, discovered, or refused
    :id: SEG-SREQ-105
    :refines: SEG-SYS-010
@@ -500,13 +504,13 @@ Judgement inputs
    outcome, graph status, then it shall exit with status 2, a request it
    could not judge.
 
-.. sreq:: The verbs that judge evidence build it from the configured run bundles
+.. sreq:: The verbs that judge evidence build it from the run bundles the invocation names
    :id: SEG-SREQ-229
    :refines: SEG-SYS-013
 
-   Where the configuration names run bundles, the command-line interface
-   shall include the test evidence of every named run bundle in the current
-   stream of graph status, proof check and proof generate.
+   Where an invocation of graph status, proof check or proof generate names
+   run bundles, the command-line interface shall include the test evidence of
+   exactly those run bundles in the current stream of that invocation.
 
 .. sreq:: The other verbs read no run bundle
    :id: SEG-SREQ-230
@@ -514,6 +518,31 @@ Judgement inputs
 
    The command-line interface shall read no run bundle in case sync, case
    check, graph check, edge show and edge affirm.
+
+.. sreq:: A bundle named twice is read once
+   :id: SEG-SREQ-232
+   :refines: SEG-SYS-013
+
+   When an invocation of graph status, proof check or proof generate names
+   one run bundle more than once, the command-line interface shall read that
+   run bundle once.
+
+.. sreq:: A named bundle and a given stream cannot be judged together
+   :id: SEG-SREQ-233
+   :refines: SEG-SYS-013
+
+   If an invocation of graph status, proof check or proof generate names a
+   run bundle and gives a current stream, then the command-line interface
+   shall exit with status 2, a request it could not judge.
+
+.. sreq:: Named bundles need a test-case export
+   :id: SEG-SREQ-235
+   :refines: SEG-SYS-013
+
+   If an invocation of graph status, proof check or proof generate names a
+   run bundle and the configuration gives no test-case export, then the
+   command-line interface shall exit with status 2, a request it could not
+   judge.
 
 Draft posture
 -------------

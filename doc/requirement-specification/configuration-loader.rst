@@ -100,8 +100,9 @@ carried elsewhere and is no part of this component's own.
 The producer
 ------------
 
-The extraction adapters read a producer's exports, Doxygen output and run
-bundles. The configuration loader carries where each of those lives and
+The extraction adapters read a producer's exports and Doxygen output. The
+command line names the run bundles; the configuration names none. The
+configuration loader carries where each of those inputs lives and
 which repository their anchors name; every path is resolved as any other path
 in the file is.
 
@@ -110,8 +111,8 @@ in the file is.
    :refines: SEG-SREQ-117
 
    The configuration loader shall carry, for each stream of records the
-   producer supplies, the locations of the inputs that stream is read
-   from.
+   producer supplies other than test outcomes, the locations of the inputs
+   that stream is read from.
 
 .. sreq:: The producer's repository is named
    :id: SEG-SREQ-192
@@ -150,14 +151,6 @@ in the file is.
    export and of the Doxygen output that the content extractor reads for
    implementations.
 
-.. sreq:: Each run's bundle and its digest are carried
-   :id: SEG-SREQ-197
-   :refines: SEG-SREQ-191
-
-   The configuration loader shall carry, for each run to be extracted, the
-   location of the run bundle and the digest the run bundle is expected to
-   have.
-
 .. sreq:: The requirement source directory is carried
    :id: SEG-SREQ-198
    :refines: SEG-SREQ-191
@@ -165,3 +158,10 @@ in the file is.
    The configuration loader shall carry the location of the requirement
    document's source directory, against which a need's docname and doctype
    resolve to the source file.
+
+.. sreq:: A configuration that names a run is refused
+   :id: SEG-SREQ-234
+   :refines: SEG-SREQ-191
+
+   If the configuration names a run, then the configuration loader shall
+   refuse the configuration.

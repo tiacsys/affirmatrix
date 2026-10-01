@@ -50,13 +50,13 @@ What the gate judges by
 Anchors
 -------
 
-.. sreq:: An anchor names its repository by configured name
+.. sreq:: An anchor names a repository by configured name
    :id: SEG-SREQ-134
    :refines: SEG-SYS-007
 
-   The record source shall name, in every content anchor it supplies, the
-   repository the anchored content was read from by that repository's
-   configured name, never by a path.
+   Where the anchored content was read from a repository, the record source
+   shall name that repository in the content anchor by its configured name,
+   never by a path.
 
 .. sreq:: Every content hash is supplied with an anchor
    :id: SEG-SREQ-143
