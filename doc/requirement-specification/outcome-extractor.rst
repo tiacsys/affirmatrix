@@ -8,6 +8,12 @@ specification a result belongs to, so a result reaches its specification by
 an exact match of a test identifier, never by a name alone. A run artifact's
 format is the runner's own, a twister run, say.
 
+A run bundle is the unit of test evidence. It holds the run artifact (the
+runner's report), a revision and a dirty flag for each checkout the run used,
+the name of the run and the command. The bundle's identity is its digest. The
+configuration gives a path and the digest the bundle must have. The extractor
+reads a run from its bundle and from no other record.
+
 A TestOutcome's content hash covers the record read from the artifact's entry
 for the test, projected onto the specification identity, the run identifier
 and the result. Its result and revision are claims recorded beside the hash.
@@ -102,20 +108,21 @@ Results
 Revision
 --------
 
-.. sreq:: A TestOutcome's revision is the revision recorded beside the run
+.. sreq:: A TestOutcome's revision is the implementation checkout's revision in the run bundle
    :id: SEG-SREQ-186
    :refines: SEG-SREQ-132
 
    The outcome extractor shall record as each TestOutcome's revision the
-   full revision recorded beside the run artifact.
+   revision that the run bundle records for the implementation repository's
+   checkout, exactly as recorded.
 
 .. sreq:: A run with no recorded revision is refused
    :id: SEG-SREQ-187
    :refines: SEG-SREQ-132
 
-   If no full revision is recorded beside the run artifact, then the
-   outcome extractor shall refuse the run instead of supplying outcomes
-   for it.
+   If the run bundle records no revision for the implementation
+   repository's checkout, then the outcome extractor shall refuse the run
+   instead of supplying outcomes for it.
 
 Edges and anchor
 ----------------
@@ -142,3 +149,60 @@ Edges and anchor
    The outcome extractor shall anchor each TestOutcome's content hash at
    the path of the run artifact within its repository, with the locator
    nodeid:<the result's test identifier>.
+
+Run bundle
+----------
+
+.. sreq:: A run is read from its run bundle and from no other record
+   :id: SEG-SREQ-219
+   :refines: SEG-SYS-013
+
+   The outcome extractor shall read each run from the run's bundle and from
+   no other record of that run.
+
+.. sreq:: A run bundle's digest covers every file in it and its path
+   :id: SEG-SREQ-220
+   :refines: SEG-SREQ-219
+
+   The outcome extractor shall compute the digest of a run bundle as the
+   SHA-256 of the list of the bundle's files, in the order of their paths,
+   each given by its path in the bundle and the SHA-256 of its bytes.
+
+.. sreq:: A digest that differs from the configured one is refused
+   :id: SEG-SREQ-221
+   :refines: SEG-SREQ-219
+
+   If the digest of a run bundle differs from the digest the configuration
+   gives for it, then the outcome extractor shall refuse the run instead of
+   supplying outcomes for it.
+
+.. sreq:: A run whose implementation checkout was dirty is refused
+   :id: SEG-SREQ-222
+   :refines: SEG-SREQ-219
+
+   If a run bundle records that the checkout of the implementation
+   repository was dirty, then the outcome extractor shall refuse the run
+   instead of supplying outcomes for it.
+
+.. sreq:: A run with no recorded name is refused
+   :id: SEG-SREQ-223
+   :refines: SEG-SREQ-219
+
+   If a run bundle records no name for the run, then the outcome extractor
+   shall refuse the run instead of supplying outcomes for it.
+
+.. sreq:: A bundle with no readable run artifact is refused
+   :id: SEG-SREQ-224
+   :refines: SEG-SREQ-219
+
+   If a run bundle holds no run artifact that the outcome extractor can
+   read, then the outcome extractor shall refuse the run instead of
+   supplying outcomes for it.
+
+.. sreq:: An export with build timestamps is refused by the outcome extractor
+   :id: SEG-SREQ-225
+   :refines: SEG-SREQ-176
+
+   If a need export the outcome extractor reads carries a build timestamp,
+   then the outcome extractor shall refuse the export instead of supplying
+   records from it.

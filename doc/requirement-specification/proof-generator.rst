@@ -110,3 +110,10 @@ the refusal arrives with the gate's report attached.
 
    The proof generator shall refuse only those scopes the proof gate reports
    as blocked.
+
+.. sreq:: Packages record the run bundles they used
+   :id: SEG-SREQ-226
+   :refines: SEG-SYS-013
+
+   The proof generator shall record in every evidence package the digest of
+   every run bundle that supplied a test outcome in the package's scope.

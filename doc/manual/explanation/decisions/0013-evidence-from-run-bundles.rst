@@ -7,6 +7,38 @@ Status
 Accepted, 2026-10-01. Supersedes ADR-0012. Applies ADR-0010's rule for the
 current revision to the verbs that build evidence.
 
+Amended 2026-10-01: seven points are made exact, and one change is stated that
+the text above leaves out.
+
+- Only strong edges are counted as ``pending``. A report gives no evidence
+  edge a link state.
+- A current or stale outcome never turns ``graph status`` negative. A dangling
+  evidence edge still does: an edge of kind ``Confirms``, ``Witnesses`` or
+  ``Excuses`` that touches an absent node gives exit status 1, as before.
+- ``case sync`` removes the stored test outcome nodes and evidence edges, after
+  it has written the derived stream. This is the one exception to "a sync never
+  removes a record". The removal needs no revision and no bundle, and a case
+  that still holds the records gives the same verdicts. The evidence schemas
+  stay in the case copy for now.
+- The dirty check and the digest check apply to every configured bundle, not
+  only to bundles recorded at the current revision. A bundle at another
+  revision is still read, and the gate still lists its outcomes as set aside.
+- Like ``case sync``, ``graph check`` and the ``edge`` commands, ``case check``
+  reads no bundle.
+- ``graph status`` asks for the current revision only when the current stream
+  holds a test outcome. The proof commands always ask for it.
+- A bundle is used when it supplied a test outcome in the scope of a package, a
+  set-aside outcome included. A package written before this decision has no
+  digests, and it still reads.
+- The change to the configuration is breaking. The keys
+  ``producer.outcomes[].revision`` and ``.name`` go away. A run gives a bundle
+  and its digest. An old configuration is refused with exit status 2. The
+  digest check reads every file of every bundle on each ``graph status``,
+  ``proof check`` and ``proof generate`` run.
+
+The requirements are :need:`SEG-SYS-013` and :need:`SEG-SREQ-219` to
+:need:`SEG-SREQ-231`.
+
 Context
 -------
 

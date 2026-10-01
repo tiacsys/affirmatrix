@@ -101,7 +101,7 @@ The producer
 ------------
 
 The extraction adapters read a producer's exports, Doxygen output and run
-artifacts. The configuration loader carries where each of those lives and
+bundles. The configuration loader carries where each of those lives and
 which repository their anchors name; every path is resolved as any other path
 in the file is.
 
@@ -150,13 +150,13 @@ in the file is.
    export and of the Doxygen output that the content extractor reads for
    implementations.
 
-.. sreq:: Each run's inputs are carried
+.. sreq:: Each run's bundle and its digest are carried
    :id: SEG-SREQ-197
    :refines: SEG-SREQ-191
 
    The configuration loader shall carry, for each run to be extracted, the
-   location of the run artifact, the location of the record of the run's
-   full revision and the location of the record of the run's name.
+   location of the run bundle and the digest the run bundle is expected to
+   have.
 
 .. sreq:: The requirement source directory is carried
    :id: SEG-SREQ-198

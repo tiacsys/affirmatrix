@@ -47,8 +47,7 @@ Waivers
 Staleness
 ---------
 
-The gate decides staleness from the revision it is given. It does not read
-the state of an evidence edge.
+The gate decides staleness from the revision it is given.
 
 .. sreq:: Outcomes from another revision are set aside visibly
    :id: SEG-SREQ-130

@@ -7,6 +7,11 @@ requirement refines one of them. None of them carries an implementation or a
 test of its own — a system requirement is discharged by the requirements
 beneath it, wherever those live in this document.
 
+Test evidence means the test outcomes of a run and the edges that tie each
+outcome to a specification and to the implementations it witnesses. The case
+keeps none of it. affirmatrix builds it again from identified run bundles each
+time a verdict needs it.
+
 .. sys:: Content-anchored evidence graph
    :id: SEG-SYS-001
 
@@ -79,9 +84,8 @@ beneath it, wherever those live in this document.
    affirmatrix shall change the recorded affirmation state only as the direct
    result of an act the operator performs.
 
-.. sys:: Evidence currency against a revision
-   :id: SEG-SYS-012
+.. sys:: Test evidence comes from identified run bundles at verdict time
+   :id: SEG-SYS-013
 
-   affirmatrix shall derive whether each evidence edge is current or stale from
-   the revision carried by the test outcome it touches, measured against the
-   current revision of the implementation repository.
+   affirmatrix shall take the test evidence of every verdict, at the time of
+   that verdict, from identified run bundles alone.

@@ -29,3 +29,4 @@ subject, not by its parent, so refinement links cross pages freely.
    proof-generator
    command-line-interface
    configuration-loader
+   retired-identifiers
