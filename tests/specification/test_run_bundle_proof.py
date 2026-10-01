@@ -25,6 +25,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from affirmatrix import config, drift, graph, satisfaction
 from affirmatrix.case import AffirmationStore
 from affirmatrix.sources import composed
@@ -76,6 +78,7 @@ def _third_bundle(tmp_path: Path, name: str = "third") -> Path:
     return bundle
 
 
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-226: the evidence verbs take no --bundle yet")
 def test_a_package_records_the_digest_of_every_bundle_that_supplied_an_outcome_in_scope(
     tmp_path: Path, capsys
 ) -> None:
@@ -114,6 +117,7 @@ def test_a_package_records_the_digest_of_every_bundle_that_supplied_an_outcome_i
     assert recipe_digest(second) not in manifest
 
 
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-133: the evidence verbs take no --bundle yet")
 def test_the_design_root_does_not_move_with_the_evidence(tmp_path: Path, capsys) -> None:
     """A package's design root and design proof are those of the golden, with one run or two.
 
@@ -142,6 +146,7 @@ def test_the_design_root_does_not_move_with_the_evidence(tmp_path: Path, capsys)
         assert package.name == golden.name
 
 
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-063: the evidence verbs take no --bundle yet")
 def test_a_stale_run_changes_no_coverage_finding_of_the_gate(tmp_path: Path, capsys) -> None:
     """The gate leaves the outcomes of a run at another revision out of every coverage finding.
 
@@ -165,7 +170,7 @@ def test_a_stale_run_changes_no_coverage_finding_of_the_gate(tmp_path: Path, cap
             "proof",
             "check",
             "--json",
-            *opened.args(),
+            *opened.evidence_args(),
             *scope_args(),
             "--revision",
             REVISION,
@@ -181,6 +186,7 @@ def test_a_stale_run_changes_no_coverage_finding_of_the_gate(tmp_path: Path, cap
     assert reports["two_runs"]["blocked"] is False
 
 
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-067: the evidence verbs take no --bundle yet")
 def test_a_stale_outcome_is_reported_as_information(tmp_path: Path, capsys) -> None:
     """The gate reports each outcome of a run at another revision as an informational finding.
 
@@ -195,7 +201,14 @@ def test_a_stale_outcome_is_reported_as_information(tmp_path: Path, capsys) -> N
     opened = _arm(tmp_path, capsys, "two_runs")
 
     status, out = run(
-        capsys, "proof", "check", "--json", *opened.args(), *scope_args(), "--revision", REVISION
+        capsys,
+        "proof",
+        "check",
+        "--json",
+        *opened.evidence_args(),
+        *scope_args(),
+        "--revision",
+        REVISION,
     )
 
     assert status == 0
@@ -207,6 +220,7 @@ def test_a_stale_outcome_is_reported_as_information(tmp_path: Path, capsys) -> N
     assert {d["severity"] for d in stale} == {"info"}
 
 
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-006: the evidence verbs take no --bundle yet")
 def test_leaf_verdicts_over_bundles_equal_the_golden_verdicts(tmp_path: Path, capsys) -> None:
     """Every requirement's satisfaction over bundle evidence equals the golden verdict.
 
@@ -224,7 +238,7 @@ def test_leaf_verdicts_over_bundles_equal_the_golden_verdicts(tmp_path: Path, ca
         work = tmp_path / arm
         opened = _arm(work, capsys, arm)
         loaded = config.load(opened.config, case=opened.case)
-        current = composed.from_config(loaded)
+        current = composed.from_config(loaded, bundles=opened.bundles)
         built = graph.build(
             drift.derive(recorded=AffirmationStore(root=loaded.case), current=current)
         )
@@ -239,6 +253,7 @@ def test_leaf_verdicts_over_bundles_equal_the_golden_verdicts(tmp_path: Path, ca
         assert sum(document["satisfaction"].values()) == 18
 
 
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-226: the evidence verbs take no --bundle yet")
 def test_a_package_gains_one_field_and_changes_nothing_else(tmp_path: Path, capsys) -> None:
     """The documents of a package equal the golden's, and the manifest gains one field.
 

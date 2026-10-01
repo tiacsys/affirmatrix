@@ -20,16 +20,16 @@ expected content digest is the SHA-256 of the canonical record, a JSON object
 of ``result``, ``run`` and ``specification`` with sorted keys and no blanks.
 Every variant of an input is built in the test, in a temporary directory, by
 copying the whole fixture tree and the clean bundle (the test cannot know which
-of their files the extractor opens) and editing the copy. The digest the run is
-given is computed after the edit, with the recipe of the architecture page
-written in plain Python (``evidence_support.recipe_digest``), so an edited
-bundle is never refused for its digest. The extractor is imported inside the
-helper that builds it, so an extractor that does not exist yet is an expected
-failure of the test, not of the collection.
+of their files the extractor opens) and editing the copy. The extractor is given
+the bundle's path and no digest: none is expected. The extractor is imported
+inside the helper that builds it, so an extractor that does not exist yet is an
+expected failure of the test, not of the collection.
 
-Without a copy, the tests read the clean bundle in place, the exports in the
-fixture, and the root ``tests/fixtures/run_bundles/``. With a copy, the root is
-the copy and the bundle is its directory ``bundle``.
+Without a copy, the tests read the clean bundle in place and the exports in the
+fixture. With a copy, the bundle is the copy's directory ``bundle``.
+
+Retired: SEG-TS-066 (run entries of the configuration, SEG-SREQ-197, withdrawn).
+Its identifier is never reused.
 
 An error for what the inputs alone show (a missing revision record) is raised
 when the extractor is built. An error for one result is raised before the
@@ -122,11 +122,6 @@ def _base(tree: Path | None) -> Path:
     return FIXTURE if tree is None else tree
 
 
-def _root(tree: Path | None) -> Path:
-    """The root of the anchors' paths: the directory of the clean bundle, or a copy."""
-    return CLEAN_BUNDLE.parent if tree is None else tree
-
-
 def _bundle(tree: Path | None) -> Path:
     """The run bundle: the clean bundle in place, or the copy's own."""
     return CLEAN_BUNDLE if tree is None else tree / BUNDLE_DIRECTORY
@@ -203,27 +198,18 @@ def _canonical(specification: str, run: str, result: str) -> bytes:
     return hashlib.sha256(text.encode()).digest()
 
 
-def _runs(tree: Path | None = None) -> list[config.RunInputs]:
-    """The one run of the tree, given as its bundle and the bundle's digest as it is now."""
-    bundle = _bundle(tree)
-    return [config.RunInputs(bundle=bundle, digest=f"sha256:{recipe_digest(bundle)}")]
-
-
 def _extractor(
     tree: Path | None = None,
     *,
-    runs: list[config.RunInputs] | None = None,
-    repository: str = REPOSITORY,
+    bundles: list[Path] | None = None,
     implementations: bool = True,
 ):
-    """An outcome extractor over the tree, its root. ``implementations=False`` drops that input."""
+    """An outcome extractor over the tree's bundle. ``implementations=False`` drops that input."""
     from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
 
     base = _base(tree)
     return TwisterOutcomeExtractor(
-        _root(tree),
-        _runs(tree) if runs is None else runs,
-        repository=repository,
+        [_bundle(tree)] if bundles is None else bundles,
         checkout=CHECKOUT,
         specifications=config.SpecificationInputs(
             export=base / SPECIFICATION_EXPORT, doxygen=base / SPECIFICATION_XML
@@ -278,6 +264,10 @@ def _witnessed(specification: str, tree: Path | None = None) -> set[str]:
     return {need_id for need_id, need in needs.items() if verified & set(need["satisfies"])}
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-178: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_path: Path) -> None:
     """A run identifier joins the run's name, platform and scenario, in that order.
 
@@ -318,6 +308,10 @@ def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_p
     assert f"{_run_identifier('safe_data.api.timeout', 'qemu_x86')}/{INIT_AND_VERIFY}" in after
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-179: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_specification_identifier_is_the_test_case_needs_identifier_verbatim(
     tmp_path: Path,
 ) -> None:
@@ -358,6 +352,10 @@ def test_a_specification_identifier_is_the_test_case_needs_identifier_verbatim(
     }
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-180: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_result_maps_to_the_need_with_its_scenario_suite_and_test_function(
     tmp_path: Path,
 ) -> None:
@@ -414,6 +412,10 @@ def test_a_result_maps_to_the_need_with_its_scenario_suite_and_test_function(
     assert f"{_run_identifier('zz.api')}/{INIT_AND_VERIFY}" in mapped
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-181: the extractor takes no bundles without a root and a digest yet",
+)
 def test_an_unmapped_or_ambiguous_result_is_an_error_for_that_result(tmp_path: Path) -> None:
     """An unmapped or ambiguous result is an error that names the result.
 
@@ -444,6 +446,10 @@ def test_an_unmapped_or_ambiguous_result_is_an_error_for_that_result(tmp_path: P
     _refused(unmapped, SELFTEST_RESULT)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-182: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_content_hash_covers_the_specification_the_run_and_the_result_only(
     tmp_path: Path,
 ) -> None:
@@ -491,6 +497,10 @@ def test_a_content_hash_covers_the_specification_the_run_and_the_result_only(
     assert after[identity] == _canonical(INIT_AND_VERIFY, _run_identifier(BASE), "failed")
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-183: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_recorded_status_maps_onto_the_closed_result_set(tmp_path: Path) -> None:
     """A recorded status maps onto the member of the closed result set it corresponds to.
 
@@ -522,6 +532,10 @@ def test_a_recorded_status_maps_onto_the_closed_result_set(tmp_path: Path) -> No
     }
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-184: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_status_with_no_counterpart_is_an_error_for_that_result(tmp_path: Path) -> None:
     """A status with no counterpart in the closed result set is an error for that result.
 
@@ -538,6 +552,10 @@ def test_a_status_with_no_counterpart_is_an_error_for_that_result(tmp_path: Path
         _refused(variant, INIT_RESULT)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-185: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_skipped_result_is_recorded_as_a_skipped_outcome() -> None:
     """A skipped result is recorded as an outcome whose result is skipped.
 
@@ -565,6 +583,10 @@ def test_a_skipped_result_is_recorded_as_a_skipped_outcome() -> None:
     assert {identity for identity, node in nodes.items() if node.result == "skipped"} == skipped
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-186: the extractor takes no bundles without a root and a digest yet",
+)
 def test_an_outcomes_revision_is_the_revision_the_bundle_records_for_the_checkout(
     tmp_path: Path,
 ) -> None:
@@ -591,6 +613,10 @@ def test_an_outcomes_revision_is_the_revision_the_bundle_records_for_the_checkou
     assert {node.revision for node in _nodes(changed).values()} == {other}
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-187: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     """A run with no recorded full revision is refused, and no outcome is supplied.
 
@@ -612,6 +638,10 @@ def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
             _extractor(variant)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-188: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_confirms_edge_runs_from_each_outcome_to_its_specification() -> None:
     """A Confirms edge runs from each outcome to the specification its result maps to.
 
@@ -629,6 +659,10 @@ def test_a_confirms_edge_runs_from_each_outcome_to_its_specification() -> None:
     assert (f"{_run_identifier(BASE)}/{INIT_AND_VERIFY}", INIT_AND_VERIFY) in expected
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-189: the extractor takes no bundles without a root and a digest yet",
+)
 def test_a_witnesses_edge_runs_to_each_implementation_of_what_the_specification_verifies(
     tmp_path: Path,
 ) -> None:
@@ -681,30 +715,34 @@ def test_a_witnesses_edge_runs_to_each_implementation_of_what_the_specification_
     assert _pairs(_edges(implementations=False), "Witnesses") == []
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="SEG-SREQ-190: the extractor takes no bundles without a root and a digest yet",
+)
 def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path) -> None:
-    """An outcome's anchor names the run artifact's path in its repository and the result.
+    """An outcome's anchor names its bundle by digest, the artifact's path in it, and the result.
 
-    The extractor is given the directory that holds the clean bundle as its root and the
-    repository as the configured name toolbox. The artifact is clean/twister.json under that
-    root. Each of the 76 outcomes has exactly one content hash, contentHash. Its anchor names
-    the repository toolbox and the path clean/twister.json, relative to the root. Its locator
-    is nodeid: followed by the identifier of the result, for example
-    nodeid:safe_data.api.safe_data.init_and_verify.
+    Each of the 76 outcomes has exactly one content hash, contentHash. Its
+    anchor names as its repository the digest of the clean bundle, written as
+    sha256: and 64 hex digits. Its path is the run artifact within the bundle,
+    twister.json. Its locator is nodeid: followed by the identifier of the
+    result, for example nodeid:safe_data.api.safe_data.init_and_verify.
 
-    In a copy of the fixture, the bundle is moved to out/run1. Then every anchor has the path
-    out/run1/twister.json.
+    In a copy of the fixture, the bundle is moved to out/run1. Then every anchor
+    still has the same repository member and the same path.
 
     :verifies: SEG-SREQ-190
     :test-id: SEG-TS-065
     """
     identifiers = {_identity(r): r.identifier for r in _expected()}
+    digest = f"sha256:{recipe_digest(CLEAN_BUNDLE)}"
     nodes = _nodes()
     assert set(nodes) == set(identifiers)
     for identity, node in nodes.items():
         assert set(node.content_anchors) == {"contentHash"}
         anchor = node.content_anchors["contentHash"]
-        assert anchor.repository == REPOSITORY
-        assert anchor.path == "clean/twister.json"
+        assert anchor.repository == digest
+        assert anchor.path == "twister.json"
         assert anchor.locator == f"nodeid:{identifiers[identity]}"
     assert (
         nodes[f"{_run_identifier(BASE)}/{INIT_AND_VERIFY}"].content_anchors["contentHash"].locator
@@ -714,42 +752,8 @@ def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path
     moved = _tree(tmp_path)
     (moved / "out").mkdir()
     shutil.move(_bundle(moved), moved / "out" / "run1")
-    bundle = moved / "out" / "run1"
-    relocated = [config.RunInputs(bundle=bundle, digest=f"sha256:{recipe_digest(bundle)}")]
-    paths = {
-        node.content_anchors["contentHash"].path for node in _nodes(moved, runs=relocated).values()
-    }
-    assert paths == {"out/run1/twister.json"}
-
-
-def test_each_runs_inputs_are_loaded_relative_to_the_file(tmp_path: Path) -> None:
-    """Each run's bundle and digest are loaded, the bundle resolved against the file.
-
-    A configuration file in a subdirectory lists two outcomes in its producer block. Each
-    has a bundle and a digest. Loading the file yields two run inputs, in the order of the
-    file. The location of each bundle is the subdirectory joined with the relative path that
-    the file gives. Each digest is the text the file gives.
-
-    :verifies: SEG-SREQ-197
-    :test-id: SEG-TS-066
-    """
-    first, second = "sha256:" + "a" * 64, "sha256:" + "b" * 64
-    path = tmp_path / "repo" / "affirmatrix.yaml"
-    path.parent.mkdir(parents=True)
-    path.write_text(
-        "producer:\n"
-        "  repository: sample-repo\n"
-        "  outcomes:\n"
-        "    - bundle: runs/first\n"
-        f"      digest: {first}\n"
-        "    - bundle: later/second\n"
-        f"      digest: {second}\n",
-        encoding="utf-8",
-    )
-    producer = config.load(path).producer
-    assert producer is not None
-    base = tmp_path / "repo"
-    assert producer.outcomes == (
-        config.RunInputs(bundle=base / "runs/first", digest=first),
-        config.RunInputs(bundle=base / "later/second", digest=second),
-    )
+    relocated = _nodes(moved, bundles=[moved / "out" / "run1"])
+    assert {
+        (n.content_anchors["contentHash"].repository, n.content_anchors["contentHash"].path)
+        for n in relocated.values()
+    } == {(digest, "twister.json")}

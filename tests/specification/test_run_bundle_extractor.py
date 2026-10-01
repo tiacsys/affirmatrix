@@ -1,18 +1,21 @@
-"""Verification suite for the outcome extractor over run bundles and the configured runs.
+"""Verification suite for the outcome extractor over run bundles.
 
 Each function below realizes one test specification (``SEG-TS-nnn``) and
 demonstrates the software requirement named in its ``:verifies:`` marker. The
 extractor reads each run from its run bundle: the run artifact, one record of
-the revision and one dirty flag for each checkout, and the run name. It checks
-the bundle's digest against the configured one.
+the revision and one dirty flag for each checkout, and the run name. A caller
+names the bundles; the configuration names none and no digest is expected.
+
+Retired: SEG-TS-070 (the check of a bundle against a configured digest) and
+SEG-TS-077 (run entries in the configuration). Their requirements are
+withdrawn. The identifiers are never reused.
 
 Every test writes a configuration over the frozen exports with
-``evidence_support.write_config`` and takes the records the configured producer
-supplies. A bundle is a copy of the clean bundle in ``tmp_path``, changed in the
-way the test needs. The configuration names the bundle and its digest; the
-digest is computed for the changed copy, unless the test is about a digest. The
-implementation checkout is the one the top-level key ``implementation`` names:
-its revision is in ``<name>.sha`` and its dirty flag in ``<name>.dirty``.
+``evidence_support.write_config`` and takes the records the producer supplies
+over the named bundles. A bundle is a copy of the clean bundle in ``tmp_path``,
+changed in the way the test needs. The implementation checkout is the one the
+top-level key ``implementation`` names: its revision is in ``<name>.sha`` and its
+dirty flag in ``<name>.dirty``.
 
 Each refusal test starts with a control: the unchanged bundle is accepted. A
 test of a refusal therefore fails for the claim and never for a configuration
@@ -30,7 +33,6 @@ import pytest
 import yaml
 
 from affirmatrix import config
-from affirmatrix.cli import main
 from affirmatrix.sources import SourceError
 
 from .evidence_support import (
@@ -41,6 +43,8 @@ from .evidence_support import (
     TOOLBOX,
     copy_bundle,
     recipe_digest,
+    run,
+    session,
     streams,
     write_config,
 )
@@ -48,16 +52,19 @@ from .evidence_support import (
 
 def _accepted(tmp_path: Path, bundle: Path, **options) -> list:
     """The outcome nodes that the configuration over one bundle supplies."""
-    nodes, _ = streams(write_config(tmp_path, [bundle], **options))
+    nodes, _ = streams(write_config(tmp_path, **options), [bundle])
     return [node for node in nodes if node.kind == "TestOutcome"]
 
 
 def _refused(tmp_path: Path, bundle: Path, word: str, **options) -> None:
     """The configuration over one bundle is refused with an error that holds ``word``."""
     with pytest.raises(SourceError, match=f"(?i){re.escape(word)}"):
-        streams(write_config(tmp_path, [bundle], **options))
+        streams(write_config(tmp_path, **options), [bundle])
 
 
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-219: the producer takes no bundles named by the caller"
+)
 def test_a_run_is_read_from_its_bundle_and_from_no_other_record(tmp_path: Path) -> None:
     """A run is read from its bundle and from no other record.
 
@@ -85,30 +92,9 @@ def test_a_run_is_read_from_its_bundle_and_from_no_other_record(tmp_path: Path) 
     assert {node.result.value for node in outcomes} == {"passed", "skipped"}
 
 
-def test_a_digest_that_differs_from_the_configured_one_is_refused(tmp_path: Path) -> None:
-    """A bundle whose digest differs from the configured digest is refused.
-
-    The configuration gives the clean bundle's digest: the extractor supplies
-    76 outcomes. The configuration then gives a digest that differs in its last
-    digit: the extractor refuses the run and names the digest. A bundle with
-    one byte of its run artifact changed, under the configured digest of the
-    unchanged bundle, is refused the same way.
-
-    :verifies: SEG-SREQ-221
-    :test-id: SEG-TS-070
-    """
-    bundle = copy_bundle(tmp_path)
-    right = recipe_digest(bundle)
-    assert len(_accepted(tmp_path, bundle)) == OUTCOMES_PER_RUN
-
-    wrong = right[:-1] + ("0" if right[-1] != "0" else "1")
-    _refused(tmp_path, bundle, "digest", digests=[wrong])
-
-    artifact = bundle / "twister.json"
-    artifact.write_bytes(artifact.read_bytes() + b"\n")
-    _refused(tmp_path, bundle, "digest", digests=[right])
-
-
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-222: the producer takes no bundles named by the caller"
+)
 def test_a_run_whose_implementation_checkout_was_dirty_is_refused(tmp_path: Path) -> None:
     """A bundle that records a dirty implementation checkout is refused.
 
@@ -137,6 +123,9 @@ def test_a_run_whose_implementation_checkout_was_dirty_is_refused(tmp_path: Path
     assert len(_accepted(tmp_path, own, implementation="zephyr")) == OUTCOMES_PER_RUN
 
 
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-223: the producer takes no bundles named by the caller"
+)
 def test_a_run_with_no_recorded_name_is_refused(tmp_path: Path) -> None:
     """A bundle that records no run name is refused.
 
@@ -158,6 +147,9 @@ def test_a_run_with_no_recorded_name_is_refused(tmp_path: Path) -> None:
         _refused(tmp_path, variant, "name")
 
 
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-224: the producer takes no bundles named by the caller"
+)
 def test_a_bundle_with_no_readable_run_artifact_is_refused(tmp_path: Path) -> None:
     """A bundle that holds no readable run artifact is refused.
 
@@ -181,6 +173,9 @@ def test_a_bundle_with_no_readable_run_artifact_is_refused(tmp_path: Path) -> No
     _refused(tmp_path, unreadable, "artifact")
 
 
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-225: the producer takes no bundles named by the caller"
+)
 def test_an_export_with_a_build_timestamp_is_refused(tmp_path: Path) -> None:
     """A need export that carries a build timestamp is refused.
 
@@ -208,6 +203,9 @@ def test_an_export_with_a_build_timestamp_is_refused(tmp_path: Path) -> None:
         _refused(tmp_path, bundle, "timestamp", **{option: stamped})
 
 
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-186: the producer takes no bundles named by the caller"
+)
 def test_an_outcomes_revision_is_the_implementation_checkouts_revision_in_the_bundle(
     tmp_path: Path,
 ) -> None:
@@ -236,6 +234,9 @@ def test_an_outcomes_revision_is_the_implementation_checkouts_revision_in_the_bu
     assert {node.revision for node in _accepted(tmp_path, word)} == {"a-word"}
 
 
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-187: the producer takes no bundles named by the caller"
+)
 def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     """A bundle that records no revision for the implementation checkout is refused.
 
@@ -266,52 +267,107 @@ def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     assert len(_accepted(tmp_path, other)) == OUTCOMES_PER_RUN
 
 
-def _old_style(tmp_path: Path, file: str) -> Path:
-    """A configuration whose one run names its artifact, revision record and name record."""
-    path = write_config(tmp_path, [copy_bundle(tmp_path, "old-bundle")], where=file)
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    document["producer"]["outcomes"] = [
-        {
-            "artifact": str(tmp_path / "run" / "twister.json"),
-            "revision": str(tmp_path / "run" / "toolbox.sha"),
-            "name": str(tmp_path / "run" / "run.name"),
-            "repository": "evidence",
-        }
-    ]
-    path.write_text(yaml.safe_dump(document), encoding="utf-8")
-    return path
+@pytest.mark.xfail(strict=True, reason="SEG-SREQ-234: the configuration still accepts a run entry")
+def test_a_configuration_that_names_a_run_is_refused(tmp_path: Path, capsys) -> None:
+    """A configuration that names a run is refused, whatever the entry holds.
 
+    A configuration with no run loads. A configuration whose producer holds
+    ``outcomes`` is refused with a configuration error: with a list of run
+    entries that give a bundle and a digest, with a list of entries that give
+    the old keys, and with an empty list. Graph check and case check, which read
+    the configuration, exit with status 2 and print the refusal.
 
-def _without_digest(tmp_path: Path, file: str) -> Path:
-    path = write_config(tmp_path, [copy_bundle(tmp_path, "other")], where=file)
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    del document["producer"]["outcomes"][0]["digest"]
-    path.write_text(yaml.safe_dump(document), encoding="utf-8")
-    return path
-
-
-def test_a_run_carries_a_bundle_and_a_digest_and_an_old_run_entry_is_refused(
-    tmp_path: Path,
-) -> None:
-    """A run in the configuration carries a bundle location and a digest.
-
-    A configuration whose run gives a bundle and a digest loads. A
-    configuration whose run gives a bundle and no digest is refused with a
-    configuration error. A configuration whose run gives the old keys
-    (``artifact``, ``revision`` and ``name``) is refused with a configuration
-    error. Each of the two refused files gives exit status 2 to a command
-    that reads it, ``graph check`` and ``case check`` among them.
-
-    :verifies: SEG-SREQ-197
-    :test-id: SEG-TS-077
+    :verifies: SEG-SREQ-234
+    :test-id: SEG-TS-115
     """
-    good = write_config(tmp_path, [copy_bundle(tmp_path)], where="good")
-    assert config.load(good).producer is not None
-
-    refused = (_without_digest(tmp_path, "no-digest"), _old_style(tmp_path, "old"))
-    for path in refused:
+    assert config.load(write_config(tmp_path)).producer is not None
+    bundle = str(copy_bundle(tmp_path))
+    kinds = {
+        "entries": [{"bundle": bundle, "digest": "sha256:" + "a" * 64}],
+        "old": [{"artifact": "twister.json", "revision": "toolbox.sha", "name": "run.name"}],
+        "empty": [],
+    }
+    for label, outcomes in kinds.items():
+        path = write_config(tmp_path, where=label)
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        document["producer"]["outcomes"] = outcomes
+        path.write_text(yaml.safe_dump(document), encoding="utf-8")
         with pytest.raises(config.ConfigError):
             config.load(path)
         for command in (["graph", "check"], ["case", "check"]):
-            case_root = str(tmp_path / "case-refused")
-            assert main([*command, "--case", case_root, "--config", str(path)]) == 2
+            status, out = run(
+                capsys, *command, "--case", str(tmp_path / f"case-{label}"), "--config", str(path)
+            )
+            assert status == 2, (label, command)
+            assert out.strip()
+
+
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-224: the producer takes no bundles named by the caller"
+)
+def test_a_path_that_is_not_a_directory_is_refused(tmp_path: Path, capsys) -> None:
+    """A path named as a run bundle that is not a directory with a readable artifact is refused.
+
+    The clean bundle is accepted. A path that does not exist, a path that is a
+    plain file, and an empty directory each make the extractor refuse the run.
+    Graph status exits with status 2 when it names the plain file.
+
+    :verifies: SEG-SREQ-224
+    :test-id: SEG-TS-117
+    """
+    assert len(_accepted(tmp_path, copy_bundle(tmp_path, "clean"))) == OUTCOMES_PER_RUN
+
+    plain = tmp_path / "bundles" / "plain-file"
+    plain.write_text("not a bundle\n", encoding="utf-8")
+    empty = tmp_path / "bundles" / "empty-directory"
+    empty.mkdir()
+    for path in (tmp_path / "bundles" / "not-there", plain, empty):
+        with pytest.raises(SourceError):
+            streams(write_config(tmp_path), [path])
+
+    opened = session(tmp_path, [plain], capsys)
+    status, out = run(capsys, "graph", "status", *opened.evidence_args(), "--revision", REVISION)
+    assert status == 2
+    assert out.strip()
+
+
+@pytest.mark.xfail(
+    strict=True, reason="SEG-SREQ-190: the anchor names a repository, not the bundle"
+)
+def test_an_anchor_names_the_bundle_by_its_digest(tmp_path: Path) -> None:
+    """An outcome's anchor names its run bundle by the digest, wherever the bundle lies.
+
+    Each of the 76 outcomes of the clean bundle has an anchor whose repository
+    member is the bundle's digest written as ``sha256:`` and 64 hex digits, whose
+    path is the run artifact within the bundle (twister.json), and whose locator
+    is ``nodeid:`` and a test identifier. A copy of the bundle in another
+    directory under another name gives the same anchors. A copy with one added
+    file has another digest and so another repository member, and the same path.
+
+    :verifies: SEG-SREQ-190
+    :test-id: SEG-TS-118
+    """
+    first = copy_bundle(tmp_path, "first")
+    digest = f"sha256:{recipe_digest(first)}"
+
+    def anchors(bundle: Path) -> set[tuple[str, str, str]]:
+        found = set()
+        for node in _accepted(tmp_path, bundle):
+            anchor = node.content_anchors["contentHash"]
+            found.add((anchor.repository, anchor.path, anchor.locator))
+        return found
+
+    base = anchors(first)
+    assert len(base) == OUTCOMES_PER_RUN
+    assert {repository for repository, _, _ in base} == {digest}
+    assert {path for _, path, _ in base} == {"twister.json"}
+    assert all(locator.startswith("nodeid:") for _, _, locator in base)
+
+    assert anchors(copy_bundle(tmp_path / "elsewhere", "other-name")) == base
+
+    added = copy_bundle(tmp_path, "added")
+    (added / "notes.txt").write_text("a new file\n", encoding="utf-8")
+    other = anchors(added)
+    assert {repository for repository, _, _ in other} == {f"sha256:{recipe_digest(added)}"}
+    assert {path for _, path, _ in other} == {"twister.json"}
+    assert {repository for repository, _, _ in other} != {digest}

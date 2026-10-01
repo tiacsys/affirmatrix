@@ -77,27 +77,21 @@ def second_bundle(tmp_path: Path, name: str = "second") -> Path:
 
 def write_config(
     tmp_path: Path,
-    bundles: list[Path],
     *,
-    digests: list[str] | None = None,
     implementation: str = "toolbox",
     specification_export: Path | None = None,
     implementation_export: Path | None = None,
+    specifications: bool = True,
     where: str = "cfg",
 ) -> Path:
-    """A configuration over the frozen exports with the given bundles, in file order.
+    """A configuration over the frozen exports. It names no run: the command line does.
 
-    Each digest defaults to the bundle's own, by the recipe. Every path is
-    absolute. The repository ``evidence`` is ``tmp_path/bundles``, the place the
-    bundles lie under.
+    Every path is absolute. ``specifications=False`` leaves out the test-case
+    export. The directory ``tmp_path/bundles`` is where the tests keep bundle
+    copies; the configuration does not name it.
     """
-    (tmp_path / "bundles").mkdir(exist_ok=True)
-    (tmp_path / "zephyr").mkdir(exist_ok=True)
-    wanted = digests or [recipe_digest(bundle) for bundle in bundles]
-    runs = [
-        {"bundle": str(bundle), "digest": f"sha256:{digest}", "repository": "evidence"}
-        for bundle, digest in zip(bundles, wanted, strict=True)
-    ]
+    (tmp_path / "bundles").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "zephyr").mkdir(parents=True, exist_ok=True)
     block = {
         "repository": "toolbox",
         "requirements": {
@@ -109,18 +103,14 @@ def write_config(
             "export": str(implementation_export or TOOLBOX / "needs/api-traceability/needs.json"),
             "doxygen": str(TOOLBOX / "xml/dox-safe-data-api"),
         },
-        "specifications": {
+    }
+    if specifications:
+        block["specifications"] = {
             "export": str(specification_export or TOOLBOX / "needs/test-specification/needs.json"),
             "doxygen": str(TOOLBOX / "xml/dox-safe-data-testspec"),
-        },
-        "outcomes": runs,
-    }
+        }
     document = {
-        "repositories": {
-            "toolbox": str(TOOLBOX / "sources"),
-            "evidence": str(tmp_path / "bundles"),
-            "zephyr": str(tmp_path / "zephyr"),
-        },
+        "repositories": {"toolbox": str(TOOLBOX / "sources"), "zephyr": str(tmp_path / "zephyr")},
         "implementation": implementation,
         "producer": block,
     }
@@ -130,9 +120,9 @@ def write_config(
     return path
 
 
-def streams(config_path: Path) -> tuple[list, list]:
-    """Every node and every edge the configured producer supplies, or its refusal."""
-    producer = composed.from_config(config.load(config_path))
+def streams(config_path: Path, bundles: list[Path] = ()) -> tuple[list, list]:
+    """Every node and every edge the producer supplies over the bundles, or its refusal."""
+    producer = composed.from_config(config.load(config_path), bundles=tuple(bundles))
     return list(producer.nodes()), list(producer.edges())
 
 
@@ -148,22 +138,31 @@ def run(capsys, *argv: str) -> tuple[int, str]:
 
 @dataclass(frozen=True)
 class Session:
-    """A configuration, a case root and the arguments that name them."""
+    """A configuration, a case root, the bundles an invocation names, and the arguments for them."""
 
     config: Path
     case: Path
+    bundles: tuple[Path, ...] = ()
 
     def args(self) -> list[str]:
+        """The case and the configuration, for every verb."""
         return ["--case", str(self.case), "--config", str(self.config)]
+
+    def evidence_args(self) -> list[str]:
+        """The same, and one ``--bundle`` for each bundle, for the verbs that judge evidence."""
+        return [
+            *self.args(),
+            *[item for bundle in self.bundles for item in ("--bundle", str(bundle))],
+        ]
 
 
 def session(tmp_path: Path, bundles: list[Path], capsys, **options) -> Session:
     """Write the configuration and make an empty case."""
-    path = write_config(tmp_path, bundles, **options)
+    path = write_config(tmp_path, **options)
     root = tmp_path / "case"
     assert main(["case", "init", "--case", str(root)]) == 0
     capsys.readouterr()
-    return Session(config=path, case=root)
+    return Session(config=path, case=root, bundles=tuple(bundles))
 
 
 def affirm_design(opened: Session, capsys) -> None:
@@ -197,7 +196,7 @@ def generate(opened: Session, capsys, out: Path) -> Path:
         capsys,
         "proof",
         "generate",
-        *opened.args(),
+        *opened.evidence_args(),
         *scope_args(),
         "--revision",
         REVISION,
