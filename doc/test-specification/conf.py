@@ -8,3 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from conf_common import configure
 
 configure(globals(), doc_dir=Path(__file__).resolve().parent)
+
+# Generated from the tests and the test run (doc/_extensions/testdocs.py).
+globals()["extensions"].append("testdocs")
+testdocs_page = "specification"

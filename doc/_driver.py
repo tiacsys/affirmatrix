@@ -14,15 +14,21 @@ Sphinx's own doctree cache provides incrementality; this driver provides
 selection, the barrier, parallelism, and cleanup.
 
 Commands:
-  python -m doc build [DOC ...] [-b html] [--no-index] [-j N]
+  python -m doc build [DOC ...] [-b html] [--no-index] [-j N] [--test-run DIR]
+  python -m doc test-run [--output DIR]
   python -m doc live DOC
   python -m doc clean [DOC ...]
+
+The test report shows one pytest run: ``--test-run DIR``, else the
+environment variable ``AFFIRMATRIX_TEST_RUN``, else ``build/test-run``.
+``test-run`` makes such a run, in the shape of a run bundle.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import resource
 import shutil
 import subprocess
 import sys
@@ -35,6 +41,12 @@ DOC_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = DOC_ROOT.parent
 BUILD_ROOT = REPO_ROOT / "build" / "doc"
 DEPLOY = BUILD_ROOT / "deploy"
+TEST_RUN = REPO_ROOT / "build" / "test-run"
+RUN_ENV = "AFFIRMATRIX_TEST_RUN"
+#: The memory cap and the time limit of a test run: a runaway test is a
+#: killed process, not a machine out of memory.
+RUN_MEMORY_BYTES = 1024**3
+RUN_TIMEOUT_SECONDS = 300
 
 
 def registry() -> dict:
@@ -79,6 +91,8 @@ def build_stage(docs: list[str], builder: str, jobs: int, label: str) -> None:
 
 
 def cmd_build(args: argparse.Namespace) -> None:
+    if args.test_run:
+        os.environ[RUN_ENV] = str(Path(args.test_run).resolve())
     reg = registry()
     everything = doc_ids(reg)
     selected = args.docs or everything
@@ -91,6 +105,47 @@ def cmd_build(args: argparse.Namespace) -> None:
     print(f"== stage 2: {args.builder} for {', '.join(selected)}")
     build_stage(selected, args.builder, args.jobs, "stage 2")
     print(f"done — output under {DEPLOY}")
+
+
+def _git(*argv: str) -> str:
+    proc = subprocess.run(["git", *argv], cwd=REPO_ROOT, capture_output=True, text=True)
+    return proc.stdout if proc.returncode == 0 else ""
+
+
+def _cap_memory() -> None:
+    resource.setrlimit(resource.RLIMIT_AS, (RUN_MEMORY_BYTES, RUN_MEMORY_BYTES))
+
+
+def cmd_test_run(args: argparse.Namespace) -> None:
+    """Run the test suite once and record it in the shape of a run bundle.
+
+    The directory holds ``junit.xml`` (pytest's own JUnit report), the
+    checkout's revision and dirty flag (``affirmatrix.sha``,
+    ``affirmatrix.dirty``, empty when clean), the run name and the command.
+    The revision is taken before the run, so it names what was tested.
+    """
+    out = Path(args.output).resolve() if args.output else TEST_RUN
+    out.mkdir(parents=True, exist_ok=True)
+    revision = _git("rev-parse", "HEAD")
+    dirty = _git("status", "--porcelain")
+    cmd = [
+        sys.executable, "-m", "pytest", "-q", "-o", "addopts=",
+        f"--junitxml={out / 'junit.xml'}",
+    ]
+    try:
+        proc = subprocess.run(
+            cmd, cwd=REPO_ROOT, preexec_fn=_cap_memory, timeout=RUN_TIMEOUT_SECONDS
+        )
+        code = proc.returncode
+    except subprocess.TimeoutExpired:
+        sys.exit(f"the test run took longer than {RUN_TIMEOUT_SECONDS} s and was stopped")
+    (out / "affirmatrix.sha").write_text(revision, encoding="utf-8")
+    (out / "affirmatrix.dirty").write_text(dirty, encoding="utf-8")
+    name = args.name or f"pytest-{revision.strip()[:12] or 'unknown'}"
+    (out / "run.name").write_text(name + "\n", encoding="utf-8")
+    (out / "command.txt").write_text(" ".join(cmd[1:]) + "\n", encoding="utf-8")
+    print(f"test run recorded in {out} (pytest exit {code})")
+    raise SystemExit(code)
 
 
 def cmd_live(args: argparse.Namespace) -> None:
@@ -146,7 +201,19 @@ def main(argv: list[str] | None = None) -> None:
         "--no-index", action="store_true",
         help="skip stage 1 (fast rebuild against existing indices)",
     )
+    p_build.add_argument(
+        "--test-run", metavar="DIR",
+        help="the test run the test report shows (default: $AFFIRMATRIX_TEST_RUN, "
+        "else build/test-run)",
+    )
     p_build.set_defaults(func=cmd_build)
+
+    p_run = sub.add_parser("test-run", help="run the tests once, recorded for the test report")
+    p_run.add_argument(
+        "--output", metavar="DIR", help="where to record it (default build/test-run)"
+    )
+    p_run.add_argument("--name", help="the run name (default pytest-<revision>)")
+    p_run.set_defaults(func=cmd_test_run)
 
     p_live = sub.add_parser("live", help="sphinx-autobuild live preview for one document")
     p_live.add_argument("doc")

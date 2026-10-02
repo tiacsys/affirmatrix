@@ -21,3 +21,6 @@ doc/**/_build/
 # The affirmation store lineage (ADR-0009): case/ is a worktree of the
 # orphan case branch, never content of this branch.
 /case/
+
+# Pages generated at build time from the tests and the test run
+doc/*/_generated/

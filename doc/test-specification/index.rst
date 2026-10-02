@@ -1,13 +1,13 @@
 Test Specification
 ==================
 
-Test specifications for the affirmatrix requirements (``SEG-TS-nnn``). The
-``verifies`` links target needs imported from the requirement specification
-(cross-document, via the registry).
+Test specifications for the affirmatrix requirements (``SEG-TS-nnn``). Each
+one is the docstring of a test under ``tests/``: its first line is the title,
+the paragraphs beneath it state the claim, and two docstring fields carry its
+identity (``:test-id:``) and the requirements it verifies (``:verifies:``).
+This page is generated from those docstrings at every build, so it always
+shows the tests as they are. The ``verifies`` links point at the requirement
+specification, whose pages show each requirement's tests under "is verified
+by"; the test report links each result back here under "is reported by".
 
-Each specification is a pytest function's docstring under
-``tests/specification/``: its first line is the title, the paragraph beneath
-states the claim, and two docstring fields carry its identity and the
-requirement it verifies. Until the rendering step lands in ``python -m doc``,
-this document is a placeholder that establishes the document's place in the
-federation.
+.. include:: _generated/specifications.inc

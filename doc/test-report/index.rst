@@ -1,13 +1,12 @@
 Test Report
 ===========
 
-Generated evidence document: test outcomes ingested from the pytest run
-(``SEG-OUT-nnn``), each reporting a test specification. Until the ingestion
-step lands in ``python -m doc`` (the twister-reader analog), this document is
-a placeholder that establishes the document's place in the federation.
+The results of one pytest run of this repository's tests (``SEG-OUT-…``).
+Each test case is one need with its result; a test that has a test
+specification links to it (``reports``), and through it to the requirements
+it verifies. The run is a directory in the shape of a run bundle:
+``junit.xml``, the revision of the checkout and its dirty flag, the run name
+and the command. ``python -m doc test-run`` makes one in ``build/test-run``;
+``python -m doc build --test-run DIR`` names another.
 
-.. outcome:: Placeholder outcome
-   :id: SEG-OUT-000
-
-   No ingested results yet — this need exists so the document exports a
-   non-empty ``needs.json`` for federation testing.
+.. include:: _generated/report.inc

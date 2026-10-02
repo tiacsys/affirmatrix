@@ -39,6 +39,22 @@ prefix = "SEG-OUT-"
 color = "#9856a5"
 style = "node"
 
+# Fields of the generated test documents (doc/_extensions/testdocs.py). They
+# are declared here, for every document, so that each document can import the
+# test needs as external needs without dropping these keys.
+
+[needs.fields.nodeid]
+description = "the pytest node id of the test"
+nullable = true
+schema = { type = "string" }
+parse_dynamic_functions = false
+
+[needs.fields.result]
+description = "the result of the test case in the run"
+nullable = true
+schema = { type = "string" }
+parse_dynamic_functions = false
+
 # ---------------------------------------------------------------------------
 # Link types — the SEG edge vocabulary (navigation only; semantics in-engine)
 # ---------------------------------------------------------------------------
