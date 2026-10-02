@@ -416,6 +416,14 @@ Proof
    The command-line interface shall write nothing in response to proof show
    and proof verify.
 
+.. sreq:: A package named by its path is read without a configuration or a case
+   :id: SEG-SREQ-270
+   :refines: SEG-SREQ-089
+
+   Where an invocation of proof show or proof verify names an evidence
+   package by the path of its directory, the command-line interface shall
+   read that package whether or not a configuration file or a case exists.
+
 Outcome vocabulary
 -------------------
 

@@ -8,6 +8,11 @@ the package, such as the run bundles or the case, is made only when the
 operator gives them. The verifier names every check it did not make, so a pass
 never says more than the package supports.
 
+Some checks need only the package: the root, the identity, the agreement of
+the documents and the verdict the package records. They are made whatever else
+is given. A package named by the path of its directory is read whether or not a
+configuration file or a case exists (:need:`SEG-SREQ-270`).
+
 The verifier judges a package at the revision the package records. It reads no
 repository and needs no current revision.
 
@@ -110,3 +115,49 @@ affirmations (:need:`SEG-SREQ-241`) checks that separately, against the case.
    shall report whether the snapshot identifier minted from the rebuilt
    scope, with the timestamp the recorded identifier carries, equals the
    recorded identifier.
+
+.. sreq:: The snapshot identifier is the package's directory name
+   :id: SEG-SREQ-264
+   :refines: SEG-SREQ-236
+
+   The proof verifier shall report whether the snapshot identifier that an
+   evidence package records equals the name of the package's directory.
+
+.. sreq:: The outcomes of the record are fresh
+   :id: SEG-SREQ-265
+   :refines: SEG-SREQ-236
+
+   The proof verifier shall report whether every outcome in the execution
+   coverage record of an evidence package carries the revision the package
+   records.
+
+.. sreq:: No outcome of the record is also stale
+   :id: SEG-SREQ-266
+   :refines: SEG-SREQ-236
+
+   The proof verifier shall report whether any outcome of an evidence
+   package's execution coverage record is also listed as stale in its
+   coverage report.
+
+.. sreq:: The member scope is what the documents name
+   :id: SEG-SREQ-267
+   :refines: SEG-SREQ-236
+
+   The proof verifier shall report whether the member scope of an evidence
+   package is exactly the nodes of its design consistency proof, the
+   outcomes of its execution coverage record and its coverage report, and
+   the waivers its execution coverage record names.
+
+.. sreq:: A package lists no unready edge
+   :id: SEG-SREQ-268
+   :refines: SEG-SREQ-236
+
+   The proof verifier shall report whether the coverage report of an
+   evidence package lists any unready edge.
+
+.. sreq:: A package holds no finding that blocks
+   :id: SEG-SREQ-269
+   :refines: SEG-SREQ-236
+
+   The proof verifier shall report whether the coverage report of an
+   evidence package holds any finding that blocks.
