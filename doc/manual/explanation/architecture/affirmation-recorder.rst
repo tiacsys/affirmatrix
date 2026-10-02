@@ -23,8 +23,8 @@ from the same endpoint hashes:
        to_node=current_nodes[outdated_edge.to_id],
        role="SoftwareEngineer",
        reason="reviewed the change; the binding still holds",
-       from_source_revision=impl_revision,  # supplied by the operator —
-       to_source_revision=req_revision,     # the tool never runs git
+       from_source_revision=impl_revision,  # supplied by the caller —
+       to_source_revision=req_revision,     # the recorder runs no git
    )
    store.append_review_events([composed.event])
    store.write_edges([composed.edge])
@@ -63,8 +63,9 @@ endpoint back before a judgement could bind anything. The recorder also
 refuses endpoint records that are not the named edge's endpoints — hashes of
 some other node would compose a record about an edge nobody reviewed.
 
-Source revisions are opaque strings here. The tool never runs git, so the
-operator supplies each endpoint's revision, and their format is judged where
+Source revisions are opaque strings here. The recorder and the library run
+no git. The command-line adapter reads repositories (ADR-0010, ADR-0015). So
+the caller supplies each endpoint's revision, and their format is judged where
 the record is persisted — against the case's own schema — not by the
 recorder.
 

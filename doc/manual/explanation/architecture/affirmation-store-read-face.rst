@@ -39,6 +39,16 @@ because position is a review event's identity and order is therefore the one
 thing the stream must preserve. The record type carries no ordinal field — that
 would be a second spelling of position.
 
+Two read-face queries serve ``edge show``. ``latest_review_event(edge)`` gives the
+last event of one edge. ``latest_review_event_identifiers()`` gives, for every
+edge that has an event, the identifier that the events document holds for its
+last event. The identifier is the text as written. It is not minted again from
+the position of the event. A search of the history of the case needs the text
+that the document holds. The method reads the document once and validates each
+entry like every other read.
+``review_events_path()`` gives the name of the events document under the case
+root, in the form that a repository uses for a path. It reads nothing.
+
 Every call re-reads the case and keeps nothing, so the stream reflects the case
 as it stands now, and a case edited between two reads is seen as edited. Kinds
 are read in sorted order and entries in their stored order, so two reads of an

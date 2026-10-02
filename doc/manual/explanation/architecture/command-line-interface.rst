@@ -7,7 +7,7 @@ generation (``proof check``/``generate``, and ``proof show``/``verify`` for a pa
 them so an operator can drive all three on a real case without a Python
 script. Every verb's outcome is the library's alone (:mod:`affirmatrix.cli`);
 this page states what each verb calls, how an exit status is decided, the
-three repository reads the adapter alone may perform, the configuration
+four repository reads the adapter alone may perform, the configuration
 loader's keys, and a few facts an operator needs that the requirement text
 does not spell out on its own: the hex-shaped revision, the repository-name
 lookup miss, and the two different scopes a cleanliness check can have.
@@ -37,7 +37,9 @@ Noun          Verb                Library call
                                    checkout reads and the content of the current
                                    stream (``cli/_node.py``)
 ``edge``      ``show``            :func:`~affirmatrix.drift.compare` against
-                                   :meth:`~affirmatrix.case.AffirmationStore.latest_review_event`
+                                   :meth:`~affirmatrix.case.AffirmationStore.latest_review_event`,
+                                   then the history of the case
+                                   (``cli/_provenance.py``)
 ``edge``      ``affirm``          :func:`affirmatrix.affirmation.affirmable` /
                                    :func:`~affirmatrix.affirmation.compose`
 ``proof``     ``check``           :func:`affirmatrix.proof.check_readiness`
@@ -236,6 +238,123 @@ reads the whole current stream, because it must know that the identifier occurs
 once. Then it asks for the bytes of each hash, and the content extractor reads
 its source files again for each question.
 
+Showing an edge
+---------------
+
+``edge show`` reports each edge that the selection includes. It compares the
+hashes that the last affirmation recorded with the current ones. With ``-v`` it
+also recovers the content that the affirmation bound. For every edge that has a
+last affirmation, the row also says who recorded that affirmation and when
+(:need:`SEG-SREQ-293`). The state of the edge does not matter: an outdated edge
+and a broken edge have the block too. An edge that was never affirmed has none.
+There is no option for it.
+
+A review event holds no person and no time. The history of the case holds them,
+because the commit that adds an event is the act of affirming (ADR-0009). The
+adapter reads that history (ADR-0015) to find the *recording commit*: the
+earliest commit whose events document holds the event. The commit that created
+the document is not the answer, because every event sits in that one document.
+
+The adapter finds the commit in this way:
+
+1. The store gives the identifier of the last event of each edge, as the events
+   document holds it (:meth:`~affirmatrix.case.AffirmationStore.latest_review_event_identifiers`).
+   One read of the document serves the whole selection. The identifier is never
+   minted again from the position of the event.
+2. The adapter runs ``git log --reverse`` over the events document with a
+   pickaxe regular expression (``-S`` with ``--pickaxe-regex``). The expression
+   matches the key ``"id"`` and the identifier together, as one JSON member,
+   with any white space between the parts. The first commit that git lists is
+   the earliest one.
+3. A second call, ``git show``, reads the facts of that one commit.
+
+The closing quote of the identifier is not a boundary on its own. A free-text
+reason can end with the identifier of the next event, and the commit that adds
+that reason can be an earlier commit. A reason holds a quote only as ``\"``, so
+the key and the value together cannot occur inside another value.
+
+The search is one ``git log`` for each event. The cost of a selection grows with
+the number of events and with the number of commits that touched the events
+document. A single pass over the history can serve all events, but it needs the
+text of every diff and a parser for it. The checks of the whole case run once
+for each command. They make sure that the case is the top level of a repository
+and that the history has a commit. They also read whether the history is
+shallow. A selection with no affirmed edge runs no git.
+
+The JSON row has the key ``recordedInCaseHistory``. Its value always has the
+keys ``status``, ``commit``, ``subject``, ``committer``, ``author``,
+``signedOffBy``, ``signature`` and ``shallow``. ``status`` is one of three words:
+
+* ``found``: a commit holds the event. The other keys describe the earliest
+  such commit.
+* ``notCommitted``: no commit holds the event, or the repository has no commit
+  yet. The event is a draft in the working tree (:need:`SEG-SREQ-300`). An
+  earlier affirmation of the same edge never stands in for it.
+* ``unavailable``: the case is not a repository of its own, or git cannot read
+  its history (:need:`SEG-SREQ-301`). A case that lies inside another repository
+  counts as not a repository of its own, so the answer never comes from the
+  enclosing repository. A case that is a worktree of another repository is its
+  own repository. Git is never told where the repository is.
+
+The keys describe the recording commit as the commit records it:
+
+* ``commit`` and ``subject`` are the identifier of the commit and its subject
+  line (:need:`SEG-SREQ-299`).
+* ``committer`` and ``author`` are objects with ``name``, ``email`` and ``date``.
+  The committer and the commit date are the identity and the time
+  (:need:`SEG-SREQ-294`). ``author`` is ``null`` when the author has the name
+  and the e-mail address of the committer, whatever the author date is
+  (:need:`SEG-SREQ-295`). A date is ISO 8601 with the offset, as ``git log
+  --format=%cI`` gives it. No mailmap is applied.
+* ``signedOffBy`` lists the values of the Signed-off-by lines, as written and in
+  order (:need:`SEG-SREQ-296`).
+* ``signature`` is the status that git gives for the signature, as a word:
+  ``none``, ``good``, ``bad``, ``unknownValidity``, ``expired``, ``revoked`` or
+  ``cannotCheck``. An expired signature and an expired key both give ``expired``.
+  Git runs the check and the tool runs no cryptography (:need:`SEG-SREQ-297`).
+* ``shallow`` is ``true`` while the history is cut short, as in a clone made
+  with ``--depth``. The commit that the block names can then be a later commit
+  than the one that recorded the event (:need:`SEG-SREQ-302`).
+
+The keys that describe the commit are ``null`` unless the status is
+``found``. That includes ``signature`` and ``shallow``, and ``signedOffBy`` is
+then an empty list.
+
+In the text report the block follows the edge line and comes before the
+comparison lines. A broken edge has no comparison, because an endpoint is
+missing from the current records. For that edge the block is the only detail
+under the edge line. The adapter finds the block from the event and not from
+the stored hash, so the comparison does not decide whether the block exists.
+For a ``found`` block the lines are:
+
+.. code-block:: text
+
+     recorded in the case history as: <committer name> <e-mail>, committed <date>
+       commit <40 hex characters> "<subject>"
+       author: <name> <e-mail>, authored <date>
+       signed-off-by: <value>
+       signature: <word>
+       shallow history: <sentence>
+
+The ``author`` line appears only when ``author`` is not ``null``. There is one
+``signed-off-by`` line for each entry, and the ``shallow`` line appears only
+while the history is shallow. Another status gives one line:
+``recorded in the case history: not committed`` or ``... not available``, with
+no identity and no date.
+
+The words say what the history records. The text says "recorded in the case
+history as" and never "affirmed by", and it never says "verified"
+(:need:`SEG-SREQ-298`). A committer, an author and a Signed-off-by line are text
+that the person who made the commit set. A signature is evidence only when the
+reader verifies it with keys that the reader trusts. The report shows the
+history as it stands now. After an amend or a rebase it shows the new commit
+identifier.
+
+What the history holds never changes the exit status (:need:`SEG-SREQ-303`). A
+read that fails gives ``unavailable`` and never a traceback. Every git call runs
+through one function with ``--no-optional-locks``, so no call changes the case,
+its history, its index or its working tree (:need:`SEG-SREQ-116`).
+
 Showing and verifying a package
 ---------------------------------
 
@@ -323,17 +442,22 @@ a structured document; for ``proof check`` this is exactly
 :func:`affirmatrix.proof.coverage_report_document`, the same serialization a
 generated package's own ``coverage_report.jsonld`` uses.
 
-The three repository reads
-------------------------------
+The four repository reads
+-----------------------------
 
-The adapter, and only the adapter, may read a source repository —
+The adapter, and only the adapter, may read a repository —
 :mod:`affirmatrix.cli._repository`, the sole importer of ``subprocess`` in
-the whole package. Three reads, no writes: discovering the working tree's
-current revision, checking that the paths an endpoint's anchors name match
-their committed content, and recovering the bytes a path held at a past
-revision for display. Every git call runs with ``--no-optional-locks``. Without
-it, ``git status`` refreshes the index of the repository, and a read must not
-write. ``node show`` uses the revision read and the cleanliness read too. It reports
+the whole package. Four reads, no writes. Three are in source repositories:
+
+* discovering the current revision of the working tree
+* checking that the paths an endpoint's anchors name match their committed
+  content
+* recovering the bytes a path held at a past revision, for display
+
+The fourth is in the repository of the case. It finds the commit that recorded
+a review event, for ``edge show`` (see "Showing an edge" above, and ADR-0015).
+Every git call runs with ``--no-optional-locks``. Without it, ``git status`` refreshes the index of
+the repository, and a read must not write. ``node show`` uses the revision read and the cleanliness read too. It reports
 their results and never refuses on them. Discovery and the cleanliness check together are how
 ``edge affirm`` and the proof gate's own revision fill a review event's
 source-revision fields without an operator typing a commit hash; the

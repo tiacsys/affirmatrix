@@ -26,9 +26,10 @@ The recorder computes nothing about link state either. The edge it takes is a
 *derived* record — the suspect detector's output, carrying the state the two
 streams imply — and the caller's obligation is to supply one; a recorder that
 re-derived would be a second telling of link state. Source revisions are
-opaque here: the tool never runs git, so the operator supplies them, and
-their format is judged where the record is persisted, against the case's own
-schema.
+opaque here: the recorder and the library run no git (the command-line
+adapter reads repositories, ADR-0010 and ADR-0015), so the caller supplies
+them, and their format is judged where the record is persisted, against the
+case's own schema.
 
 Iteration-0 backlog item B14 (SEG-SYS-004 and its decomposition).
 """
