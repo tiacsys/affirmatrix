@@ -97,10 +97,9 @@ jobs:
           refuse "an e-mail address" '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
           refuse "a token or a private key" 'ghp_|gho_|github_pat_|glpat-|AKIA[0-9A-Z]{16}|xox[baprs]-|-----BEGIN [A-Z ]*PRIVATE KEY'
           refuse "a working-record reference" 'DEC-[0-9]{3}|design summary|\bAC-0[0-9]{2}\b|\bG[0-9]{2,3}\b'
-          # Role abbreviations still stand in two decision records; they
-          # warn until that text is reworded.
           if grep -rlIwE --include='*.html' --include='*.txt' 'FSM|SWE|RE|TE' .; then
-            echo "::warning::the site contains a role abbreviation"
+            echo "::error::the site contains a role abbreviation"
+            status=1
           fi
           exit "${status}"
 

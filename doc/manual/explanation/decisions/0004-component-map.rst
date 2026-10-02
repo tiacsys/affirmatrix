@@ -32,8 +32,8 @@ rest of the decomposition to the design round. Two things now depend on it.
 First, the requirements layering criterion ratified 2026-07-25 makes a
 software requirement's subject *a distinct component identified by the
 software architecture* — so SREQ decomposition cannot proceed until the
-component set exists and is named. Second, the SWE brief instructs the
-engine to be scaffolded as ``affirmatrix.core``, which was never decided as
+component set exists and is named. Second, the Software Engineer's brief
+instructs the engine to be scaffolded as ``affirmatrix.core``, which was never decided as
 a namespace.
 
 The names chosen here are consumed verbatim as requirement subjects ("the
