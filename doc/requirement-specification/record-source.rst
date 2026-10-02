@@ -69,7 +69,8 @@ Content behind a hash
 ---------------------
 
 A record source that reads content can also hand that content back, so an
-operator can compare it with what the case recorded.
+operator can compare it with what the case recorded. The outcome reader
+supplies no content: the record it hashes is built from a run bundle.
 
 .. sreq:: A record source supplies the bytes it hashed
    :id: SEG-SREQ-311
