@@ -17,6 +17,8 @@ Commands:
   python -m doc build [DOC ...] [-b html] [--no-index] [-j N] [--test-run DIR]
   python -m doc test-run [--output DIR]
   python -m doc live DOC
+  python -m doc site DIR
+  python -m doc check-site DIR --base-url URL
   python -m doc clean [DOC ...]
 
 The test report shows one pytest run: ``--test-run DIR``, else the
@@ -32,7 +34,9 @@ import resource
 import shutil
 import subprocess
 import sys
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
+from html.parser import HTMLParser
 from pathlib import Path
 
 import yaml
@@ -179,6 +183,91 @@ def cmd_serve(args: argparse.Namespace) -> None:
     http.server.ThreadingHTTPServer(("", args.port), Handler).serve_forever()
 
 
+def cmd_site(args: argparse.Namespace) -> None:
+    """Assemble the published site: each document's html/ tree and the landing page.
+
+    The layout is the deploy tree's, ``<document>/html/``, so every link the
+    build wrote against ``DOC_BASE_URL`` resolves when the site is served there.
+    """
+    out = Path(args.output).resolve()
+    if out.exists():
+        sys.exit(f"{out} exists; give a new directory")
+    for doc in doc_ids(registry()):
+        html = DEPLOY / doc / "html"
+        if not html.is_dir():
+            sys.exit(f"{doc} is not built — run `python -m doc build` first")
+        shutil.copytree(html, out / doc / "html")
+    shutil.copyfile(DOC_ROOT / "site" / "index.html", out / "index.html")
+    print(f"site assembled in {out}")
+
+
+class _Links(HTMLParser):
+    """The href and src values of one page, and the ids it defines."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.links: list[str] = []
+        self.ids: set[str] = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        for name, value in attrs:
+            if value is None:
+                continue
+            if name in ("href", "src"):
+                self.links.append(value)
+            elif name == "id":
+                self.ids.add(value)
+
+
+def cmd_check_site(args: argparse.Namespace) -> None:
+    """Check every link inside an assembled site, offline.
+
+    A relative link resolves against its page; a link that starts with the
+    base URL resolves against the site root. The target file must exist, and
+    a fragment must name an id on the target page. Links to other hosts are
+    not fetched.
+    """
+    root = Path(args.site).resolve()
+    base = args.base_url.rstrip("/") + "/"
+    pages: dict[Path, _Links] = {}
+
+    def parsed(page: Path) -> _Links:
+        if page not in pages:
+            parser = _Links()
+            parser.feed(page.read_text(encoding="utf-8", errors="replace"))
+            pages[page] = parser
+        return pages[page]
+
+    checked = 0
+    broken: list[str] = []
+    for page in sorted(root.rglob("*.html")):
+        for link in parsed(page).links:
+            if link.startswith(("#", "mailto:", "javascript:", "data:")):
+                continue
+            if link.startswith(base):
+                relative, origin = link[len(base) :], root
+            elif "://" in link or link.startswith("//"):
+                continue
+            else:
+                relative, origin = link, page.parent
+            parts = urllib.parse.urlsplit(relative)
+            target = (origin / urllib.parse.unquote(parts.path)).resolve()
+            if target.is_dir():
+                target = target / "index.html"
+            checked += 1
+            where = f"{link} (in {page.relative_to(root)})"
+            if not target.is_file():
+                broken.append(f"missing target: {where}")
+            elif parts.fragment and target.suffix == ".html":
+                if urllib.parse.unquote(parts.fragment) not in parsed(target).ids:
+                    broken.append(f"missing anchor: {where}")
+    for line in broken:
+        print(line)
+    print(f"{checked} links checked, {len(broken)} broken")
+    if broken:
+        raise SystemExit(1)
+
+
 def cmd_clean(args: argparse.Namespace) -> None:
     targets = args.docs or doc_ids(registry())
     for doc in targets:
@@ -222,6 +311,19 @@ def main(argv: list[str] | None = None) -> None:
     p_serve = sub.add_parser("serve", help="serve the built federation over HTTP")
     p_serve.add_argument("-p", "--port", type=int, default=8000)
     p_serve.set_defaults(func=cmd_serve)
+
+    p_site = sub.add_parser("site", help="assemble the built federation into a site directory")
+    p_site.add_argument("output", metavar="DIR", help="the new site directory")
+    p_site.set_defaults(func=cmd_site)
+
+    p_check = sub.add_parser("check-site", help="check every link inside an assembled site")
+    p_check.add_argument("site", metavar="DIR", help="the assembled site")
+    p_check.add_argument(
+        "--base-url",
+        required=True,
+        help="the URL the site is built for (the value of DOC_BASE_URL)",
+    )
+    p_check.set_defaults(func=cmd_check_site)
 
     p_clean = sub.add_parser("clean", help="remove build intermediates and deploy output")
     p_clean.add_argument("docs", nargs="*")

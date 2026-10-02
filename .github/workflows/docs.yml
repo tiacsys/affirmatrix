@@ -1,0 +1,129 @@
+# Builds the documentation and publishes it to GitHub Pages
+# (https://tobiaskaestner.github.io/safety-evidence-graph/).
+#
+# - Pull request: test run, build and checks only.
+# - Push to tool, or a manual run on tool: the same, then deploy.
+#
+# The test report shows the test run of this job, so a failing test run
+# stops the job and nothing is published.
+#
+# One-time repository settings: Settings > Pages > Source = "GitHub Actions";
+# tool is the default branch.
+
+name: Documentation
+
+on:
+  push:
+    branches: [tool]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Every cross-document link is written against this URL.
+  DOC_BASE_URL: https://tobiaskaestner.github.io/safety-evidence-graph
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: doc/requirements.txt
+
+      - name: Install Python packages
+        run: |
+          python -m pip install -r doc/requirements.txt
+          python -m pip install --no-deps .
+
+      - name: Show tool versions
+        run: |
+          python --version
+          python -m sphinx --version
+
+      # The run the test report shows. It keeps its own memory cap and time
+      # limit; a failing test stops the job here.
+      - name: Run the tests
+        run: python -m doc test-run
+
+      - name: Build the documents
+        run: python -m doc build
+
+      # Stage two writes these logs over the stage-one logs, so they hold
+      # only the final build. Stage one warns about cross-document links by
+      # design: the indexes it publishes do not exist yet.
+      - name: Check for warnings
+        run: |
+          if grep -nE 'WARNING|ERROR' build/doc/*/html.log; then
+            echo "::error::the documentation build has warnings"
+            exit 1
+          fi
+
+      - name: Assemble the site
+        run: python -m doc site build/site
+
+      - name: Check the links
+        run: python -m doc check-site build/site --base-url "${DOC_BASE_URL}"
+
+      # Nothing private goes public: no local paths, no addresses, no tokens,
+      # no terms of the project's working records.
+      - name: Audit the site
+        working-directory: build/site
+        run: |
+          status=0
+          refuse() {
+            if grep -rlIE -- "$2" .; then
+              echo "::error::the site contains $1"
+              status=1
+            fi
+          }
+          refuse "a local absolute path" '/home/[^/ ]+/|/Users/|/tmp/|/wrk/'
+          refuse "a local server address" 'localhost:[0-9]'
+          refuse "an e-mail address" '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
+          refuse "a token or a private key" 'ghp_|gho_|github_pat_|glpat-|AKIA[0-9A-Z]{16}|xox[baprs]-|-----BEGIN [A-Z ]*PRIVATE KEY'
+          refuse "a working-record reference" 'DEC-[0-9]{3}|design summary|\bAC-0[0-9]{2}\b|\bG[0-9]{2,3}\b'
+          # Role abbreviations still stand in two decision records; they
+          # warn until that text is reworded.
+          if grep -rlIwE --include='*.html' --include='*.txt' 'FSM|SWE|RE|TE' .; then
+            echo "::warning::the site contains a role abbreviation"
+          fi
+          exit "${status}"
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: build/site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/tool'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

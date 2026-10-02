@@ -31,7 +31,7 @@ def configure(namespace: dict, doc_dir: str | Path, project: str | None = None) 
     namespace.update(
         project=project,
         author="the affirmatrix project",
-        copyright="2026, Tobias Kaestner",
+        copyright="2026, The affirmatrix contributors",
         # Document version: exported into needs.json (current_version), which
         # needs_external_needs requires. Placeholder until scoped git-tag
         # version resolution (documents.yaml `version_scope`) is wired in.
