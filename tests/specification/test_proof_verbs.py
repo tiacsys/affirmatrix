@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from .evidence_support import (
     REVISION,
     affirm_design,
@@ -71,7 +69,6 @@ def test_proof_check_and_proof_generate_are_verbs_of_their_own(tmp_path: Path, c
     assert len(list(package.glob("*.jsonld"))) == 4
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-089: proof show and proof verify do not exist yet")
 def test_proof_show_and_proof_verify_are_verbs_of_their_own(tmp_path: Path, capsys) -> None:
     """The operator shows and verifies an evidence package, each as its own verb.
 

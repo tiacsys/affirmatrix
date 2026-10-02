@@ -185,6 +185,13 @@ kind" path the write face already used while the four schemas did not
 exist yet — writing to such a case seeds them on the next call; reading
 never seeds anything.
 
+:func:`~affirmatrix.proof.read_package` reads the four documents of a package
+from any directory, with no case. It checks each one against the schemas that the
+tool carries and refuses a package that is short a document or holds one that is
+not valid. :func:`~affirmatrix.proof.summarize` states what such a package
+records, and :func:`~affirmatrix.proof.verify` checks it. :doc:`proof-verifier`
+describes the checks.
+
 Refusal
 -----------
 

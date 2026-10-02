@@ -6,8 +6,9 @@ and no logic buried in command handlers, so a later interface — a web API, a
 review UI, a terminal UI — is another thin adapter over the same core rather
 than a second implementation of the same rules.
 
-Eleven commands over four nouns: ``case init|check|sync|refresh|remove``,
-``graph check|status``, ``edge show|affirm``, ``proof check|generate``. Every
+Thirteen commands over four nouns: ``case init|check|sync|refresh|remove``,
+``graph check|status``, ``edge show|affirm``,
+``proof check|generate|show|verify``. Every
 verb's outcome is the library's alone to decide (SEG-SREQ-068); this package
 renders that outcome and does no judgement of its own. One shared outcome
 vocabulary (:mod:`affirmatrix.cli._outcome`), one edge selection grammar
@@ -160,6 +161,16 @@ def _build_parser() -> argparse.ArgumentParser:
     proof_generate_verb = proof_verbs.add_parser("generate", parents=[globals_])
     _proof.add_generate_arguments(proof_generate_verb)
     proof_generate_verb.set_defaults(handler=_proof.handle_generate, json=False)
+
+    proof_show_verb = proof_verbs.add_parser("show", parents=[globals_])
+    _add_json(proof_show_verb)
+    _proof.add_show_arguments(proof_show_verb)
+    proof_show_verb.set_defaults(handler=_proof.handle_show)
+
+    proof_verify_verb = proof_verbs.add_parser("verify", parents=[globals_])
+    _add_json(proof_verify_verb)
+    _proof.add_verify_arguments(proof_verify_verb)
+    proof_verify_verb.set_defaults(handler=_proof.handle_verify)
 
     return parser
 

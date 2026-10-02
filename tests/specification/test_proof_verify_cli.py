@@ -45,7 +45,6 @@ from .proof_verify_support import (
 )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-256: proof verify does not exist yet")
 def test_proof_verify_names_every_check_and_the_checks_it_did_not_make(
     tmp_path: Path, capsys
 ) -> None:
@@ -104,7 +103,6 @@ def test_proof_verify_names_every_check_and_the_checks_it_did_not_make(
     assert "failed" in line_of(text, "root")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-257: proof verify does not exist yet")
 def test_proof_verify_gives_the_verifier_exactly_the_bundles_the_operator_names(
     tmp_path: Path, capsys
 ) -> None:
@@ -143,7 +141,6 @@ def test_proof_verify_gives_the_verifier_exactly_the_bundles_the_operator_names(
     assert cli_statuses(report)["bundle-digests"] == "failed"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-258: proof verify does not exist yet")
 def test_proof_verify_checks_the_affirmations_against_the_case_of_the_invocation(
     tmp_path: Path, capsys
 ) -> None:
@@ -177,7 +174,6 @@ def test_proof_verify_checks_the_affirmations_against_the_case_of_the_invocation
     assert cli_statuses(report)["affirmations"] == "not made"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-259: proof verify does not exist yet")
 def test_a_failed_check_gives_exit_status_1_even_when_another_check_is_not_judged(
     tmp_path: Path, capsys
 ) -> None:
@@ -231,7 +227,6 @@ def test_a_failed_check_gives_exit_status_1_even_when_another_check_is_not_judge
     assert found["bundle-digests"] == "not judged"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-260: proof verify does not exist yet")
 def test_a_check_that_cannot_be_judged_gives_exit_status_2_when_nothing_failed(
     tmp_path: Path, capsys
 ) -> None:
@@ -273,7 +268,6 @@ def test_a_check_that_cannot_be_judged_gives_exit_status_2_when_nothing_failed(
     assert verify_cli(capsys, one.opened, copy)[0] == 0
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-261: proof verify does not exist yet")
 def test_a_package_whose_checks_all_pass_gives_exit_status_0(tmp_path: Path, capsys) -> None:
     """Proof verify exits with status 0 when every check made passed and every asked one was judged.
 
@@ -306,7 +300,6 @@ def test_a_package_whose_checks_all_pass_gives_exit_status_0(tmp_path: Path, cap
     assert verify_cli(capsys, sealed.opened, golden_copy(tmp_path))[0] == 0
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-262: proof verify does not exist yet")
 def test_proof_verify_obtains_no_implementation_revision(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -341,7 +334,6 @@ def test_proof_verify_obtains_no_implementation_revision(
     assert calls == []
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-263: proof show and proof verify do not exist yet")
 def test_proof_show_and_proof_verify_write_nothing(tmp_path: Path, capsys) -> None:
     """Proof show and proof verify leave every file of the case, bundles and configuration alone.
 
@@ -372,7 +364,6 @@ def test_proof_show_and_proof_verify_write_nothing(tmp_path: Path, capsys) -> No
     assert snapshot(tmp_path) == before
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-270: proof verify does not exist yet")
 def test_proof_verify_judges_a_package_named_by_path_with_no_configuration_and_no_case(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:

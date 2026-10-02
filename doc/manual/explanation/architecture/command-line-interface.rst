@@ -3,7 +3,7 @@ Command line and configuration
 
 The command line is the thin adapter over the three workflows: consistency
 (``graph check``), suspect detection (``graph status``), and evidence
-generation (``proof check``/``generate``), with ``case`` and ``edge`` around
+generation (``proof check``/``generate``, and ``proof show``/``verify`` for a package that exists), with ``case`` and ``edge`` around
 them so an operator can drive all three on a real case without a Python
 script. Every verb's outcome is the library's alone (:mod:`affirmatrix.cli`);
 this page states what each verb calls, how an exit status is decided, the
@@ -12,8 +12,8 @@ loader's keys, and a few facts an operator needs that the requirement text
 does not spell out on its own: the hex-shaped revision, the repository-name
 lookup miss, and the two different scopes a cleanliness check can have.
 
-Eleven commands, one dispatch entry
--------------------------------------
+Thirteen commands, one dispatch entry
+---------------------------------------
 
 ``affirmatrix <noun> <verb>``, parsed and dispatched by
 :func:`affirmatrix.cli.main`:
@@ -39,6 +39,9 @@ Noun          Verb                Library call
 ``proof``     ``check``           :func:`affirmatrix.proof.check_readiness`
 ``proof``     ``generate``        :func:`affirmatrix.proof.assemble` /
                                    :func:`~affirmatrix.proof.persist`
+``proof``     ``show``            :func:`affirmatrix.proof.read_package`,
+                                   :func:`~affirmatrix.proof.summarize`
+``proof``     ``verify``          :func:`affirmatrix.proof.verify`
 ============  ==================  =============================================================
 
 A verb that needs the current stream (every one but ``case init``) resolves
@@ -144,6 +147,43 @@ A refusal of the store to read a case (a record that fails its schema) is
 exit status 2, for every verb, and the JSON form of ``graph status`` then holds
 an ``error`` entry (:need:`SEG-SREQ-211`).
 
+Showing and verifying a package
+---------------------------------
+
+``proof show`` and ``proof verify`` take one package. The name is a snapshot
+identifier, a unique prefix of one, or the path of the package directory
+(:need:`SEG-SREQ-248`). A name that is a directory is read as a path. Any other
+name is looked up among the packages of the case. A prefix that names two
+packages is refused with exit status 2, and the refusal lists both
+(:need:`SEG-SREQ-249`). A package that cannot be read, because a document is
+missing, is not JSON or fails its schema, is refused the same way
+(:need:`SEG-SREQ-254`).
+
+A package named by path needs no case and no configuration file
+(:need:`SEG-SREQ-270`). The package is read with the schemas that the tool
+carries. A configuration file that exists but cannot be read still gives exit
+status 2, also for a path.
+
+``proof show`` reports what the package records and judges nothing. It reads
+no run bundle and no current stream, and it exits with status 0 whatever the
+package records (:need:`SEG-SREQ-252`, :need:`SEG-SREQ-253`). For a package
+that records no run bundle digest it says "not recorded". Its JSON report has
+the keys ``snapshotId``, ``requestedScope``, ``memberScope``, ``revision``,
+``total``, ``designRoot``, ``runBundles`` (``null`` when none is recorded),
+``findings`` and ``requirements``. It holds no path, so the three ways to name
+a package give one report.
+
+``proof verify`` runs the checks of the proof verifier
+(:doc:`proof-verifier`) and prints each one with its status. ``--bundle PATH``
+(repeatable) gives the verifier the run bundles that the invocation names, and
+no others (:need:`SEG-SREQ-257`). ``--affirmations`` gives it the case of the
+invocation (:need:`SEG-SREQ-258`). There is no ``--revision``: the verifier
+judges at the revision the package records, and the command asks for no
+revision (:need:`SEG-SREQ-262`). Its JSON report has ``snapshotId`` and a list
+``checks``, each with ``name``, ``status`` and ``detail``.
+
+Neither verb writes a file (:need:`SEG-SREQ-263`).
+
 The exit-status vocabulary
 ------------------------------
 
@@ -156,9 +196,13 @@ exactly these three values:
 * **1** — the command's negative verdict, acted on (an unbuildable
   ``graph check``, a ``graph status`` naming a suspect or broken edge, an
   ``edge affirm`` selection with no affirmable member, a blocked
-  ``proof check``, a refused ``proof generate``, a ``case check`` naming a
+  ``proof check``, a refused ``proof generate``, a ``proof verify`` with a
+  failed check, a ``case check`` naming a
   missing schema or an unreadable producer).
-* **2** — the command could not judge the request at all (an unbuildable
+* **2** — the command could not judge the request at all (a package that
+  cannot be read, a prefix that names two packages, a ``proof verify`` with
+  no failed check and a check that was asked for and not judged, a run bundle
+  that is refused, an unbuildable
   current stream for ``graph status``, a selector matching nothing, an
   affirmation missing its selector, a revision that must be given
   explicitly but was not, no producer available for a two-stream verb, a

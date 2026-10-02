@@ -164,6 +164,21 @@ class AffirmationStore:
                 latest = event
         return latest
 
+    def snapshot_ids(self) -> tuple[str, ...]:
+        """The identifier of every evidence package the case holds, in name order.
+
+        Report-only: it lists the directories under ``proofs/`` and reads no
+        document. A case with no ``proofs/`` directory holds none.
+        """
+        directory = _layout.resolved_under(self.root, _layout.PROOFS_DIRECTORY)
+        if not directory.is_dir():
+            return ()
+        return tuple(sorted(entry.name for entry in directory.iterdir() if entry.is_dir()))
+
+    def proof_directory(self, snapshot_id: str) -> Path:
+        """The directory of one evidence package, confined under the case like every path."""
+        return _layout.resolved_under(self.root, _layout.PROOFS_DIRECTORY, snapshot_id)
+
     def layout(self) -> frozenset[str]:
         """The directories this case's root already has, of the five it should.
 
@@ -622,6 +637,31 @@ class AffirmationStore:
         )
 
 
+def read_package_directory(directory: Path) -> Mapping[str, Mapping[str, object]]:
+    """The four documents of an evidence package in any directory, keyed by document name.
+
+    :implements: SEG-SREQ-254
+    :implements: SEG-SREQ-270
+
+    The reader of a package that lies outside any case, or inside one that is
+    not at hand. It needs no case and no store: each document is validated
+    against the schema the tool carries, and a package short one document, or
+    holding one that is not valid, is refused whole, as :meth:`AffirmationStore.read_package`
+    refuses it. Reading writes nothing.
+    """
+    if not directory.is_dir():
+        raise AffirmationStoreError(f"{directory} is not a directory, so it holds no package")
+    with resources.as_file(_PACKAGE_DATA / _layout.SCHEMA_DIRECTORY) as schema_directory:
+        schemas = _validation.load(Path(schema_directory))
+    documents: dict[str, Mapping[str, object]] = {}
+    for name, schema_name in sorted(_layout.PROOF_DOCUMENT_SCHEMAS.items()):
+        path = directory / f"{name}{_layout.DOCUMENT_SUFFIX}"
+        document = _documents.read_document(path)
+        _validation.validate_entry(schemas, document, schema_name, f"proof document {path}")
+        documents[name] = document
+    return MappingProxyType(documents)
+
+
 def _packaged_schemas() -> list[Traversable]:
     """The schema files the package carries, in file-name order."""
     directory = _PACKAGE_DATA / _layout.SCHEMA_DIRECTORY
@@ -639,4 +679,9 @@ def _edge_label(reference: EdgeReference) -> str:
     return f"{reference.from_id!r} -> {reference.to_id!r} ({reference.kind})"
 
 
-__all__ = ["AffirmationStore", "AffirmationStoreError", "DemotionNotRequestedError"]
+__all__ = [
+    "AffirmationStore",
+    "AffirmationStoreError",
+    "DemotionNotRequestedError",
+    "read_package_directory",
+]

@@ -18,8 +18,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from .evidence_support import copy_bundle, recipe_digest
 from .proof_verify_support import (
     copy_package,
@@ -41,7 +39,6 @@ def _check(report, name: str):
     return {check.name: check for check in report.checks}[name]
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-242: the proof verifier does not exist yet")
 def test_a_bundle_whose_digest_the_package_does_not_list_is_a_mismatch(
     tmp_path: Path, capsys
 ) -> None:
@@ -72,7 +69,6 @@ def test_a_bundle_whose_digest_the_package_does_not_list_is_a_mismatch(
     assert statuses(legacy)["bundle-digests"] == "failed"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-243: the proof verifier does not exist yet")
 def test_a_listed_bundle_that_is_not_given_leaves_the_evidence_unjudged(
     tmp_path: Path, capsys
 ) -> None:
@@ -102,7 +98,6 @@ def test_a_listed_bundle_that_is_not_given_leaves_the_evidence_unjudged(
     assert recipe_digest(second) in _check(one, "bundle-digests").detail
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-244: the proof verifier does not exist yet")
 def test_a_design_node_the_readers_do_not_supply_leaves_the_evidence_unjudged(
     tmp_path: Path, capsys
 ) -> None:
@@ -146,7 +141,6 @@ def test_a_design_node_the_readers_do_not_supply_leaves_the_evidence_unjudged(
     assert "failed" not in found.values()
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-244: the proof verifier does not exist yet")
 def test_a_design_edge_the_readers_do_not_supply_leaves_the_evidence_unjudged(
     tmp_path: Path, capsys
 ) -> None:
@@ -180,7 +174,6 @@ def test_a_design_edge_the_readers_do_not_supply_leaves_the_evidence_unjudged(
     assert "failed" not in found.values()
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-245: the proof verifier does not exist yet")
 def test_the_evidence_rebuilt_from_the_bundles_must_equal_the_recorded_evidence(
     tmp_path: Path, capsys
 ) -> None:
@@ -232,7 +225,6 @@ def test_the_evidence_rebuilt_from_the_bundles_must_equal_the_recorded_evidence(
         assert found["root"] == "passed", label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-246: the proof verifier does not exist yet")
 def test_the_snapshot_identifier_must_follow_from_the_rebuilt_scope(tmp_path: Path, capsys) -> None:
     """The verifier reports the snapshot identifier check as failed when the identifier differs.
 

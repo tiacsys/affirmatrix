@@ -46,6 +46,13 @@ refused, an input the generator cannot even judge (an absent requested
 requirement, an ambiguous outcome) raises its own distinct type, and
 neither is ever caught as the other.
 
+**The verifier reads a package back.** :func:`~affirmatrix.proof.read_package`
+reads the four documents of a package from any directory,
+:func:`~affirmatrix.proof.summarize` states what they record, and
+:func:`~affirmatrix.proof.verify` checks them. The verifier makes a fixed list
+of named checks and reports each one as passed, failed, not judged or not made;
+see :mod:`affirmatrix.proof._verify`. None of the three writes anything.
+
 **Capability, not authority:** an operator runs generation; the engine does not
 generate on its own.
 
@@ -68,19 +75,37 @@ from affirmatrix.proof._package import (
     persist,
 )
 from affirmatrix.proof._scope import Scope, ScopeError, collect_scope
+from affirmatrix.proof._stored import (
+    RequirementEntry,
+    StoredPackage,
+    Summary,
+    read_package,
+    summarize,
+)
+from affirmatrix.proof._verify import CHECK_NAMES, Check, CheckStatus, Verification, verify
 
 __all__ = [
+    "CHECK_NAMES",
     "COVERAGE_REPORT",
     "DESIGN_CONSISTENCY_PROOF",
     "EVIDENCE_MANIFEST",
     "EXECUTION_COVERAGE_RECORD",
+    "Check",
+    "CheckStatus",
     "GenerationRefused",
     "Package",
+    "RequirementEntry",
     "Scope",
     "ScopeError",
+    "StoredPackage",
+    "Summary",
+    "Verification",
     "assemble",
     "check_readiness",
     "collect_scope",
     "coverage_report_document",
     "persist",
+    "read_package",
+    "summarize",
+    "verify",
 ]

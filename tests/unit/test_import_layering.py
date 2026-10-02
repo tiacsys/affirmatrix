@@ -90,6 +90,7 @@ ALLOWED_IMPORTS: dict[str, frozenset[str]] = {
             "identity",
             "records",
             "satisfaction",
+            "sources",
             "taxonomy",
         }
     ),

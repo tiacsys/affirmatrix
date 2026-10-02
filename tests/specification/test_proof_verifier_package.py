@@ -20,8 +20,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from .evidence_support import GOLDEN
 from .proof_verify_support import (
     PACKAGE_CHECKS,
@@ -50,7 +48,6 @@ def _failed(report) -> set[str]:
     return {name for name, status in statuses(report).items() if status == "failed"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-237: the proof verifier does not exist yet")
 def test_the_design_root_of_a_package_is_recomputed_and_equals_the_recorded_root(
     tmp_path: Path, capsys
 ) -> None:
@@ -85,7 +82,6 @@ def test_the_design_root_of_a_package_is_recomputed_and_equals_the_recorded_root
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-237: the proof verifier does not exist yet")
 def test_a_changed_design_root_input_fails_the_root_check(tmp_path: Path, capsys) -> None:
     """The verifier reports the root check as failed when one input of the root changed.
 
@@ -129,7 +125,6 @@ def test_a_changed_design_root_input_fails_the_root_check(tmp_path: Path, capsys
             assert _failed(report) == {"root"}, label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-238: the proof verifier does not exist yet")
 def test_documents_that_disagree_on_what_the_package_is_fail_the_identity_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -171,7 +166,6 @@ def test_documents_that_disagree_on_what_the_package_is_fail_the_identity_check(
         assert found["root"] == "passed", label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-239: the proof verifier does not exist yet")
 def test_an_outcome_or_finding_outside_the_member_scope_fails_the_agreement_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -217,7 +211,6 @@ def test_an_outcome_or_finding_outside_the_member_scope_fails_the_agreement_chec
         assert found["root"] == "passed", label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-239: the proof verifier does not exist yet")
 def test_records_that_disagree_on_set_aside_skipped_or_excused_outcomes_fail_the_agreement_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -262,7 +255,6 @@ def test_records_that_disagree_on_set_aside_skipped_or_excused_outcomes_fail_the
         assert statuses(_verify(copy))["agreement"] == "failed", label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-240: the proof verifier does not exist yet")
 def test_a_coverage_report_that_records_a_blocked_scope_fails_the_unblocked_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -290,7 +282,6 @@ def test_a_coverage_report_that_records_a_blocked_scope_fails_the_unblocked_chec
     assert _failed(report) == {"unblocked"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-241: the proof verifier does not exist yet")
 def test_every_design_edge_bound_by_a_review_event_passes_the_affirmations_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -313,7 +304,6 @@ def test_every_design_edge_bound_by_a_review_event_passes_the_affirmations_check
     assert absent["affirmations"] == "not made"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-241: the proof verifier does not exist yet")
 def test_a_design_edge_without_a_binding_review_event_fails_the_affirmations_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -349,7 +339,6 @@ def test_a_design_edge_without_a_binding_review_event_fails_the_affirmations_che
         assert edge["from"] in check.detail and edge["to"] in check.detail, label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-264: the proof verifier does not exist yet")
 def test_a_snapshot_identifier_that_is_not_the_directory_name_fails_the_identity_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -378,7 +367,6 @@ def test_a_snapshot_identifier_that_is_not_the_directory_name_fails_the_identity
     assert sealed.package.name in detail and other in detail
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-265: the proof verifier does not exist yet")
 def test_an_outcome_of_another_revision_fails_the_agreement_check(tmp_path: Path, capsys) -> None:
     """The verifier fails the agreement check for an outcome that carries another revision.
 
@@ -406,7 +394,6 @@ def test_an_outcome_of_another_revision_fails_the_agreement_check(tmp_path: Path
     assert found["root"] == "passed"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-266: the proof verifier does not exist yet")
 def test_an_outcome_of_the_record_that_is_also_stale_fails_the_agreement_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -432,7 +419,6 @@ def test_an_outcome_of_the_record_that_is_also_stale_fails_the_agreement_check(
     assert found["root"] == "passed"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-267: the proof verifier does not exist yet")
 def test_a_member_scope_that_is_not_what_the_documents_name_fails_the_agreement_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -466,7 +452,6 @@ def test_a_member_scope_that_is_not_what_the_documents_name_fails_the_agreement_
         assert found["root"] == "passed", label
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-268: the proof verifier does not exist yet")
 def test_a_coverage_report_that_lists_an_unready_edge_fails_the_unblocked_check(
     tmp_path: Path, capsys
 ) -> None:
@@ -496,7 +481,6 @@ def test_a_coverage_report_that_lists_an_unready_edge_fails_the_unblocked_check(
     assert found["root"] == "passed"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-269: the proof verifier does not exist yet")
 def test_a_coverage_report_with_a_blocking_finding_fails_the_unblocked_check(
     tmp_path: Path, capsys
 ) -> None:

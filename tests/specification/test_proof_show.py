@@ -37,7 +37,6 @@ from .proof_verify_support import (
 )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-248: proof show and proof verify do not exist yet")
 def test_a_package_is_named_by_identifier_by_unique_prefix_or_by_path(
     tmp_path: Path, capsys
 ) -> None:
@@ -68,7 +67,6 @@ def test_a_package_is_named_by_identifier_by_unique_prefix_or_by_path(
     assert reports[0]["snapshotId"] == sealed.package.name
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-249: proof show and proof verify do not exist yet")
 def test_a_prefix_that_names_two_packages_is_refused_with_both_names(
     tmp_path: Path, capsys
 ) -> None:
@@ -99,7 +97,6 @@ def test_a_prefix_that_names_two_packages_is_refused_with_both_names(
         assert status == 0, verb
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-250: proof show does not exist yet")
 def test_proof_show_reports_what_the_package_records_about_itself(tmp_path: Path, capsys) -> None:
     """Proof show reports the snapshot, scopes, revision, totality, root and findings.
 
@@ -137,7 +134,6 @@ def test_proof_show_reports_what_the_package_records_about_itself(tmp_path: Path
         assert needle in text, needle
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-250: proof show does not exist yet")
 def test_proof_show_lists_the_specifications_outcomes_and_implementations_of_each_requirement(
     tmp_path: Path, capsys
 ) -> None:
@@ -176,7 +172,6 @@ def test_proof_show_lists_the_specifications_outcomes_and_implementations_of_eac
     assert any(w["refinedBy"] and not w["specifications"] for w in expected.values())
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-251: proof show does not exist yet")
 def test_a_package_without_run_bundle_digests_says_that_none_is_recorded(
     tmp_path: Path, capsys
 ) -> None:
@@ -209,7 +204,6 @@ def test_a_package_without_run_bundle_digests_says_that_none_is_recorded(
     assert "not recorded" not in text
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-252: proof show does not exist yet")
 def test_proof_show_reads_no_run_bundle_and_no_current_stream(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -256,7 +250,6 @@ def test_proof_show_reads_no_run_bundle_and_no_current_stream(
     assert (status, json.loads(out)) == control
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-253: proof show does not exist yet")
 def test_proof_show_exits_with_status_0_whatever_the_package_records(
     tmp_path: Path, capsys
 ) -> None:
@@ -295,7 +288,6 @@ def test_proof_show_exits_with_status_0_whatever_the_package_records(
         assert shown["requestedScope"], package.name
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-254: proof show and proof verify do not exist yet")
 def test_a_package_that_cannot_be_read_gives_exit_status_2(tmp_path: Path, capsys) -> None:
     """Proof show and proof verify exit with status 2 for a package that cannot be read.
 
@@ -349,7 +341,6 @@ def _empty_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return empty
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-270: proof show does not exist yet")
 def test_proof_show_reads_a_package_named_by_path_with_no_configuration_and_no_case(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:

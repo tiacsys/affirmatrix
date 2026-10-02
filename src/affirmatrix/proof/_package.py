@@ -236,7 +236,7 @@ def assemble(
         raise GenerationRefused(scope, report)
     documents = {
         DESIGN_CONSISTENCY_PROOF: _design_consistency_proof_document(scope, current_revision),
-        EXECUTION_COVERAGE_RECORD: _execution_coverage_record_document(scope, report),
+        EXECUTION_COVERAGE_RECORD: execution_coverage_record_document(scope, report),
         COVERAGE_REPORT: coverage_report_document(report),
         EVIDENCE_MANIFEST: _evidence_manifest_document(
             scope, current_revision, evidence_bundles or {}
@@ -296,14 +296,35 @@ def _design_edges(scope: Scope) -> list[EdgeRecord]:
     )
 
 
+def sealed_root(
+    *,
+    requested_ids: Iterable[str],
+    revision: str,
+    node_hashes: Iterable[bytes],
+    edges: Iterable[tuple[str, str, str]],
+) -> bytes:
+    """The root of a design consistency proof, from the fields the proof itself records.
+
+    The one place the canonical metadata meets the commitment layer's root
+    primitive. The generator seals a package with it, and the verifier
+    recomputes the root with it from a stored package, so the two cannot
+    drift apart.
+    """
+    metadata = _canonical_metadata(requested_ids=requested_ids, revision=revision)
+    return commitment.design_root(metadata, node_hashes, edges)
+
+
 def _package_root(scope: Scope, current_revision: str) -> bytes:
     """The package's own sealed root — a second, distinct call to
     :func:`~affirmatrix.commitment.design_root`."""
-    metadata = _canonical_metadata(requested_ids=scope.requested_ids, revision=current_revision)
-    design_nodes = _design_nodes(scope)
-    node_hashes = (commitment.node_hash(node.kind, node.content_hashes) for node in design_nodes)
-    edge_tuples = ((edge.from_id, edge.to_id, edge.kind) for edge in _design_edges(scope))
-    return commitment.design_root(metadata, node_hashes, edge_tuples)
+    return sealed_root(
+        requested_ids=scope.requested_ids,
+        revision=current_revision,
+        node_hashes=(
+            commitment.node_hash(node.kind, node.content_hashes) for node in _design_nodes(scope)
+        ),
+        edges=((edge.from_id, edge.to_id, edge.kind) for edge in _design_edges(scope)),
+    )
 
 
 def _design_consistency_proof_document(scope: Scope, current_revision: str) -> Mapping[str, object]:
@@ -342,7 +363,7 @@ def _design_consistency_proof_document(scope: Scope, current_revision: str) -> M
     }
 
 
-def _execution_coverage_record_document(
+def execution_coverage_record_document(
     scope: Scope, report: gates.CoverageReport
 ) -> Mapping[str, object]:
     """The execution coverage record: fresh evidence only.
@@ -504,5 +525,7 @@ __all__ = [
     "assemble",
     "check_readiness",
     "coverage_report_document",
+    "execution_coverage_record_document",
     "persist",
+    "sealed_root",
 ]

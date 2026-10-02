@@ -29,5 +29,6 @@ module realizes.
    package-gate
    proof-scope
    proof-package
+   proof-verifier
    command-line-interface
    iteration-0-backlog

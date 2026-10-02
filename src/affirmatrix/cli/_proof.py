@@ -1,9 +1,12 @@
-"""The proof noun: ask the gate about a scope, and generate the package (SEG-SREQ-089).
+"""The proof noun: ask the gate, generate a package, show it, verify it (SEG-SREQ-089).
 
 ``proof check`` reports the coverage the gate finds for a requested scope,
 without generating anything; ``proof generate`` assembles and persists an
 evidence package when the gate finds the scope ready, and refuses with the
-gate's own report otherwise.
+gate's own report otherwise. ``proof show`` states what a package records and
+judges nothing. ``proof verify`` runs the checks of the proof verifier and
+reports each one. Neither of the last two writes anything, and neither asks for
+an implementation revision.
 """
 
 from __future__ import annotations
@@ -32,6 +35,22 @@ def add_check_arguments(parser: argparse.ArgumentParser) -> None:
 def add_generate_arguments(parser: argparse.ArgumentParser) -> None:
     add_check_arguments(parser)
     parser.add_argument("--output-dir", help="relocate the whole write root here, not the case")
+
+
+def add_show_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "package", help="a package: its snapshot identifier, a unique prefix, or its directory"
+    )
+
+
+def add_verify_arguments(parser: argparse.ArgumentParser) -> None:
+    add_show_arguments(parser)
+    _judgement.add_bundle_argument(parser)
+    parser.add_argument(
+        "--affirmations",
+        action="store_true",
+        help="check that the case holds a review event for every design edge",
+    )
 
 
 def handle_check(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
@@ -128,6 +147,122 @@ def handle_generate(args: argparse.Namespace, config: Config, store: Affirmation
     return _outcome.exit_for(_outcome.POSITIVE)
 
 
+def handle_show(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Report what an evidence package records, and judge nothing.
+
+    :implements: SEG-SREQ-247
+    :implements: SEG-SREQ-252
+    :implements: SEG-SREQ-253
+    :implements: SEG-SREQ-263
+
+    Reads the four documents of the package and nothing else: no run bundle,
+    no current stream, and no configuration beyond the case root that names the
+    package by identifier. Exits with status 0 whatever the package records.
+    """
+    directory = resolve_package(args.package, store)
+    summary = proof.summarize(proof.read_package(directory))
+    if args.json:
+        _outcome.render_json(summary.as_document())
+    else:
+        _print_summary(summary)
+    return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def handle_verify(args: argparse.Namespace, config: Config, store: AffirmationStore) -> int:
+    """Verify an evidence package, report every check, and exit by what the checks found.
+
+    :implements: SEG-SREQ-255
+    :implements: SEG-SREQ-256
+    :implements: SEG-SREQ-257
+    :implements: SEG-SREQ-258
+    :implements: SEG-SREQ-259
+    :implements: SEG-SREQ-260
+    :implements: SEG-SREQ-261
+    :implements: SEG-SREQ-262
+    :implements: SEG-SREQ-263
+
+    Gives the verifier exactly the run bundles the invocation names, and the
+    case of the invocation when the affirmations are asked for. It resolves no
+    revision: the verifier judges at the revision the package records. A check
+    that failed gives status 1, whatever else was not judged; a check that was
+    asked for and not judged gives status 2; otherwise status 0.
+    """
+    directory = resolve_package(args.package, store)
+    try:
+        report = proof.verify(
+            directory,
+            config=config,
+            bundles=args.bundle,
+            case=store if args.affirmations else None,
+        )
+    except (SourceError, graph.GraphError) as error:
+        _outcome.render_refusal(str(error), as_json=args.json)
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    if args.json:
+        _outcome.render_json(report.as_document())
+    else:
+        print(f"snapshot: {report.snapshot_id}")
+        for check in report.checks:
+            print(f"  {check.name:<17} {check.status:<11} {check.detail}".rstrip())
+    if report.failed:
+        return _outcome.exit_for(_outcome.NEGATIVE)
+    if report.unjudged:
+        return _outcome.exit_for(_outcome.INDETERMINATE)
+    return _outcome.exit_for(_outcome.POSITIVE)
+
+
+def resolve_package(name: str, store: AffirmationStore) -> Path:
+    """The directory of the package that ``name`` gives: a path, an identifier or a prefix.
+
+    :implements: SEG-SREQ-248
+    :implements: SEG-SREQ-249
+    :implements: SEG-SREQ-270
+
+    A name that is a directory is a path, and reading it needs no case and no
+    configuration. Any other name is an identifier or a prefix of one, looked
+    up among the packages of the case. A prefix that names two packages, and a
+    name that names none, are refused with status 2.
+    """
+    if not name:
+        raise _judgement.JudgementError("a package needs a name: an identifier, a prefix or a path")
+    if Path(name).is_dir():
+        return Path(name)
+    matches = [found for found in store.snapshot_ids() if found.startswith(name)]
+    if len(matches) == 1:
+        return store.proof_directory(matches[0])
+    if not matches:
+        raise _judgement.JudgementError(
+            f"{name!r} is no directory, and the case at {store.root} holds no package "
+            "with that identifier or prefix"
+        )
+    raise _judgement.JudgementError(
+        f"{name!r} names {len(matches)} packages, so it names none: {', '.join(matches)}"
+    )
+
+
+def _print_summary(summary: proof.Summary) -> None:
+    """The human-readable report of ``proof show``."""
+    print(f"snapshot: {summary.snapshot_id}")
+    print(f"revision: {summary.revision}")
+    print(f"design root: {summary.design_root}")
+    print(f"requested scope: {', '.join(summary.requested_scope)}")
+    print(f"member scope: {len(summary.member_scope)} names")
+    print(f"total: {'yes' if summary.total else 'no'}")
+    bundles = ", ".join(summary.run_bundles) if summary.run_bundles else "not recorded"
+    print(f"run bundles: {bundles}")
+    print(f"findings: {len(summary.findings)}")
+    for finding in summary.findings:
+        print(f"  {finding['severity']}: {finding['condition']} ({finding['subject']})")
+    print("requirements:")
+    for entry in summary.requirements:
+        print(f"  {entry.identifier}")
+        print(f"    refined by: {', '.join(entry.refined_by) or 'none'}")
+        print(f"    specifications: {', '.join(entry.specifications) or 'none'}")
+        print(f"    implementations: {', '.join(entry.implementations) or 'none'}")
+        outcomes = ", ".join(f"{name} {result}" for name, result in entry.outcomes)
+        print(f"    outcomes: {outcomes or 'none'}")
+
+
 def _build(args: argparse.Namespace, config: Config, store: AffirmationStore):
     """The built graph and the current stream, or ``(None, None, exit_status)`` on refusal.
 
@@ -148,4 +283,14 @@ def _build(args: argparse.Namespace, config: Config, store: AffirmationStore):
     return built, current, None
 
 
-__all__ = ["add_check_arguments", "add_generate_arguments", "handle_check", "handle_generate"]
+__all__ = [
+    "add_check_arguments",
+    "add_generate_arguments",
+    "add_show_arguments",
+    "add_verify_arguments",
+    "handle_check",
+    "handle_generate",
+    "handle_show",
+    "handle_verify",
+    "resolve_package",
+]
