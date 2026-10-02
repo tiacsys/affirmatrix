@@ -126,3 +126,19 @@ It never enters a hash.
 
    The affirmation store shall read back a node record that carries no
    extraction revision as written.
+
+.. sreq:: A malformed extraction revision is refused
+   :id: SEG-SREQ-325
+   :refines: SEG-SREQ-304
+
+   If an extraction revision supplied with a node record is not 40 or 64
+   lowercase hexadecimal characters, then the affirmation store shall refuse
+   the write.
+
+.. sreq:: No extraction revision is persisted as no field
+   :id: SEG-SREQ-326
+   :refines: SEG-SREQ-304
+
+   The affirmation store shall persist a node record that carries no
+   extraction revision with no extraction revision field, never with an empty
+   map.

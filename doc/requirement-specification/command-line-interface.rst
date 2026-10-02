@@ -937,8 +937,9 @@ line never records it as an extraction revision.
    :refines: SEG-SREQ-306
 
    When the command-line interface writes a node record whose content hashes
-   equal those the case holds for that node, it shall keep every extraction
-   revision the case holds for that node.
+   equal those the case holds for that node, it shall keep the extraction
+   revision the case holds for each repository the node's content anchors
+   name, and keep none for another repository.
 
 .. sreq:: A stale extraction revision is dropped
    :id: SEG-SREQ-309
@@ -958,6 +959,13 @@ line never records it as an extraction revision.
    revision for a repository because its revision cannot be discovered, it
    shall report each such repository and the number of node records written
    without a revision for it.
+
+.. sreq:: A revision the operator gives is never an extraction revision
+   :id: SEG-SREQ-327
+   :refines: SEG-SREQ-306
+
+   The command-line interface shall not record a revision the operator gives
+   on the command line as an extraction revision.
 
 Draft posture
 -------------
