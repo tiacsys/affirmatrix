@@ -17,6 +17,13 @@ Accepted, 2026-07-25. Amended 2026-09-29, as built:
 - The store loader retires when the extractors serve this repository's own
   case. The table and every other boundary below stand.
 
+Amended 2026-10-02: a row is added to the table. The proof verifier reads an
+evidence package and checks it: the root, the agreement of its documents, and,
+when it is given run bundles or a case, the evidence and the affirmations. It
+lives in the module ``affirmatrix.proof``. Requirement text names it as "the
+proof verifier". It judges a package at the revision the package records and
+reads no repository.
+
 Context
 -------
 
@@ -89,6 +96,7 @@ the suspect detector           ``affirmatrix.drift``              —           
 the affirmation recorder       ``affirmatrix.affirmation``        —                      0
 the gate evaluator             ``affirmatrix.gates``              —                      0
 the proof generator            ``affirmatrix.proof``              verifiable packages    0
+the proof verifier             ``affirmatrix.proof``              verifiable packages    1
 the affirmation store          ``affirmatrix.case``               input, hashes, schema  0
 the configuration loader       ``affirmatrix.config``             topology               0
 the command-line interface     ``affirmatrix.cli``                thin interface         0

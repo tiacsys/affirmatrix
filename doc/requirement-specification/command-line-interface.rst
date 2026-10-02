@@ -250,13 +250,13 @@ Edge
 Proof
 -----
 
-.. sreq:: The operator asks the gate about a scope and generates the package
+.. sreq:: The operator asks the gate about a scope, generates the package, and shows and verifies a package
    :id: SEG-SREQ-089
    :refines: SEG-SYS-010
 
    The command-line interface shall let the operator ask the proof gate
-   about a scope's readiness and generate an evidence package for it, each
-   as its own verb.
+   about a scope's readiness, generate an evidence package for it, and show
+   and verify an evidence package, each as its own verb.
 
 .. sreq:: proof check reports the gate's coverage verdict
    :id: SEG-SREQ-090
@@ -295,6 +295,126 @@ Proof
    Where proof generate is given an output directory, the command-line
    interface shall write the whole generated package under it instead of
    the case.
+
+.. sreq:: proof show reports a package
+   :id: SEG-SREQ-247
+   :refines: SEG-SREQ-089
+
+   The command-line interface shall let the operator show an evidence
+   package, as its own verb.
+
+.. sreq:: A package is named three ways
+   :id: SEG-SREQ-248
+   :refines: SEG-SREQ-247
+
+   The command-line interface shall let the operator name an evidence
+   package for proof show and proof verify by its snapshot identifier, by a
+   unique prefix of that identifier, or by the path of its directory.
+
+.. sreq:: An ambiguous prefix is refused
+   :id: SEG-SREQ-249
+   :refines: SEG-SREQ-247
+
+   If a prefix names more than one evidence package, then the command-line
+   interface shall exit with status 2, a request it could not judge, naming
+   the packages.
+
+.. sreq:: proof show reports what the package records
+   :id: SEG-SREQ-250
+   :refines: SEG-SREQ-247
+
+   The command-line interface shall have proof show report an evidence
+   package's snapshot, requested scope, member scope, revision, totality,
+   design root, run bundle digests and the gate's recorded findings, and, for
+   each requirement in the scope, the specifications, outcomes and
+   implementations the package records for it.
+
+.. sreq:: A legacy package says its digests are not recorded
+   :id: SEG-SREQ-251
+   :refines: SEG-SREQ-247
+
+   Where an evidence package records no run bundle digest, the command-line
+   interface shall have proof show report that none is recorded.
+
+.. sreq:: proof show reads the package alone
+   :id: SEG-SREQ-252
+   :refines: SEG-SREQ-247
+
+   The command-line interface shall read no run bundle and no current stream
+   in proof show.
+
+.. sreq:: proof show judges nothing
+   :id: SEG-SREQ-253
+   :refines: SEG-SREQ-247
+
+   When proof show has read the package, the command-line interface shall
+   exit with status 0, whatever the package records.
+
+.. sreq:: proof verify checks a package
+   :id: SEG-SREQ-255
+   :refines: SEG-SREQ-089
+
+   The command-line interface shall let the operator verify an evidence
+   package with the checks of the proof verifier, as its own verb.
+
+.. sreq:: Every check is named
+   :id: SEG-SREQ-256
+   :refines: SEG-SREQ-255
+
+   The command-line interface shall have proof verify report each check by
+   name as passed, failed or not judged, and name each check it did not make.
+
+.. sreq:: Bundles are named at invocation for verification
+   :id: SEG-SREQ-257
+   :refines: SEG-SREQ-255
+
+   Where an invocation of proof verify names run bundles, the command-line
+   interface shall give exactly those run bundles to the proof verifier.
+
+.. sreq:: Affirmations are checked on request
+   :id: SEG-SREQ-258
+   :refines: SEG-SREQ-255
+
+   Where an invocation of proof verify asks for the affirmations to be
+   checked, the command-line interface shall give the case of that
+   invocation to the proof verifier.
+
+.. sreq:: A failed check is the negative verdict
+   :id: SEG-SREQ-259
+   :refines: SEG-SREQ-255
+
+   If a check of proof verify fails, then the command-line interface shall
+   exit with status 1, its negative verdict.
+
+.. sreq:: An unjudged check is a request it could not judge
+   :id: SEG-SREQ-260
+   :refines: SEG-SREQ-255
+
+   While no check of proof verify has failed and a check it was asked to make
+   cannot be judged, the command-line interface shall exit with status 2, a
+   request it could not judge.
+
+.. sreq:: A verified package is the positive verdict
+   :id: SEG-SREQ-261
+   :refines: SEG-SREQ-255
+
+   While every check of proof verify that was made has passed and every
+   check it was asked to make was judged, the command-line interface shall
+   exit with status 0, its positive verdict.
+
+.. sreq:: proof verify needs no revision
+   :id: SEG-SREQ-262
+   :refines: SEG-SREQ-255
+
+   The command-line interface shall obtain no implementation revision for
+   proof verify.
+
+.. sreq:: show and verify write nothing
+   :id: SEG-SREQ-263
+   :refines: SEG-SREQ-089
+
+   The command-line interface shall write nothing in response to proof show
+   and proof verify.
 
 Outcome vocabulary
 -------------------
@@ -345,6 +465,14 @@ Outcome vocabulary
    If the outcome extractor refuses a run, then the command-line interface
    shall exit with status 2, a request it could not judge, and report no
    verdict.
+
+.. sreq:: An unreadable package cannot be judged
+   :id: SEG-SREQ-254
+   :refines: SEG-SREQ-095
+
+   If the evidence package named to proof show or proof verify cannot be
+   read, then the command-line interface shall exit with status 2, a request
+   it could not judge.
 
 Edge selection
 --------------
