@@ -4,7 +4,7 @@
 Status
 ------
 
-Accepted, 2026-08-06 (proposed 2026-07-25). Stage 1 is in force and describes
+Accepted, 2026-08-06 (proposed 2026-07-25). Read by the command-line adapter, as ADR-0015 says. Stage 1 is in force and describes
 what is already true today; stage 2 is not yet scheduled, and the ADR-0008
 clauses it would supersede stand unchanged until it is.
 

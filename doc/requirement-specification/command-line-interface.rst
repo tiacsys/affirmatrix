@@ -4,7 +4,7 @@ Command Line Interface
 The command-line interface is the operator's front door onto the engine.
 Every verb's outcome is the library's alone to decide; the interface only
 renders it. What follows is organised by the thing an operator acts on — a
-case, the graph, an edge, a package — one section per noun, one requirement
+case, the graph, an edge, a node, a package — one section per noun, one requirement
 per verb, stating what that verb is for. A shared set of rules then covers
 everything every verb obeys alike: how an outcome is reported, how an edge
 selection is built, how a judgement's inputs are supplied, and that every
@@ -264,6 +264,204 @@ Edge
    If an edge-affirm selection includes no affirmable edge, then the
    command-line interface shall list every selected edge with the reason
    it is not affirmable and exit with status 1, its negative verdict.
+
+Who recorded an affirmation
+---------------------------
+
+A review event holds the role, the reason, the revisions and the hashes of an
+affirmation. It holds no person and no time. The history of the case holds
+them: ADR-0009 makes the commit that adds a review event the act of affirming,
+and ADR-0015 lets the command line read that history.
+
+The *recording commit* of an affirmation is the earliest commit of the history
+of the case whose tree holds the affirmation's review event. The commit that
+created the file of review events is not the answer, because every event sits
+in that one file. What the history records is text that the committer set. It
+is not an authenticated identity, unless the commit is signed and the
+signature is verified.
+
+.. sreq:: edge show reports who made the last affirmation and when
+   :id: SEG-SREQ-293
+   :refines: SEG-SYS-014
+
+   The command-line interface shall have edge show report, for every affirmed
+   edge a selection includes, who made the edge's last affirmation and when,
+   as the recording commit of that affirmation records it.
+
+.. sreq:: The committer and the commit date are the identity and the time
+   :id: SEG-SREQ-294
+   :refines: SEG-SREQ-293
+
+   The command-line interface shall report the committer of an affirmation's
+   recording commit as the identity, and the date of that commit as the time.
+
+.. sreq:: A different author is reported too
+   :id: SEG-SREQ-295
+   :refines: SEG-SREQ-293
+
+   Where the author of an affirmation's recording commit differs from its
+   committer, the command-line interface shall report the author and the
+   author date as well.
+
+.. sreq:: Signed-off-by lines are reported as written
+   :id: SEG-SREQ-296
+   :refines: SEG-SREQ-293
+
+   Where the message of an affirmation's recording commit carries Signed-off-by
+   lines, the command-line interface shall report each of them as written.
+
+.. sreq:: The signature status is reported
+   :id: SEG-SREQ-297
+   :refines: SEG-SREQ-293
+
+   The command-line interface shall report whether an affirmation's recording
+   commit is signed and, where it is, the result of the verification the
+   version-control system gives for the signature.
+
+.. sreq:: The identity is what the history records, never verified
+   :id: SEG-SREQ-298
+   :refines: SEG-SREQ-293
+
+   The command-line interface shall present the identity and the time of an
+   affirmation as what the history of the case records, and shall not present
+   either as verified.
+
+.. sreq:: The recording commit is named
+   :id: SEG-SREQ-299
+   :refines: SEG-SREQ-293
+
+   The command-line interface shall report the identifier and the subject line
+   of an affirmation's recording commit.
+
+.. sreq:: An affirmation no commit holds is reported as not committed
+   :id: SEG-SREQ-300
+   :refines: SEG-SREQ-293
+
+   If no commit of the history of the case holds the review event of an edge's
+   last affirmation, then the command-line interface shall report that the
+   affirmation is not committed, and shall report no identity and no time for
+   it.
+
+.. sreq:: A case without readable history reports none
+   :id: SEG-SREQ-301
+   :refines: SEG-SREQ-293
+
+   If the case is not a repository of its own, or its history cannot be read,
+   then the command-line interface shall report that the history of the case
+   is not available, and shall report no identity and no time.
+
+.. sreq:: A shallow history is reported
+   :id: SEG-SREQ-302
+   :refines: SEG-SREQ-293
+
+   While the history of the case is shallow, the command-line interface shall
+   report that it is shallow with every identity it reports.
+
+.. sreq:: The history never changes edge show's exit status
+   :id: SEG-SREQ-303
+   :refines: SEG-SREQ-293
+
+   The command-line interface shall derive edge show's exit status without
+   regard to what the history of the case records.
+
+Node
+----
+
+A node is addressed by its case-local identifier. ``node show`` compares what
+the case recorded for the node with what the current stream supplies now.
+
+.. sreq:: The operator shows a node by its identifier
+   :id: SEG-SREQ-313
+   :refines: SEG-SYS-015
+
+   The command-line interface shall let the operator show a node by its
+   identifier, as its own verb.
+
+.. sreq:: node show compares every named content hash
+   :id: SEG-SREQ-314
+   :refines: SEG-SREQ-313
+
+   The command-line interface shall have node show report, for each named
+   content hash of the node, the comparison the suspect detector gives between
+   the current digest and the digest the case records for it.
+
+.. sreq:: node show shows the current content of every hash
+   :id: SEG-SREQ-315
+   :refines: SEG-SREQ-313
+
+   The command-line interface shall have node show report, for each named
+   content hash of the node, the content the record source of the current
+   stream supplies for it.
+
+.. sreq:: A hash with no supplied content says so
+   :id: SEG-SREQ-316
+   :refines: SEG-SREQ-313
+
+   If the record source of the current stream supplies no content for a content
+   hash, then the command-line interface shall have node show report that none
+   is supplied for it.
+
+.. sreq:: node show reports the recorded extraction revision
+   :id: SEG-SREQ-317
+   :refines: SEG-SREQ-313
+
+   The command-line interface shall have node show report, with each named
+   content hash, the extraction revision the case records for the repository
+   that the hash's recorded anchor names, or report that none is recorded.
+
+.. sreq:: node show reports the checkout's revision
+   :id: SEG-SREQ-318
+   :refines: SEG-SREQ-313
+
+   The command-line interface shall have node show report, for the repository
+   each content hash's current anchor names, the revision that repository is
+   at, or report that no repository is configured for it.
+
+.. sreq:: node show reports the checkout's cleanliness
+   :id: SEG-SREQ-319
+   :refines: SEG-SREQ-313
+
+   The command-line interface shall have node show report, for each such
+   repository, whether the content at the paths the node's anchors name matches
+   its committed content, naming each path that differs.
+
+.. sreq:: Matching hashes are the positive verdict
+   :id: SEG-SREQ-320
+   :refines: SEG-SREQ-313
+
+   While every named content hash of the node is reported as matching, the
+   command-line interface shall exit with status 0 from node show, its positive
+   verdict, whether or not a repository differs from its committed content.
+
+.. sreq:: A differing hash is the negative verdict
+   :id: SEG-SREQ-321
+   :refines: SEG-SREQ-313
+
+   While a named content hash of the node is reported as differing or as on one
+   side only, or the current stream holds no such node, the command-line
+   interface shall exit with status 1 from node show, its negative verdict.
+
+.. sreq:: An identifier the case does not hold cannot be judged
+   :id: SEG-SREQ-322
+   :refines: SEG-SREQ-313
+
+   If the case holds no node with the identifier given to node show, then the
+   command-line interface shall exit with status 2, a request it could not
+   judge, naming the identifier.
+
+.. sreq:: An unreadable current stream cannot be judged
+   :id: SEG-SREQ-323
+   :refines: SEG-SREQ-313
+
+   If node show cannot read the current stream it is given, then the
+   command-line interface shall exit with status 2, a request it could not
+   judge.
+
+.. sreq:: node show writes nothing
+   :id: SEG-SREQ-324
+   :refines: SEG-SREQ-313
+
+   The command-line interface shall write nothing in response to node show.
 
 Proof
 -----
@@ -636,8 +834,8 @@ from the working directory.
    :id: SEG-SREQ-142
    :refines: SEG-SREQ-105
 
-   If a verb that derives from both record sources is given no current
-   stream and no producer is configured, then the command-line interface
+   If a verb that derives from, or compares, both record sources is given
+   no current stream and no producer is configured, then the command-line interface
    shall exit with status 2, a request it could not judge.
 
 .. sreq:: The current stream comes from the first source that is present
@@ -671,7 +869,7 @@ from the working directory.
    :refines: SEG-SYS-013
 
    The command-line interface shall read no run bundle in case sync, case
-   check, graph check, edge show and edge affirm.
+   check, graph check, node show, edge show and edge affirm.
 
 .. sreq:: A bundle named twice is read once
    :id: SEG-SREQ-232
@@ -706,6 +904,61 @@ from the working directory.
    absent from the repository map, then the command-line interface shall
    exit with status 2, a request it could not judge, naming the reader.
 
+Extraction revisions
+--------------------
+
+An *extraction revision* is the revision of a repository at which the content
+behind a node record's content hashes was read (ADR-0016). The revision of a
+repository *can be discovered* for a node when the repository is configured and
+can be read, and holds the committed content at every path the node's content
+anchors name in it. A revision the operator gives is an assertion. The command
+line never records it as an extraction revision.
+
+.. sreq:: A written node record carries the extraction revisions of its repositories
+   :id: SEG-SREQ-306
+   :refines: SEG-SYS-007
+
+   When the command-line interface writes a node record whose content hashes
+   are not those the case holds for that node, or holds none, it shall record
+   with the node record, for each repository the node's content anchors name
+   whose revision can be discovered, that revision as the extraction revision.
+
+.. sreq:: A missing extraction revision is added when the hashes are unchanged
+   :id: SEG-SREQ-307
+   :refines: SEG-SREQ-306
+
+   When the command-line interface writes a node record whose content hashes
+   equal those the case holds for that node, and the case holds no extraction
+   revision for a repository the node's content anchors name whose revision can
+   be discovered, it shall record that revision as the extraction revision.
+
+.. sreq:: A held extraction revision is kept while the hashes are unchanged
+   :id: SEG-SREQ-308
+   :refines: SEG-SREQ-306
+
+   When the command-line interface writes a node record whose content hashes
+   equal those the case holds for that node, it shall keep every extraction
+   revision the case holds for that node.
+
+.. sreq:: A stale extraction revision is dropped
+   :id: SEG-SREQ-309
+   :refines: SEG-SREQ-306
+
+   If a node record's content hashes are not those the case holds for it, and
+   the revision of a repository its content anchors name cannot be discovered,
+   then the command-line interface shall write the node record with no
+   extraction revision for that repository, and shall not keep the one the case
+   holds.
+
+.. sreq:: Records written without an extraction revision are reported
+   :id: SEG-SREQ-310
+   :refines: SEG-SREQ-306
+
+   When the command-line interface writes node records with no extraction
+   revision for a repository because its revision cannot be discovered, it
+   shall report each such repository and the number of node records written
+   without a revision for it.
+
 Draft posture
 -------------
 
@@ -724,9 +977,10 @@ Draft posture
    The command-line interface shall perform no write operation against a
    source repository.
 
-.. sreq:: No version-control operation reaches the case
+.. sreq:: No version-control write reaches the case
    :id: SEG-SREQ-116
    :refines: SEG-SREQ-114
 
    The command-line interface shall perform no version-control operation
-   against the case.
+   against the case that changes the case, its history, its index or its
+   working tree.
