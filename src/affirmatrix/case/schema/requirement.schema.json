@@ -51,6 +51,14 @@
           "description": "How the hashed span is found within the file. 'need:<id>' names the requirement directive the statement is extracted from — the extraction key, not offsets that drift with unrelated edits. 'file' says the digest covers the whole file."
         }
       }
+    },
+    "seg:extractedFrom": {
+      "type": "object",
+      "description": "The revision of each repository at which the content behind the digests was read (ADR-0016). Each key is a repository name that the content anchors name. Each value is a revision: 40 or 64 lowercase hexadecimal characters. A producer-recorded claim, never a hash preimage member. The field is optional, and a record that has no extraction revision carries no field.",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+      }
     }
   },
   "$defs": {

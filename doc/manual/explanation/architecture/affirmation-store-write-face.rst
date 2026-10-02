@@ -191,6 +191,16 @@ do, that a pending edge has no hash it was affirmed against and an active one
 must have. Stating the rule in both places is deliberate: the record type guards
 the producer, the schema guards the document somebody reads without our code.
 
+Every node schema also declares one optional property, ``seg:extractedFrom``
+(ADR-0016): an object from a repository name to a revision, each value 40 or 64
+lowercase hexadecimal characters. The store writes the property only when the
+record carries at least one revision. A record with none gets no property and
+never an empty object (:need:`SEG-SREQ-326`), so a record written before the
+property reads back as written (:need:`SEG-SREQ-305`). A value of another shape
+fails validation, and so the whole write is refused (:need:`SEG-SREQ-325`).
+Nothing in the property enters a hash, and the store runs no git: it keeps the
+map as the caller gives it.
+
 Every schema forbids the properties it does not declare, and every digest field
 is pinned to sixty-four lowercase hexadecimal characters. That is the structural
 half of "covered content is never persisted" (:need:`SEG-SREQ-018`): there is no field

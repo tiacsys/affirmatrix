@@ -8,10 +8,11 @@ affirmable member of a selection.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 
 from affirmatrix import affirmation, drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore
-from affirmatrix.cli import _judgement, _outcome, _selector
+from affirmatrix.cli import _extraction, _judgement, _outcome, _selector
 from affirmatrix.config import Config
 from affirmatrix.records import EdgeReference, LinkState
 from affirmatrix.sources import SourceError
@@ -90,6 +91,12 @@ def handle_affirm(args: argparse.Namespace, config: Config, store: AffirmationSt
     or kind it cannot resolve, :class:`~affirmatrix.affirmation.AffirmationError`
     from :func:`~affirmatrix.affirmation.compose` itself — land in the
     per-edge "not affirmed" list the 0/1 verdict (SEG-SREQ-087/088) reads.
+
+    The endpoint node records are written with their extraction revisions, by
+    the rule of :mod:`affirmatrix.cli._extraction`. A revision given with
+    ``--revision`` goes into the review event only, never into a node record.
+    After the affirmed lines, one line names each repository that has node
+    records written without a revision.
     """
     selector = _selector.selector_from_args(args)
     if selector.is_empty():
@@ -144,12 +151,16 @@ def handle_affirm(args: argparse.Namespace, config: Config, store: AffirmationSt
             continue
         composed.append(affirmed)
 
+    missing: Mapping[str, int] = {}
     if composed:
         endpoint_nodes = {}
         for one in composed:
             endpoint_nodes[one.event.from_id] = built.node(one.event.from_id)
             endpoint_nodes[one.event.to_id] = built.node(one.event.to_id)
-        store.write_nodes(endpoint_nodes.values())
+        held = {node.local_id: node for node in store.nodes()}
+        stamped = _extraction.stamp(endpoint_nodes.values(), held, config)
+        missing = stamped.missing
+        store.write_nodes(stamped.nodes)
         store.write_edges([one.edge for one in composed])
         store.append_review_events([one.event for one in composed])
 
@@ -162,6 +173,7 @@ def handle_affirm(args: argparse.Namespace, config: Config, store: AffirmationSt
     else:
         for one in composed:
             print(f"affirmed: {_label(one.edge)}")
+        _extraction.report(missing)
         for entry in not_affirmed:
             print(f"not affirmed: {entry['edge']} ({entry['reason']})")
     return _outcome.exit_for(_outcome.POSITIVE if composed else _outcome.NEGATIVE)

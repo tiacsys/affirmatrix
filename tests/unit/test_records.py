@@ -618,6 +618,10 @@ def test_no_record_type_offers_a_field_for_content() -> None:
             "expiry",
             "approver",
             "revision",
+            # ADR-0016 added ``extracted_from``: the revisions of the
+            # repositories the content was read at, a producer-recorded
+            # claim like the fields above, never a hash preimage member.
+            "extracted_from",
         },
         records.EdgeRecord: {"from_id", "to_id", "kind", "state", "edge_hash"},
         records.EdgeReference: {"kind", "from_id", "to_id"},

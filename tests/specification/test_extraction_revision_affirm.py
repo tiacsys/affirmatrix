@@ -23,7 +23,6 @@ def _reason(claim: str) -> str:
     return f"{claim}: a node record has no extraction revision, and edge affirm records none"
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-306"))
 def test_edge_affirm_records_the_discovered_revision_in_both_endpoint_records(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -49,7 +48,6 @@ def test_edge_affirm_records_the_discovered_revision_in_both_endpoint_records(
         }
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-308"))
 def test_edge_affirm_keeps_the_held_revision_of_an_unchanged_endpoint(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -75,7 +73,6 @@ def test_edge_affirm_keeps_the_held_revision_of_an_unchanged_endpoint(
         assert support.held_map(fixture.case, local_id) == {fixture.name: first}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-309"))
 def test_edge_affirm_drops_the_held_revision_of_an_endpoint_changed_and_not_committed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -104,7 +101,6 @@ def test_edge_affirm_drops_the_held_revision_of_an_endpoint_changed_and_not_comm
         assert support.GIVEN not in support.extracted_from(node).values()
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-327"))
 def test_a_revision_given_on_the_command_line_is_never_an_extraction_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -135,7 +131,6 @@ def test_a_revision_given_on_the_command_line_is_never_an_extraction_revision(
         assert support.held_map(second.case, local_id) == {}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-310"))
 def test_edge_affirm_reports_the_repository_and_the_count_of_records_without_a_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

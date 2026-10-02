@@ -156,6 +156,7 @@ edge that moved:
 
    $ affirmatrix edge affirm --case ./case-copy --current ./store-copy --kind Implements --from affirmatrix.taxonomy.propagates --to SEG-SREQ-030 --role Maintainer --reason "Error message reworded; behaviour unchanged." --revision 678f72f5371cd69416adb9199ff0af54b706acdb
    affirmed: affirmatrix.taxonomy.propagates -> SEG-SREQ-030 (Implements)
+   no extraction revision: store-copy/content: 2 node records
    $ echo $?
    0
 
@@ -253,6 +254,7 @@ it found:
 
    $ affirmatrix case sync --case ./case-copy --current ./store-copy
    synced case-copy
+   no extraction revision: store-copy/content: 228 node records
    vanished: SEG-TS-003 -> SEG-SREQ-032 (Verifies)
    $ echo $?
    0
@@ -296,6 +298,7 @@ decision, and it is by name
    0
    $ affirmatrix case sync --case ./case-copy --current ./store-copy
    synced case-copy
+   no extraction revision: store-copy/content: 228 node records
 
 The edge's record is gone from the case and the next sync has nothing to
 report. The review event that once affirmed it stays in the events file:
