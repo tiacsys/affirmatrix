@@ -217,8 +217,8 @@ Graph
 
    The command-line interface shall have graph check report whether it
    checked the case or the current stream the operator gave, and name what
-   it checked by its location: the root of the case, or the configuration
-   file whose producer it read.
+   it checked by its location: the root of the case, or the location of
+   the current stream the operator gave.
 
 Edge
 ----
