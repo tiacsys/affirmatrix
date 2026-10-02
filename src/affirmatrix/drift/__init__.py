@@ -54,6 +54,13 @@ written by the one affirmation that produced them, so a comparison against
 that same event explains the verdict the truth table reached against that
 hash, rather than telling it a second time.
 
+:func:`compare_node` answers a neighbouring question for a node alone, with no
+edge and no review event: how the node record the case holds compares with the
+node record of the current stream. The case's record is the node as it stood at
+the last ``case sync``. It is not the node as it stood at an affirmation. So a
+match here after a new sync does not mean that an affirmed link still holds. For
+"changed since affirmed", use :func:`compare` with the review event.
+
 Iteration-0 backlog item B13 (SEG-SYS-003 and its decomposition).
 """
 
@@ -203,28 +210,81 @@ def compare(
     )
 
 
+def _status(was: ContentAnchor | None, now: ContentAnchor | None) -> HashStatus:
+    """The status of one named hash, from its recorded and its current anchor.
+
+    Only the digests are compared. A moved anchor with the same digest matches.
+    """
+    if was is None:
+        return HashStatus.CURRENT_ONLY
+    if now is None:
+        return HashStatus.RECORDED_ONLY
+    return HashStatus.MATCHING if was.digest == now.digest else HashStatus.DIFFERING
+
+
 def _endpoint_comparison(
     *, recorded: Mapping[str, ContentAnchor], current: NodeRecord, source_revision: str
 ) -> tuple[HashComparison, ...]:
     """One endpoint's named hashes, recorded against current, in name order."""
     names = sorted(set(recorded) | set(current.content_anchors))
-    comparisons = []
-    for name in names:
-        was, now = recorded.get(name), current.content_anchors.get(name)
-        if was is None:
-            status = HashStatus.CURRENT_ONLY
-        elif now is None:
-            status = HashStatus.RECORDED_ONLY
-        elif was.digest == now.digest:
-            status = HashStatus.MATCHING
-        else:
-            status = HashStatus.DIFFERING
-        comparisons.append(
-            HashComparison(
-                name=name, status=status, recorded=was, current=now, source_revision=source_revision
-            )
+    return tuple(
+        HashComparison(
+            name=name,
+            status=_status(recorded.get(name), current.content_anchors.get(name)),
+            recorded=recorded.get(name),
+            current=current.content_anchors.get(name),
+            source_revision=source_revision,
         )
-    return tuple(comparisons)
+        for name in names
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class NodeHashComparison:
+    """One named content hash of one node, the case's record against the current one.
+
+    ``recorded`` is the anchor the case's node record carries for this name and
+    ``current`` the anchor the current stream's record carries. Either is
+    ``None`` when its side has no such hash, and :attr:`status` says which.
+    """
+
+    name: str
+    status: HashStatus
+    recorded: ContentAnchor | None
+    current: ContentAnchor | None
+
+
+def compare_node(
+    *, recorded: NodeRecord | None, current: NodeRecord | None
+) -> tuple[NodeHashComparison, ...]:
+    """Compare the case's node record with the current stream's, one result per hash name.
+
+    :implements: SEG-SREQ-312
+
+    ``recorded`` is the node record the case holds: the node as it stood at the
+    last ``case sync``. It is not the node as it stood at an affirmation. A
+    match here after a new sync therefore does not mean that an affirmed link
+    still holds. An edge's "changed since affirmed" is :func:`compare` with the
+    review event, and this function does not answer it.
+
+    Either record can be ``None``. A node that only one side holds has every
+    hash on that side only. The results follow name order, for the union of the
+    names of both records. Each name is judged by itself: the change of one
+    hash never changes the status of another. Only digests are compared, so a
+    moved anchor with an equal digest matches. The function reads the two
+    records and nothing else.
+    """
+    was = {} if recorded is None else recorded.content_anchors
+    now = {} if current is None else current.content_anchors
+    return tuple(
+        NodeHashComparison(
+            name=name,
+            status=_status(was.get(name), now.get(name)),
+            recorded=was.get(name),
+            current=now.get(name),
+        )
+        for name in sorted(set(was) | set(now))
+    )
 
 
 def truth_table_state(*, content_matches: bool, dependencies_active: bool) -> LinkState:
@@ -456,7 +516,9 @@ __all__ = [
     "DriftError",
     "HashComparison",
     "HashStatus",
+    "NodeHashComparison",
     "compare",
+    "compare_node",
     "derive",
     "truth_table_state",
 ]

@@ -105,6 +105,17 @@ The anchor names the source the hashed form is built from. It does not name a
 span whose bytes were hashed, because the form is assembled from the export's
 fields; recomputing the hash therefore needs the build, not just the file.
 
+The bytes behind the hash
+-------------------------
+
+The reader meets the protocol :class:`~affirmatrix.records.ContentSource`
+(:need:`SEG-SREQ-311`). The method ``content(local_id, "contentHash")`` gives the
+canonical form of the need, the exact bytes that the hash covers. It is not a
+readable rendering of the need. The reader builds the bytes from the export that
+it read when it was built, so the call opens no file. For any identifier that is
+not a need of a configured type, and for any name but ``contentHash``, the answer
+is ``None``.
+
 Refusal
 -------
 

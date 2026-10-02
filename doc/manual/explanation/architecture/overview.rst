@@ -143,8 +143,8 @@ detail.
        propagate suspicion, which content hashes each kind carries.
    * - record source
      - ``records``
-     - The input protocol, and the frozen record types the engine exchanges
-       and the case persists.
+     - The input protocol, the content protocol, and the frozen record types
+       the engine exchanges and the case persists.
    * - store loader
      - ``sources.store``
      - Reads the would-be store as a record source; this repository's own
@@ -152,7 +152,7 @@ detail.
    * - composed producer
      - ``sources.composed``
      - Chains the configured readers into one current stream, and builds it from
-       the configuration.
+       the configuration. It also gives the bytes behind a hash.
    * - requirements reader, content extractor, outcome extractor
      - ``sources.reqs``, ``sources.content``, ``sources.outcomes``
      - The three readers are built. The command line composes all three, in that
@@ -193,7 +193,7 @@ detail.
      - Source topology and role vocabulary from one YAML file.
    * - command-line interface
      - ``cli``
-     - Eleven commands over four nouns; renders outcomes, decides none. See
+     - Fourteen commands over five nouns; renders outcomes, decides none. See
        :doc:`command-line-interface`.
 
 Three modules are shared internals, not components, and never a requirement's
@@ -245,6 +245,12 @@ judgement's inputs (role, reason, and each endpoint's revision, either given
 or discovered and checked), has the recorder compose the review event and the
 affirmed edge record, and has the store persist both. Walked through in
 :doc:`../../tutorials/affirm-an-edge`.
+
+**Node content.** ``node show`` compares one node's recorded hashes with the
+current stream's, and shows the current content and the revision the case
+recorded. It reads the node records of both sides and builds no graph, so a hash
+that only one side holds reaches its report. Its exit status comes from the
+hashes alone. See :doc:`command-line-interface`.
 
 **Evidence package.** ``proof check`` collects a scope and asks the gate
 whether it is ready, changing nothing. ``proof generate`` does the same, and

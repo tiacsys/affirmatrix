@@ -27,11 +27,6 @@ from . import node_show_support as support
 pytestmark = support.requires_git
 
 
-def _reason(claim: str) -> str:
-    return f"{claim}: there is no node show verb, so the command cannot be run"
-
-
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-324"))
 def test_node_show_changes_no_file_of_the_case(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -59,7 +54,6 @@ def test_node_show_changes_no_file_of_the_case(
         assert base.snapshot(fixture.case) == before, local_id
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-324"))
 def test_node_show_writes_nothing_in_the_content_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

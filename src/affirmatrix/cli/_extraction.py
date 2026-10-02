@@ -21,6 +21,9 @@ For each repository that a node's anchors name, the rule is:
   to a hash it did not give is false.
 * The revision cannot be discovered: record none, and count the node.
 
+``node show`` reads the same facts with :func:`read_repository` and reports them,
+without writing a node record.
+
 A revision for a repository that the anchors do not name is never kept. A
 revision that the operator gives on the command line is never an input here:
 it is an assertion, not a checked fact.
@@ -62,7 +65,8 @@ class Stamped:
     missing: Mapping[str, int]
 
 
-def _anchored_paths(node: NodeRecord, repository: str) -> frozenset[str]:
+def anchored_paths(node: NodeRecord, repository: str) -> frozenset[str]:
+    """The repository-relative POSIX paths that the anchors of ``node`` name in ``repository``."""
     return frozenset(
         Path(anchor.path).as_posix()
         for anchor in node.content_anchors.values()
@@ -72,6 +76,23 @@ def _anchored_paths(node: NodeRecord, repository: str) -> frozenset[str]:
 
 def _repositories(node: NodeRecord) -> frozenset[str]:
     return frozenset(anchor.repository for anchor in node.content_anchors.values())
+
+
+def read_repository(location: Path, paths: Iterable[str]) -> RepositoryState:
+    """Read one repository for ``paths``: its revision, and the paths that cannot back content.
+
+    The three reads of :mod:`affirmatrix.cli._repository`, with optional locks
+    off, once for all of ``paths``. A path is unusable in two cases. It differs
+    from the commit (``git status``, an untracked path included). Or the commit
+    does not hold it (``git ls-tree``). Raises :class:`~affirmatrix.cli._repository.RepositoryError`
+    when any read fails; the caller says what that means for it.
+    """
+    wanted = frozenset(paths)
+    ordered = [Path(path) for path in sorted(wanted)]
+    revision = str(_repository.discover_revision(location))
+    dirty = _repository.check_clean(location, ordered).dirty_paths
+    held = _repository.committed_paths(location, revision, ordered)
+    return RepositoryState(revision, frozenset(dirty) | (wanted - held))
 
 
 def read_repositories(nodes: Iterable[NodeRecord], config: Config) -> dict[str, RepositoryState]:
@@ -84,20 +105,16 @@ def read_repositories(nodes: Iterable[NodeRecord], config: Config) -> dict[str, 
     anchored: dict[str, set[str]] = {}
     for node in nodes:
         for repository in _repositories(node):
-            anchored.setdefault(repository, set()).update(_anchored_paths(node, repository))
+            anchored.setdefault(repository, set()).update(anchored_paths(node, repository))
     states: dict[str, RepositoryState] = {}
     for repository, paths in sorted(anchored.items()):
         location = config.repository(repository)
         if location is None:
             continue
-        ordered = [Path(path) for path in sorted(paths)]
         try:
-            revision = str(_repository.discover_revision(location))
-            dirty = _repository.check_clean(location, ordered).dirty_paths
-            held = _repository.committed_paths(location, revision, ordered)
+            states[repository] = read_repository(location, paths)
         except _repository.RepositoryError:
             continue
-        states[repository] = RepositoryState(revision, frozenset(dirty) | (paths - held))
     return states
 
 
@@ -106,7 +123,7 @@ def discovered_revision(
 ) -> str | None:
     """The revision of ``repository`` for ``node``, or ``None`` when it cannot be discovered."""
     state = states.get(repository)
-    if state is None or _anchored_paths(node, repository) & state.unusable:
+    if state is None or anchored_paths(node, repository) & state.unusable:
         return None
     return state.revision
 
@@ -157,9 +174,11 @@ def report(missing: Mapping[str, int]) -> None:
 __all__ = [
     "RepositoryState",
     "Stamped",
+    "anchored_paths",
     "discovered_revision",
     "extraction_revisions",
     "read_repositories",
+    "read_repository",
     "report",
     "stamp",
 ]

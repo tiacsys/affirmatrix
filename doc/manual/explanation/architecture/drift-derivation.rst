@@ -129,3 +129,21 @@ untouched on the derivation's ``vanished`` field instead, so an affirmed edge
 that silently disappeared is visible rather than inferred from an unexplained
 coverage gap. Retiring its record from the case remains a maintainer's
 explicit removal, never derivation's.
+
+One node against the case's record
+----------------------------------
+
+:func:`affirmatrix.drift.compare_node` compares one node, with no edge and no
+review event (:need:`SEG-SREQ-312`). It takes the node record that the case
+holds and the node record of the current stream, and either can be ``None``. It
+gives one result for each hash name of either record, with the status from
+:class:`~affirmatrix.drift.HashStatus`. Each name is judged alone, and only the
+digests are compared. A moved anchor with an equal digest matches. A node that
+only one side holds has every hash on that side only.
+
+The case's record is the node as it stood at the last ``case sync``. It is not
+the node as it stood at an affirmation. So a match after a new sync does not mean
+that an affirmed link still holds. The question "did this endpoint change since
+the affirmation" stays with :func:`~affirmatrix.drift.compare` and the review
+event, which keeps the digests of that moment. ``node show`` uses
+``compare_node`` and nothing of the edge comparison.

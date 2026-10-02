@@ -8,6 +8,10 @@ supplies is the builder's to report as broken; neither is this class's
 business. It wraps nothing either: an error a member raises while its records
 are being taken is already a :class:`~affirmatrix.sources.SourceError`.
 
+The producer also hands back the bytes behind a hash
+(:meth:`ComposedProducer.content`). It asks each member that can, in member
+order, and the first answer wins.
+
 :func:`from_config` builds the producer a configuration describes:
 
 * No reader configured — a ``producer`` block absent, or naming only
@@ -51,7 +55,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from affirmatrix.config import Config, ProducerConfig
-from affirmatrix.records import EdgeRecord, NodeRecord, RecordSource
+from affirmatrix.records import ContentSource, EdgeRecord, NodeRecord, RecordSource
 from affirmatrix.sources import SourceError
 from affirmatrix.sources.content import CSourceExtractor, Placement
 from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
@@ -77,6 +81,22 @@ class ComposedProducer:
         """Every member's edges, member by member."""
         for source in self.sources:
             yield from source.edges()
+
+    def content(self, local_id: str, hash_name: str) -> bytes | None:
+        """The bytes behind one hash, from the first member that answers.
+
+        :implements: SEG-SREQ-311
+
+        A member that is not a :class:`~affirmatrix.records.ContentSource`, such
+        as the outcome reader, is passed over. So is a member that answers
+        ``None``. The first answer wins.
+        """
+        for source in self.sources:
+            if isinstance(source, ContentSource):
+                data = source.content(local_id, hash_name)
+                if data is not None:
+                    return data
+        return None
 
     def evidence_bundles(self) -> Mapping[str, str]:
         """For each outcome a member supplies, the digest of the run bundle it came from.

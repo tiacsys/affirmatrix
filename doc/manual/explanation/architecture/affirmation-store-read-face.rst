@@ -11,7 +11,9 @@ A case presented as a record source
 -----------------------------------
 
 The store's read face is a record source: it satisfies the same protocol as
-every producer, structurally, by having the two methods.
+every producer, structurally, by having the two methods. It is not a
+:class:`~affirmatrix.records.ContentSource`: the case holds hashes and never the
+content behind them.
 
 .. code-block:: python
 

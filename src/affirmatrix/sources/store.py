@@ -104,6 +104,27 @@ class StoreLoader:
             for local_id, declaration in _table(document, _NODES, manifest).items():
                 yield self._node_record(local_id, kind, declaration, manifest)
 
+    def content(self, local_id: str, hash_name: str) -> bytes | None:
+        """The bytes of the content file that one hash of one node declares.
+
+        :implements: SEG-SREQ-311
+
+        The same bytes :meth:`nodes` hashed, read again as they are now. The
+        first manifest that declares the identifier answers. ``None`` for an
+        identifier no manifest declares and for a name that is not a content
+        file of the entry.
+        """
+        for manifest in _manifests(self.root / _NODES):
+            declaration = _table(_read_manifest(manifest), _NODES, manifest).get(local_id)
+            if declaration is None:
+                continue
+            if not isinstance(declaration, dict) or hash_name in (_RESULT_KEY, _REVISION_KEY):
+                return None
+            if hash_name not in declaration:
+                return None
+            return self._content_bytes(local_id, hash_name, declaration[hash_name], manifest)
+        return None
+
     def edges(self) -> Iterator[EdgeRecord]:
         """The edge records the store declares, grouped by kind in each manifest.
 
