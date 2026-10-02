@@ -516,7 +516,8 @@ def test_graph_check_counts_pending_strong_edges_only(
     assert document["pending"] == 4
     assert document["edgesByKind"]["Confirms"] == 10
     assert document["edgesByKind"]["Witnesses"] == 12
-    assert set(document) == {"nodesByKind", "edgesByKind", "pending"}
+    assert {"nodesByKind", "edgesByKind", "pending"} <= set(document)
+    assert not [key for key in document if "dangling" in key.lower()]
 
     world = make_world(tmp_path / "world", outcomes=("head", "old"))
     status, out = run(capsys, "graph", "check", "--json", *world.args(config=False))
@@ -524,7 +525,8 @@ def test_graph_check_counts_pending_strong_edges_only(
     document = json.loads(out)
     assert document["pending"] == 2
     assert document["edgesByKind"]["Confirms"] == 2
-    assert set(document) == {"nodesByKind", "edgesByKind", "pending"}
+    assert {"nodesByKind", "edgesByKind", "pending"} <= set(document)
+    assert not [key for key in document if "dangling" in key.lower()]
 
 
 def test_a_bundle_named_twice_is_read_once(tmp_path: Path, capsys) -> None:

@@ -1,0 +1,49 @@
+{
+ "current_version": "v0",
+ "project": "capture shape",
+ "versions": {
+  "v0": {
+   "creator": {
+    "program": "sphinx_needs"
+   },
+   "needs": {
+    "D-1": {
+     "content": "A note.",
+     "docname": "lib/design",
+     "doctype": ".rst",
+     "id": "D-1",
+     "status": null,
+     "tags": [],
+     "title": "a design note",
+     "type": "design"
+    },
+    "I-LIB-MAX": {
+     "content": "Max.",
+     "docname": "lib/design",
+     "doctype": ".rst",
+     "id": "I-LIB-MAX",
+     "satisfies": [
+      "R-1"
+     ],
+     "status": null,
+     "tags": [],
+     "title": "LIB_MAX",
+     "type": "impl"
+    },
+    "I-LIB-MIN": {
+     "content": "Min.",
+     "docname": "lib/design",
+     "doctype": ".rst",
+     "id": "I-LIB-MIN",
+     "satisfies": [
+      "R-2"
+     ],
+     "status": null,
+     "tags": [],
+     "title": "LIB_MIN",
+     "type": "impl"
+    }
+   }
+  }
+ }
+}

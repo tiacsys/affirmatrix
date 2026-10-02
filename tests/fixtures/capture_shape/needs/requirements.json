@@ -1,0 +1,76 @@
+{
+ "current_version": "v0",
+ "project": "capture shape",
+ "versions": {
+  "v0": {
+   "creator": {
+    "program": "sphinx_needs"
+   },
+   "needs": {
+    "I-1": {
+     "content": "A note.",
+     "docname": "docs/gamma",
+     "doctype": ".rst",
+     "id": "I-1",
+     "refines": [],
+     "status": null,
+     "tags": [],
+     "title": "a note",
+     "trace": [],
+     "type": "info"
+    },
+    "R-1": {
+     "content": "The system shall start.",
+     "docname": "docs/alpha",
+     "doctype": ".rst",
+     "id": "R-1",
+     "refines": [],
+     "status": null,
+     "tags": [],
+     "title": "start",
+     "trace": [],
+     "trace_back": [
+      "R-2",
+      "R-3"
+     ],
+     "type": "req"
+    },
+    "R-2": {
+     "content": "The system shall stop.",
+     "docname": "docs/alpha",
+     "doctype": ".rst",
+     "id": "R-2",
+     "refines": [
+      "R-DECOY"
+     ],
+     "status": null,
+     "tags": [],
+     "title": "stop",
+     "trace": [
+      "R-1"
+     ],
+     "trace_back": [
+      "R-3"
+     ],
+     "type": "req"
+    },
+    "R-3": {
+     "content": "The system shall pause.",
+     "docname": "docs/beta",
+     "doctype": ".rst",
+     "id": "R-3",
+     "refines": [],
+     "status": null,
+     "tags": [],
+     "title": "pause",
+     "trace": [
+      "R-2",
+      "R-1"
+     ],
+     "trace_back": [],
+     "type": "req"
+    }
+   }
+  }
+ }
+}

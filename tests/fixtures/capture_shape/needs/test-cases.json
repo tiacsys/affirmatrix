@@ -1,0 +1,56 @@
+{
+ "current_version": "v0",
+ "project": "capture shape",
+ "versions": {
+  "v0": {
+   "creator": {
+    "program": "sphinx_needs"
+   },
+   "needs": {
+    "T-ALPHA": {
+     "content": "Checks test_alpha.",
+     "docname": "suite/test-spec",
+     "doctype": ".rst",
+     "id": "T-ALPHA",
+     "status": null,
+     "tags": [],
+     "test_function": "test_alpha",
+     "test_module": "tests/mod_a",
+     "title": "t-alpha",
+     "type": "test_case",
+     "verifies": [
+      "R-1"
+     ]
+    },
+    "T-GAMMA": {
+     "content": "Checks test_gamma.",
+     "docname": "suite/test-spec",
+     "doctype": ".rst",
+     "id": "T-GAMMA",
+     "status": null,
+     "tags": [],
+     "test_function": "test_gamma",
+     "test_module": "tests/mod_b",
+     "title": "t-gamma",
+     "type": "test_case",
+     "verifies": [
+      "R-2"
+     ]
+    },
+    "TP-1": {
+     "content": "Steps.",
+     "docname": "suite/test-spec",
+     "doctype": ".rst",
+     "id": "TP-1",
+     "status": null,
+     "tags": [],
+     "title": "a procedure",
+     "type": "test_procedure",
+     "verifies": [
+      "R-1"
+     ]
+    }
+   }
+  }
+ }
+}

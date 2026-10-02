@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen version="1.16.1" xml:lang="en-US">
+  <compounddef id="members" kind="file" language="C++">
+    <compoundname>members</compoundname>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="m_0043" prot="public" static="no">
+        <name>test_shared</name>
+        <location file="suite/tests/mod_a/src/main.c" line="11" column="1" bodyfile="suite/tests/mod_a/src/main.c" bodystart="11" bodyend="14"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0044" prot="public" static="no">
+        <name>test_shared</name>
+        <location file="suite/tests/mod_ab/src/main.c" line="11" column="1" bodyfile="suite/tests/mod_ab/src/main.c" bodystart="11" bodyend="14"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0045" prot="public" static="no">
+        <name>test_shared</name>
+        <location file="suite/tests/mod_b/src/main.c" line="11" column="1" bodyfile="suite/tests/mod_b/src/main.c" bodystart="11" bodyend="14"/>
+      </memberdef>
+    </sectiondef>
+  </compounddef>
+</doxygen>

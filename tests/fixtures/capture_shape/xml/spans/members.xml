@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen version="1.16.1" xml:lang="en-US">
+  <compounddef id="members" kind="file" language="C++">
+    <compoundname>members</compoundname>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="m_0014" prot="public" static="no">
+        <name>test_direct</name>
+        <location file="tests/spans/src/main.c" line="11" column="1" bodyfile="tests/spans/src/main.c" bodystart="11" bodyend="14"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0015" prot="public" static="no">
+        <name>test_blank</name>
+        <location file="tests/spans/src/main.c" line="22" column="1" bodyfile="tests/spans/src/main.c" bodystart="22" bodyend="25"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0016" prot="public" static="no">
+        <name>test_blank_two</name>
+        <location file="tests/spans/src/main.c" line="34" column="1" bodyfile="tests/spans/src/main.c" bodystart="34" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0017" prot="public" static="no">
+        <name>test_blank_if</name>
+        <location file="tests/spans/src/main.c" line="46" column="1" bodyfile="tests/spans/src/main.c" bodystart="46" bodyend="49"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0018" prot="public" static="no">
+        <name>test_ifdef</name>
+        <location file="tests/spans/src/main.c" line="57" column="1" bodyfile="tests/spans/src/main.c" bodystart="57" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0019" prot="public" static="no">
+        <name>test_ifndef</name>
+        <location file="tests/spans/src/main.c" line="68" column="1" bodyfile="tests/spans/src/main.c" bodystart="68" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0020" prot="public" static="no">
+        <name>test_elif</name>
+        <location file="tests/spans/src/main.c" line="79" column="1" bodyfile="tests/spans/src/main.c" bodystart="79" bodyend="82"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0021" prot="public" static="no">
+        <name>test_else</name>
+        <location file="tests/spans/src/main.c" line="90" column="1" bodyfile="tests/spans/src/main.c" bodystart="90" bodyend="93"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0022" prot="public" static="no">
+        <name>test_endif</name>
+        <location file="tests/spans/src/main.c" line="101" column="1" bodyfile="tests/spans/src/main.c" bodystart="101" bodyend="104"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0023" prot="public" static="no">
+        <name>test_plain</name>
+        <location file="tests/spans/src/main.c" line="112" column="1" bodyfile="tests/spans/src/main.c" bodystart="112" bodyend="115"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0024" prot="public" static="no">
+        <name>test_plain_multi</name>
+        <location file="tests/spans/src/main.c" line="125" column="1" bodyfile="tests/spans/src/main.c" bodystart="125" bodyend="128"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0025" prot="public" static="no">
+        <name>test_plain_indented</name>
+        <location file="tests/spans/src/main.c" line="136" column="1" bodyfile="tests/spans/src/main.c" bodystart="136" bodyend="139"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0026" prot="public" static="no">
+        <name>test_mixed</name>
+        <location file="tests/spans/src/main.c" line="150" column="1" bodyfile="tests/spans/src/main.c" bodystart="150" bodyend="153"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0027" prot="public" static="no">
+        <name>test_code</name>
+        <location file="tests/spans/src/main.c" line="161" column="1" bodyfile="tests/spans/src/main.c" bodystart="161" bodyend="164"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0028" prot="public" static="no">
+        <name>test_include</name>
+        <location file="tests/spans/src/main.c" line="172" column="1" bodyfile="tests/spans/src/main.c" bodystart="172" bodyend="175"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0029" prot="public" static="no">
+        <name>test_define</name>
+        <location file="tests/spans/src/main.c" line="183" column="1" bodyfile="tests/spans/src/main.c" bodystart="183" bodyend="186"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0030" prot="public" static="no">
+        <name>test_linecomment</name>
+        <location file="tests/spans/src/main.c" line="194" column="1" bodyfile="tests/spans/src/main.c" bodystart="194" bodyend="197"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0031" prot="public" static="no">
+        <name>test_doxline</name>
+        <location file="tests/spans/src/main.c" line="205" column="1" bodyfile="tests/spans/src/main.c" bodystart="205" bodyend="208"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0032" prot="public" static="no">
+        <name>test_codecloser</name>
+        <location file="tests/spans/src/main.c" line="216" column="1" bodyfile="tests/spans/src/main.c" bodystart="216" bodyend="219"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0033" prot="public" static="no">
+        <name>test_nodoc_code</name>
+        <location file="tests/spans/src/main.c" line="221" column="1" bodyfile="tests/spans/src/main.c" bodystart="221" bodyend="224"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0034" prot="public" static="no">
+        <name>test_nodoc_plain</name>
+        <location file="tests/spans/src/main.c" line="227" column="1" bodyfile="tests/spans/src/main.c" bodystart="227" bodyend="230"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0035" prot="public" static="no">
+        <name>test_nodoc_banner</name>
+        <location file="tests/spans/src/main.c" line="235" column="1" bodyfile="tests/spans/src/main.c" bodystart="235" bodyend="238"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0036" prot="public" static="no">
+        <name>test_nodoc_blank_if</name>
+        <location file="tests/spans/src/main.c" line="242" column="1" bodyfile="tests/spans/src/main.c" bodystart="242" bodyend="245"/>
+      </memberdef>
+      <memberdef kind="function" id="m_0037" prot="public" static="no">
+        <name>test_top</name>
+        <location file="tests/spans/src/top.c" line="1" column="1" bodyfile="tests/spans/src/top.c" bodystart="1" bodyend="4"/>
+      </memberdef>
+    </sectiondef>
+  </compounddef>
+</doxygen>

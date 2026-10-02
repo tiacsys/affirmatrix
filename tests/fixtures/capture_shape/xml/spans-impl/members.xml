@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen version="1.16.1" xml:lang="en-US">
+  <compounddef id="members" kind="file" language="C++">
+    <compoundname>members</compoundname>
+    <sectiondef kind="func">
+      <memberdef kind="define" id="m_0038" prot="public" static="no">
+        <name>IMP_DIRECT</name>
+        <location file="include/impl_spans.h" line="6" column="1" bodyfile="include/impl_spans.h" bodystart="6" bodyend="6"/>
+      </memberdef>
+      <memberdef kind="define" id="m_0039" prot="public" static="no">
+        <name>IMP_GUARD</name>
+        <location file="include/impl_spans.h" line="12" column="1" bodyfile="include/impl_spans.h" bodystart="12" bodyend="12"/>
+      </memberdef>
+      <memberdef kind="define" id="m_0040" prot="public" static="no">
+        <name>IMP_BLANK</name>
+        <location file="include/impl_spans.h" line="18" column="1" bodyfile="include/impl_spans.h" bodystart="18" bodyend="18"/>
+      </memberdef>
+      <memberdef kind="define" id="m_0041" prot="public" static="no">
+        <name>IMP_ELSE</name>
+        <location file="include/impl_spans.h" line="24" column="1" bodyfile="include/impl_spans.h" bodystart="24" bodyend="24"/>
+      </memberdef>
+      <memberdef kind="define" id="m_0042" prot="public" static="no">
+        <name>IMP_PLAIN</name>
+        <location file="include/impl_spans.h" line="30" column="1" bodyfile="include/impl_spans.h" bodystart="30" bodyend="30"/>
+      </memberdef>
+    </sectiondef>
+  </compounddef>
+</doxygen>

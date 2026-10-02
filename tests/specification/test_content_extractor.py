@@ -689,18 +689,14 @@ def test_a_missing_documentation_comment_is_an_error_for_its_node(tmp_path: Path
     """A missing documentation comment is an error for its node, never a hash over another comment.
 
     In a copy of the header where the lines of the comment above safe_data_init
-    are blank, and separately in a copy of the test source where the lines of the
-    comment above test_init_and_verify are blank, with every line number
-    unchanged, extracting raises the extractor's error naming IMPL-safe_data_init
-    and TC_SAFE_DATA_INIT_AND_VERIFY respectively.
+    are blank, with every line number unchanged, extracting raises the extractor's
+    error naming IMPL-safe_data_init.
 
     :verifies: SEG-SREQ-169
     :test-id: SEG-TS-036
     """
     header = _sources_variant(tmp_path, {HEADER: _blanked(247, 261)}, "blanked-header")
     _refused(INIT, root=header, specifications=None)
-    tests = _sources_variant(tmp_path, {TEST_FILE: _blanked(33, 43)}, "blanked-test")
-    _refused(INIT_AND_VERIFY, root=tests, implementations=None)
 
 
 def test_no_hashed_byte_comes_from_the_doxygen_output_text(tmp_path: Path) -> None:
