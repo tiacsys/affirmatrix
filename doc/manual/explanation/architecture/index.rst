@@ -19,6 +19,7 @@ module realizes.
    guarantee-boundary
    case-store
    requirements-reader
+   content-extractor
    affirmation-store-write-face
    affirmation-store-read-face
    drift-derivation

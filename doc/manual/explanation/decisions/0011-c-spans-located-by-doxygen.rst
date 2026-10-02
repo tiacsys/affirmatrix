@@ -4,7 +4,11 @@
 Status
 ------
 
-Accepted, 2026-09-29. Binds, for C source, the principle of SEG-SREQ-001: the
+Accepted, 2026-09-29. Amended 2026-09-29: the search for a documentation
+comment no longer steps over blank lines, so only guard lines may lie between
+the comment's closer and the located line; the paragraph *Finding the
+documentation comment* is rewritten and no worked digest changes. Binds, for
+C source, the principle of SEG-SREQ-001: the
 parser only locates a span, and the hash is over the verbatim bytes of the
 source file. SEG-SREQ-163 to SEG-SREQ-170 state *what* each hash covers; this
 record fixes *where each span starts and ends*. The Python binding of the same
@@ -58,17 +62,19 @@ names the file the span was read from (SEG-SREQ-171 to SEG-SREQ-174).
 
 **Finding the documentation comment.** Each construct below names a *located
 line* ``L``, the line its declaration starts on. Start at line ``L - 1`` and
-step upward over every line that is blank or whose first non-blank text is
-``#if``, ``#ifdef`` or ``#ifndef``. The next line up must end with ``*/``,
-ignoring trailing whitespace: it is the *closer*. The *opener* is the nearest
-line at or above the closer that contains a comment opener, and that opener
-must be ``/**`` or ``/*!``. Anything else -- a plain ``/*``, code, the top of
-the file -- means the node has no documentation comment, which is an error for
-that node and never an empty hash (SEG-SREQ-169). The span runs contiguously
-from the opener downward, so blank lines and guard lines lying between the
-closer and ``L`` are inside it. A guard line *above* the opener is outside
-it. The forms ``///`` and ``//!``, whether a run of lines or trailing as
-``///<``, are not recognised as documentation comments.
+step upward over every *guard line*, a line whose first non-blank text is
+``#if``, ``#ifdef`` or ``#ifndef``. A blank line is not a guard line and ends
+the step: the line reached must end with ``*/``, ignoring trailing whitespace,
+and it is the *closer*. The *opener* is the nearest line at or above the closer
+that contains a comment opener, and that opener must be ``/**`` or ``/*!``
+(``/**/`` and ``/***`` are plain comments). Anything else -- a blank line, a
+plain ``/*``, code, any other preprocessor line, the top of the file -- means
+the node has no documentation comment, which is an error for that node and
+never an empty hash (SEG-SREQ-169). The span runs contiguously from the opener
+downward, so guard lines lying between the closer and ``L`` are inside it. A
+guard line *above* the opener is outside it. The forms ``///`` and ``//!``,
+whether a run of lines or trailing as ``///<``, are not recognised as
+documentation comments.
 
 **The span each hash covers.** ``declfile``, ``declline``, ``bodyfile``,
 ``bodystart`` and ``bodyend`` are the attributes of the member's
@@ -241,6 +247,12 @@ the file alone.
 Consequences
 ------------
 
+- A documentation comment must sit directly above its declaration, behind at
+  most guard lines. A blank line between them, or a comment deleted and its
+  lines emptied, is an error for the node; an unrelated comment further up can
+  never be found in its place. Without this, deleting the comment above
+  ``safe_data_init`` would have hashed the ``@addtogroup`` comment two lines
+  earlier as though it were the function's own.
 - A locator names a symbol and never a line. Moving a function within its
   file, or editing code above it, leaves the locator valid and changes no hash
   unless a covered line changed; the extractor finds the lines again from the

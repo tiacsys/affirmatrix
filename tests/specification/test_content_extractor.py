@@ -323,7 +323,6 @@ def _renamed(old: str, new: str) -> Callable[[dict[str, Any]], None]:
     return edit
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-154: the content extractor is not built yet")
 def test_an_implementation_is_identified_by_its_need_identifier_verbatim(tmp_path: Path) -> None:
     """An Implementation is identified by its implementation need's identifier, verbatim.
 
@@ -349,7 +348,6 @@ def test_an_implementation_is_identified_by_its_need_identifier_verbatim(tmp_pat
     assert set(renamed) == (set(needs) - {INIT}) | {"ZZ-init-1"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-155: the content extractor is not built yet")
 def test_a_test_specification_is_identified_by_its_need_identifier_verbatim(
     tmp_path: Path,
 ) -> None:
@@ -378,7 +376,6 @@ def test_a_test_specification_is_identified_by_its_need_identifier_verbatim(
     assert set(renamed) == (set(needs) - {INIT_AND_VERIFY}) | {"TC-renamed-1"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-156: the content extractor is not built yet")
 def test_implements_edges_come_from_satisfies_links(tmp_path: Path) -> None:
     """Implements edges come from the implementation needs' satisfies links.
 
@@ -410,7 +407,6 @@ def test_implements_edges_come_from_satisfies_links(tmp_path: Path) -> None:
     assert {(e.from_id, e.to_id) for e in _edges(root=empty, specifications=None)} == declared
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-157: the content extractor is not built yet")
 def test_verifies_edges_come_from_verifies_links(tmp_path: Path) -> None:
     """Verifies edges come from the test-case needs' verifies links.
 
@@ -438,7 +434,6 @@ def test_verifies_edges_come_from_verifies_links(tmp_path: Path) -> None:
     assert {(e.from_id, e.to_id) for e in _edges(root=retagged, implementations=None)} == declared
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-158: the content extractor is not built yet")
 def test_a_need_export_carrying_a_build_timestamp_is_refused_by_the_extractor(
     tmp_path: Path,
 ) -> None:
@@ -470,7 +465,6 @@ def test_a_need_export_carrying_a_build_timestamp_is_refused_by_the_extractor(
         _extractor(implementations=None, specifications=(stamped_spec, SPECIFICATION_XML))
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-160: the content extractor is not built yet")
 def test_a_node_is_located_through_the_member_its_symbol_names(tmp_path: Path) -> None:
     """A node is located through the Doxygen member whose name is its symbol.
 
@@ -509,7 +503,6 @@ def test_a_node_is_located_through_the_member_its_symbol_names(tmp_path: Path) -
         assert _anchor(changed, need_id, "bodyHash").digest == before
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-161: the content extractor is not built yet")
 def test_an_unlocatable_or_ambiguous_symbol_is_an_error_for_its_node(tmp_path: Path) -> None:
     """An unlocatable or ambiguous symbol is an error for its node, not an omission.
 
@@ -535,7 +528,6 @@ def test_an_unlocatable_or_ambiguous_symbol_is_an_error_for_its_node(tmp_path: P
     assert len([n for n in nodes.values() if n.kind == "Implementation"]) == 12
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-162: the content extractor is not built yet")
 def test_a_location_outside_the_root_is_an_error_and_is_not_read(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -563,7 +555,6 @@ def test_a_location_outside_the_root_is_an_error_and_is_not_read(
     assert os.path.realpath(outside) not in opened
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-163: the content extractor is not built yet")
 def test_an_apihash_covers_a_declaration_and_the_comment_above_it() -> None:
     """An Implementation's apiHash covers its declaration and the comment above it.
 
@@ -585,7 +576,6 @@ def test_an_apihash_covers_a_declaration_and_the_comment_above_it() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-164: the content extractor is not built yet")
 def test_a_macros_apihash_covers_its_definition_head_and_its_comment() -> None:
     """A macro's apiHash covers its definition head and the comment above it.
 
@@ -610,7 +600,6 @@ def test_a_macros_apihash_covers_its_definition_head_and_its_comment() -> None:
     assert _anchor(nodes, "IMPL-SAFE_SECTION", "apiHash").digest == _digest(span)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-165: the content extractor is not built yet")
 def test_a_bodyhash_covers_the_located_body() -> None:
     """An Implementation's bodyHash covers the lines its body occupies in the source.
 
@@ -633,7 +622,6 @@ def test_a_bodyhash_covers_the_located_body() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-166: the content extractor is not built yet")
 def test_a_spechash_covers_the_tests_documentation_comment() -> None:
     """A TestSpecification's specHash covers the documentation comment above the test.
 
@@ -652,7 +640,6 @@ def test_a_spechash_covers_the_tests_documentation_comment() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-167: the content extractor is not built yet")
 def test_an_implhash_covers_the_tests_located_body() -> None:
     """A TestSpecification's implHash covers the lines the test's body occupies.
 
@@ -671,7 +658,6 @@ def test_an_implhash_covers_the_tests_located_body() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-168: the content extractor is not built yet")
 def test_spans_are_whole_lines_with_their_terminators(tmp_path: Path) -> None:
     """Every span is a run of whole lines, each with its terminator.
 
@@ -699,7 +685,6 @@ def test_spans_are_whole_lines_with_their_terminators(tmp_path: Path) -> None:
     assert _anchor(nodes, INIT, "bodyHash").digest == _digest(crlf)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-169: the content extractor is not built yet")
 def test_a_missing_documentation_comment_is_an_error_for_its_node(tmp_path: Path) -> None:
     """A missing documentation comment is an error for its node, never a hash over another comment.
 
@@ -718,7 +703,6 @@ def test_a_missing_documentation_comment_is_an_error_for_its_node(tmp_path: Path
     _refused(INIT_AND_VERIFY, root=tests, implementations=None)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-170: the content extractor is not built yet")
 def test_no_hashed_byte_comes_from_the_doxygen_output_text(tmp_path: Path) -> None:
     """No hashed byte comes from the Doxygen output's text.
 
@@ -766,7 +750,6 @@ def test_no_hashed_byte_comes_from_the_doxygen_output_text(tmp_path: Path) -> No
     assert _hashes(reworded) == _hashes(nodes)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-171: the content extractor is not built yet")
 def test_an_implementations_api_anchor_names_the_declaration_file_and_symbol() -> None:
     """An Implementation's api anchor names the declaration file and the symbol.
 
@@ -790,7 +773,6 @@ def test_an_implementations_api_anchor_names_the_declaration_file_and_symbol() -
     assert (init.path, init.locator) == (HEADER, "symbol:safe_data_init#api")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-172: the content extractor is not built yet")
 def test_an_implementations_body_anchor_names_the_body_file_and_symbol() -> None:
     """An Implementation's body anchor names the body file and the symbol.
 
@@ -812,7 +794,6 @@ def test_an_implementations_body_anchor_names_the_body_file_and_symbol() -> None
     assert _anchor(nodes, "IMPL-SAFE_CONTAINER_DEFINE", "bodyHash").path == HEADER
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-173: the content extractor is not built yet")
 def test_a_test_specifications_spec_anchor_names_the_test_file_and_function() -> None:
     """A TestSpecification's spec anchor names the test file and the function.
 
@@ -833,7 +814,6 @@ def test_a_test_specifications_spec_anchor_names_the_test_file_and_function() ->
     assert _anchor(nodes, INIT_AND_VERIFY, "specHash").locator == "symbol:test_init_and_verify#spec"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-174: the content extractor is not built yet")
 def test_a_test_specifications_impl_anchor_names_the_test_file_and_function() -> None:
     """A TestSpecification's impl anchor names the test file and the function.
 
@@ -852,7 +832,6 @@ def test_a_test_specifications_impl_anchor_names_the_test_file_and_function() ->
     assert _anchor(nodes, INIT_AND_VERIFY, "implHash").locator == "symbol:test_init_and_verify#impl"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-175: the content extractor is not built yet")
 def test_a_location_that_does_not_name_its_symbol_is_an_error_for_its_node(
     tmp_path: Path,
 ) -> None:

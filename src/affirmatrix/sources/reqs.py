@@ -46,11 +46,12 @@ from typing import Any
 
 from affirmatrix._hashing import content_hash
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
+from affirmatrix.sources import _exports
 
 _REQUIREMENT = "Requirement"
 _REFINES = "Refines"
 _CONTENT_HASH = "contentHash"
-_TIMESTAMP_KEY = "created"
+_LABEL = "requirement export"
 _TEXT_FIELDS = ("id", "title", "content", "docname", "doctype")
 
 
@@ -121,74 +122,13 @@ class RequirementsReader:
 
         :implements: SEG-SREQ-150
         """
-        try:
-            document = json.loads(self.export.read_text(encoding="utf-8"))
-        except (OSError, ValueError) as error:
-            raise ReaderError(
-                f"requirement export {self.export}: cannot be read: {error}"
-            ) from error
-        if not isinstance(document, dict):
-            raise ReaderError(f"requirement export {self.export}: the top level is not an object")
-        self._refuse_timestamps(document, "the top level")
-        versions = document.get("versions")
-        if not isinstance(versions, dict):
-            raise ReaderError(f"requirement export {self.export}: has no 'versions' object")
-        if len(versions) != 1:
-            raise ReaderError(
-                f"requirement export {self.export}: holds {len(versions)} versions "
-                f"({', '.join(map(repr, versions)) or 'none'}); the reader serves one build, "
-                "so an export must hold exactly one"
-            )
-        ((name, version),) = versions.items()
-        if not isinstance(version, dict):
-            raise ReaderError(
-                f"requirement export {self.export}: version {name!r} is not an object"
-            )
-        self._refuse_timestamps(version, f"version {name!r}")
-        needs = version.get("needs")
-        if not isinstance(needs, dict):
-            raise ReaderError(
-                f"requirement export {self.export}: version {name!r} has no 'needs' object"
-            )
+        needs = _exports.read_needs(self.export, _LABEL, ReaderError)
         for key, need in needs.items():
-            if not isinstance(need, dict):
-                raise ReaderError(
-                    f"requirement export {self.export}: need {key!r} is not an object"
-                )
             if need.get("type") in self.types:
-                self._check_need(key, need)
-        object.__setattr__(self, "_needs", needs)
-
-    def _refuse_timestamps(self, holder: Mapping[str, Any], where: str) -> None:
-        """Refuse an export whose ``where`` carries a build timestamp.
-
-        :implements: SEG-SREQ-150
-        """
-        if _TIMESTAMP_KEY in holder:
-            raise ReaderError(
-                f"requirement export {self.export}: carries a build timestamp "
-                f"({_TIMESTAMP_KEY!r}) in {where}; the reader consumes only a reproducible export"
-            )
-
-    def _check_need(self, key: str, need: Mapping[str, Any]) -> None:
-        """Refuse a configured-type need missing an authored or locating field."""
-        for name in _TEXT_FIELDS:
-            if not isinstance(need.get(name), str):
-                raise ReaderError(
-                    f"requirement export {self.export}: need {key!r} has no text field {name!r}"
+                _exports.check_need(
+                    self.export, _LABEL, ReaderError, key, need, _TEXT_FIELDS, "refines"
                 )
-        if need["id"] != key:
-            raise ReaderError(
-                f"requirement export {self.export}: need {key!r} declares the id {need['id']!r}"
-            )
-        refines = need.get("refines")
-        if refines is not None and not (
-            isinstance(refines, list) and all(isinstance(parent, str) for parent in refines)
-        ):
-            raise ReaderError(
-                f"requirement export {self.export}: need {key!r} has a 'refines' "
-                "that is not a list of identifiers"
-            )
+        object.__setattr__(self, "_needs", needs)
 
     def _configured(self) -> Iterator[Mapping[str, Any]]:
         """The needs whose type is one of the configured requirement types.

@@ -71,10 +71,10 @@ Four things stand around the tool.
   repository.
 - **The record producers.** Whatever turns sources into node and edge
   records. Today the only producer is the would-be store, a hand-transcribed
-  fixture under ``tests/fixtures/``; the requirements reader is built as a
-  library component but not yet composed into the command line, and the
-  content extractor and the outcome extractor are named and documented but not
-  yet written.
+  fixture under ``tests/fixtures/``; the requirements reader and the content
+  extractor are built as library components but not yet composed into the
+  command line, and the outcome extractor is named and documented but not yet
+  written.
 
 Outside the tool: any write to git, continuous integration, and storage of
 content of any kind. A pipeline that wants to run the tool runs the command
@@ -138,8 +138,9 @@ detail.
      - Reads the would-be store as a record source; the only producer today.
    * - requirements reader, content extractor, outcome extractor
      - ``sources.reqs``, ``sources.content``, ``sources.outcomes``
-     - The requirements reader is built; the two extractors are named
-       producers for the next iteration and docstring-only today.
+     - The requirements reader and the content extractor are built; the
+       outcome extractor is a named producer for the next iteration and
+       docstring-only today.
    * - commitment layer
      - ``commitment``
      - Node hash, edge hash and design root as pure primitives.
@@ -316,9 +317,9 @@ different artifact: they drive the design and are not graph participants
 After iteration 0: state and known limits
 -----------------------------------------
 
-**What carries behaviour.** Every component in the table above except two:
-the content extractor and the outcome extractor are docstring-only modules
-under ``sources/`` that state what they will do. Of the
+**What carries behaviour.** Every component in the table above except one:
+the outcome extractor is a docstring-only module under ``sources/`` that states
+what it will do. Of the
 three gates the design names, only the package gate exists; the commit gate's
 conditions are all extraction conditions and the release gate needs a sealed
 package and a release to check.
