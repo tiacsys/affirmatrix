@@ -58,9 +58,6 @@ def test_case_sync_writes_nothing_in_the_content_repository(
     assert _control_writes_the_index(fixture.repository)
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-115: the status read of edge affirm can refresh the index"
-)
 def test_edge_affirm_writes_nothing_in_the_content_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

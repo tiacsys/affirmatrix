@@ -27,6 +27,7 @@ stream straight into the case (:need:`SEG-SREQ-072`):
 
    $ affirmatrix case sync
    synced case
+   no extraction revision: tests/fixtures/would_be_store/content: 228 node records
    $ echo $?
    0
 

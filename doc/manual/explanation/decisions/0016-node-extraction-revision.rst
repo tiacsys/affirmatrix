@@ -59,7 +59,9 @@ file was committed. It does not show that the export was built from it.
 
 The adapter discovers a revision with the two reads of ADR-0010, revision
 discovery and cleanliness of the anchored paths. This record extends them to
-the verbs that write node records. Nothing else changes in ADR-0010.
+the verbs that write node records. The cleanliness read includes whether the
+repository holds each anchored path at the discovered revision. A path the
+repository does not hold there is not clean. Nothing else changes in ADR-0010.
 
 **No hash changes.** The field never enters a hash. The library and the store
 carry it as a value and run no git.

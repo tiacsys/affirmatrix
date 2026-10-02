@@ -33,7 +33,6 @@ def _reason(claim: str) -> str:
     return f"{claim}: a node record has no extraction revision, and case sync records none"
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-306"))
 def test_a_node_the_case_does_not_hold_gets_the_discovered_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -56,7 +55,6 @@ def test_a_node_the_case_does_not_hold_gets_the_discovered_revision(
         }
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-306"))
 def test_a_changed_hash_replaces_the_held_revision_with_the_discovered_one(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -83,7 +81,6 @@ def test_a_changed_hash_replaces_the_held_revision_with_the_discovered_one(
     assert support.held_map(fixture.case, "REQ-B") == {fixture.name: second}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-307"))
 def test_an_unchanged_hash_with_no_revision_held_gets_the_discovered_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -109,7 +106,6 @@ def test_an_unchanged_hash_with_no_revision_held_gets_the_discovered_revision(
         }
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-308"))
 def test_an_unchanged_hash_keeps_the_held_revision_after_the_repository_moves_on(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -135,7 +131,6 @@ def test_an_unchanged_hash_keeps_the_held_revision_after_the_repository_moves_on
         assert support.held_map(fixture.case, local_id) == {fixture.name: first}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-308"))
 def test_an_unchanged_hash_keeps_the_held_revision_when_the_repository_is_not_configured(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -159,7 +154,6 @@ def test_an_unchanged_hash_keeps_the_held_revision_when_the_repository_is_not_co
         assert support.held_map(fixture.case, local_id) == {fixture.name: first}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-309"))
 def test_a_changed_hash_over_an_uncommitted_change_drops_the_held_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -185,7 +179,6 @@ def test_a_changed_hash_over_an_uncommitted_change_drops_the_held_revision(
     assert support.held_map(fixture.case, "REQ-B") == {}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-309"))
 def test_a_changed_hash_for_a_repository_that_is_not_configured_drops_the_held_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -213,7 +206,6 @@ def test_a_changed_hash_for_a_repository_that_is_not_configured_drops_the_held_r
     assert support.held_map(fixture.case, "REQ-B") == {}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-309"))
 def test_a_changed_hash_for_a_directory_that_is_not_a_repository_drops_the_held_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -243,7 +235,6 @@ def test_a_changed_hash_for_a_directory_that_is_not_a_repository_drops_the_held_
     assert support.held_map(fixture.case, "REQ-B") == {}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-309"))
 def test_a_path_the_repository_does_not_hold_gives_no_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -271,7 +262,6 @@ def test_a_path_the_repository_does_not_hold_gives_no_revision(
         }
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-310"))
 def test_the_report_names_the_repository_and_the_count_of_records_without_a_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -298,7 +288,6 @@ def test_the_report_names_the_repository_and_the_count_of_records_without_a_revi
     assert support.reported_counts(text, fixture.name) == [2]
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-310"))
 def test_the_report_counts_the_records_without_a_revision_for_each_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -320,7 +309,6 @@ def test_the_report_counts_the_records_without_a_revision_for_each_repository(
     assert support.reported_counts(text, support.IMPLEMENTATIONS_REPOSITORY) == []
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-306"))
 def test_each_node_gets_the_revision_of_the_repository_its_anchors_name(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -350,7 +338,6 @@ def test_each_node_gets_the_revision_of_the_repository_its_anchors_name(
         }
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-306"))
 def test_a_node_whose_anchors_name_two_repositories_gets_a_revision_for_each(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -411,7 +398,6 @@ def test_a_node_whose_anchors_name_two_repositories_gets_a_revision_for_each(
     assert support.held_map(case_root, "IMPL-DIRTY") == {"leftrepo": support.head(left)}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-308"))
 def test_a_held_revision_for_a_repository_the_anchors_no_longer_name_is_not_kept(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -443,9 +429,6 @@ def test_a_held_revision_for_a_repository_the_anchors_no_longer_name_is_not_kept
         assert support.held_digests(shapes.case, local_id) == before
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-212: case sync takes a case whose schema copy predates the field"
-)
 def test_a_schema_copy_without_the_field_refuses_the_sync_until_it_is_refreshed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -154,6 +154,7 @@ Affirm
    affirmed: SEG-TS-002 -> SEG-SREQ-030 (Verifies)
    affirmed: SEG-TS-003 -> SEG-SREQ-032 (Verifies)
    affirmed: SEG-TS-009 -> SEG-SREQ-031 (Verifies)
+   no extraction revision: tests/fixtures/would_be_store/content: 15 node records
    $ echo $?
    0
 

@@ -199,6 +199,14 @@ class NodeRecord:
     produces a reviewable diff, not a suspicion event. What a gate does with
     two outcomes' revisions disagreeing is that gate's judgement, not this
     vocabulary's.
+
+    Any node can carry ``extracted_from``: a map from a repository name to the
+    revision of that repository at which the content behind the hashes was
+    read. It is a producer-recorded claim like the fields above. It never
+    enters a hash preimage, so a change to it never unsettles an affirmation.
+    The record holds the map as a value and runs no git. An empty map means
+    that no revision is recorded. This is not the ``revision`` field, which
+    belongs to a test outcome only.
     """
 
     local_id: str
@@ -208,10 +216,12 @@ class NodeRecord:
     expiry: date | None = field(default=None)
     approver: str | None = field(default=None)
     revision: str | None = field(default=None)
+    extracted_from: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _require(self.local_id, "local identifier")
         _require(self.kind, "kind")
+        object.__setattr__(self, "extracted_from", MappingProxyType(dict(self.extracted_from)))
         if self.kind == _TEST_OUTCOME:
             if self.result is None:
                 raise ValueError(

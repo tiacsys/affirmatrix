@@ -48,7 +48,10 @@ _RESULT = "seg:result"
 _EXPIRY = "seg:expiry"
 _APPROVER = "seg:approver"
 _REVISION = "seg:revision"
-_NODE_FIXED_FIELDS = frozenset({_ID, "type", "seg:localId", _RESULT, _EXPIRY, _APPROVER, _REVISION})
+_EXTRACTED_FROM = "seg:extractedFrom"
+_NODE_FIXED_FIELDS = frozenset(
+    {_ID, "type", "seg:localId", _RESULT, _EXPIRY, _APPROVER, _REVISION, _EXTRACTED_FROM}
+)
 _SOURCE_SUFFIX = "Source"
 _SOURCE_MEMBERS = ("seg:sourceRepo", "seg:sourcePath", "seg:sourceLocator")
 
@@ -76,14 +79,21 @@ def node_entry(record: NodeRecord) -> Entry:
 
     :implements: SEG-SREQ-018
     :implements: SEG-SREQ-050
+    :implements: SEG-SREQ-304
+    :implements: SEG-SREQ-326
 
     Every value is an identifier, a kind token, a digest, the source location
-    of what a digest covers, or a test outcome's recorded result. The content
-    itself has no field to travel in, which is the structural half of the
-    guarantee; the schema's refusal of any undeclared property is the other.
-    Each digest's location is written beside it under the digest's own name
-    plus ``Source``, so the pairing is a spelling rule a reader can apply
+    of what a digest covers, a revision, or a test outcome's recorded result.
+    The content itself has no field to travel in, which is the structural half
+    of the guarantee; the schema's refusal of any undeclared property is the
+    other. Each digest's location is written beside it under the digest's own
+    name plus ``Source``, so the pairing is a spelling rule a reader can apply
     without a table.
+
+    The extraction revisions are written as one object, from repository name
+    to revision, with its keys in order. A record with no extraction revision
+    gets no such field. An empty object is a second way to say the same thing,
+    and the store does not write it.
     """
     entry: Entry = {
         _ID: identity.node_iri(record.local_id),
@@ -98,6 +108,8 @@ def node_entry(record: NodeRecord) -> Entry:
         entry[_APPROVER] = record.approver
     if record.revision is not None:
         entry[_REVISION] = record.revision
+    if record.extracted_from:
+        entry[_EXTRACTED_FROM] = dict(sorted(record.extracted_from.items()))
     entry.update(_anchor_fields(record.content_anchors))
     return entry
 
@@ -110,6 +122,7 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
     :implements: SEG-SREQ-057
     :implements: SEG-SREQ-058
     :implements: SEG-SREQ-062
+    :implements: SEG-SREQ-305
 
     A test outcome's result is read back through the closed vocabulary, so a
     hand-edited spelling the vocabulary does not contain is refused here even
@@ -163,6 +176,10 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             ) from error
     approver = str(entry[_APPROVER]) if _APPROVER in entry else None
     revision = str(entry[_REVISION]) if _REVISION in entry else None
+    extracted_from = {
+        str(repository): str(extracted)
+        for repository, extracted in dict(entry.get(_EXTRACTED_FROM) or {}).items()
+    }
     return _reconstructed(
         lambda: NodeRecord(
             local_id=local_id,
@@ -172,6 +189,7 @@ def node_record(entry: Entry, kind: str, document: Path) -> NodeRecord:
             approver=approver,
             revision=revision,
             content_anchors=content_anchors,
+            extracted_from=extracted_from,
         ),
         entry,
         document,

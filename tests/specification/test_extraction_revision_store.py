@@ -49,9 +49,6 @@ def _node(kind: str, local_id: str) -> NodeRecord:
     return NodeRecord(local_id=local_id, kind=kind, content_anchors=anchors, **extra)
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-304: a node record has no field for an extraction revision"
-)
 def test_a_node_record_keeps_the_extraction_revisions_it_is_given(tmp_path: Path) -> None:
     """A node record keeps the extraction revisions it is given.
 
@@ -116,9 +113,6 @@ def test_a_node_record_without_an_extraction_revision_is_read_back_as_written(
 
 
 @support.requires_git
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-005: a node record has no field for an extraction revision"
-)
 def test_the_extraction_revisions_never_enter_a_hash(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -197,9 +191,6 @@ def test_the_extraction_revisions_never_enter_a_hash(
     assert again.edge_hash == affirmed.edge_hash
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-304: no node schema declares an extraction revision"
-)
 def test_every_node_schema_declares_the_extraction_revisions_as_optional() -> None:
     """Every node schema declares the extraction revisions as an optional property.
 
@@ -222,9 +213,6 @@ def test_every_node_schema_declares_the_extraction_revisions_as_optional() -> No
         assert support.JSON_KEY not in schema["required"], kind
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-325: a node record has no field for an extraction revision"
-)
 def test_a_malformed_extraction_revision_is_refused(tmp_path: Path) -> None:
     """The store refuses an extraction revision that is not 40 or 64 lowercase hex characters.
 
@@ -252,9 +240,6 @@ def test_a_malformed_extraction_revision_is_refused(tmp_path: Path) -> None:
         assert support.held_map(root, "NODE-GOOD") == {"content": value}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-326: a node record has no field for an extraction revision"
-)
 def test_a_node_record_with_no_revision_is_stored_with_no_field(tmp_path: Path) -> None:
     """The store persists a node record with no extraction revision with no such field.
 
