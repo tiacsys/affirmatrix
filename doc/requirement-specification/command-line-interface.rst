@@ -216,7 +216,9 @@ Graph
    :refines: SEG-SREQ-076
 
    The command-line interface shall have graph check report whether it
-   checked the case or the current stream the operator gave.
+   checked the case or the current stream the operator gave, and name what
+   it checked by its location: the root of the case, or the configuration
+   file whose producer it read.
 
 Edge
 ----

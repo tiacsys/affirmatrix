@@ -275,7 +275,8 @@ repository.
    Where the Doxygen output holds several members named by the symbol of a
    test-case need and the need names a test module, the content extractor
    shall locate the need through the member whose file lies within the
-   directory the test module names.
+   directory the test module names. The file's path is the path within the
+   repository, after any configured path prefix is removed.
 
 .. sreq:: A Doxygen path is mapped into the repository by a configured prefix
    :id: SEG-SREQ-279
