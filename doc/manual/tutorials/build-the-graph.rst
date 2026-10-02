@@ -31,6 +31,11 @@ stream straight into the case (:need:`SEG-SREQ-072`):
    $ echo $?
    0
 
+The second line counts the node records that got no extraction revision: the
+revision of the repository their content was read from. The would-be store
+names its own ``content/`` directory as the repository of every node. The
+configuration maps no such repository, so the tool cannot discover a revision.
+
 .. code-block:: console
 
    $ ls case/nodes case/edges

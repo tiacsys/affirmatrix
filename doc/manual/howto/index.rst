@@ -3,6 +3,11 @@ How-to guides
 
 Task-oriented recipes. (Diátaxis: how-to.)
 
+.. toctree::
+   :maxdepth: 1
+
+   upgrade-an-existing-case
+
 .. contents::
    :local:
 
