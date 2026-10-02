@@ -3,7 +3,7 @@ Command line and configuration
 
 The command line is the thin adapter over the three workflows: consistency
 (``graph check``), suspect detection (``graph status``), and evidence
-generation (``proof check``/``generate``, and ``proof show``/``verify`` for a package that exists), with ``case`` and ``edge`` around
+generation (``proof check``/``generate``, and ``proof show``/``verify`` for a package that exists), with ``case``, ``node`` and ``edge`` around
 them so an operator can drive all three on a real case without a Python
 script. Every verb's outcome is the library's alone (:mod:`affirmatrix.cli`);
 this page states what each verb calls, how an exit status is decided, the
@@ -12,7 +12,7 @@ loader's keys, and a few facts an operator needs that the requirement text
 does not spell out on its own: the hex-shaped revision, the repository-name
 lookup miss, and the two different scopes a cleanliness check can have.
 
-Thirteen commands, one dispatch entry
+Fourteen commands, one dispatch entry
 ---------------------------------------
 
 ``affirmatrix <noun> <verb>``, parsed and dispatched by
@@ -33,6 +33,9 @@ Noun          Verb                Library call
 ``case``      ``remove``          :meth:`~affirmatrix.case.AffirmationStore.remove_edges`
 ``graph``     ``check``           :func:`affirmatrix.graph.build`
 ``graph``     ``status``          :func:`~affirmatrix.drift.derive`
+``node``      ``show``            :func:`~affirmatrix.drift.compare_node`, then the
+                                   checkout reads and the content of the current
+                                   stream (``cli/_node.py``)
 ``edge``      ``show``            :func:`~affirmatrix.drift.compare` against
                                    :meth:`~affirmatrix.case.AffirmationStore.latest_review_event`
 ``edge``      ``affirm``          :func:`affirmatrix.affirmation.affirmable` /
@@ -113,8 +116,8 @@ from the run bundles that the operator names, every time it runs
   stream holds its own evidence (:need:`SEG-SREQ-233`). ``--bundle`` with no
   test-case export in the configuration, or with a store at ``producer.root``,
   is refused with exit status 2 (:need:`SEG-SREQ-235`).
-* ``case sync``, ``case check``, ``graph check``, ``edge show`` and ``edge
-  affirm`` take no ``--bundle``. The option is an argument error for them, with
+* ``case sync``, ``case check``, ``graph check``, ``node show``, ``edge show``
+  and ``edge affirm`` take no ``--bundle``. The option is an argument error for them, with
   exit status 2, and they read no bundle.
 
 The proof verbs always need the implementation revision (:need:`SEG-SREQ-112`).
@@ -153,6 +156,85 @@ nothing in the case changes after a commit of the implementation repository.
 A refusal of the store to read a case (a record that fails its schema) is
 exit status 2, for every verb, and the JSON form of ``graph status`` then holds
 an ``error`` entry (:need:`SEG-SREQ-211`).
+
+Showing a node
+--------------
+
+``node show ID`` compares the node record that the case holds with the node
+record that the current stream supplies (:need:`SEG-SREQ-313`). The identifier
+is the case-local identifier, verbatim. The verb takes ``--current``,
+``--json`` and ``-v``. It takes no ``--bundle`` (:need:`SEG-SREQ-230`).
+
+The case's record is the node as it stood at the last ``case sync``. It is not
+the node as it stood at an affirmation. A match after a new sync therefore says
+nothing about an affirmed link. ``edge show`` answers that question, with the
+review event. The verb reads the node records of both sides and builds no graph.
+So a hash that only one side holds reaches the report. The graph builder
+refuses such a stream. The library call is
+:func:`affirmatrix.drift.compare_node`, which gives one result for each hash
+name (:need:`SEG-SREQ-312`).
+
+The verb makes four checks, in this order. Each failed check is exit status 2,
+with a message that names the cause:
+
+1. The case holds exactly one node with the identifier
+   (:need:`SEG-SREQ-322`).
+2. A current stream is available: given, configured, or at its configured
+   location (:need:`SEG-SREQ-202`, :need:`SEG-SREQ-142`).
+3. The current stream can be read in full (:need:`SEG-SREQ-323`). An error
+   that a reader raises while it supplies its records counts as unreadable.
+4. The current stream holds the identifier at most once
+   (:need:`SEG-SREQ-329`).
+
+After these checks, the hashes alone decide the exit status. It is 0 while
+every hash matches. It is 1 while a hash differs or exists on one side only. It is also 1
+while the current stream holds no node with the identifier
+(:need:`SEG-SREQ-320`, :need:`SEG-SREQ-321`). A repository that differs from its
+commit, is not configured or cannot be read never changes it
+(:need:`SEG-SREQ-331`).
+
+The report has one block for each hash name that either record carries:
+
+* The status, and the recorded and the current digest. The text shortens a
+  digest unless ``-v`` is given. The JSON always gives it in full.
+* ``extracted from``: the extraction revision that the case records for the
+  repository the recorded anchor names, or ``none recorded``
+  (:need:`SEG-SREQ-317`). No other revision stands in its place. A revision from
+  a review event is never shown here.
+* ``checkout``: the repository that the current anchor names, and the revision it
+  is at. The line says ``no repository is configured`` when the configuration
+  does not map the name (:need:`SEG-SREQ-318`). It says ``cannot be read``, with
+  the reason that git gave, when a configured repository fails the reads
+  (:need:`SEG-SREQ-331`).
+* ``worktree``: ``clean``, or the anchored paths of the node in that repository
+  that differ from their commit (:need:`SEG-SREQ-319`). A path that the commit
+  does not hold counts as a difference. One read serves each repository, with
+  the same function as ``case sync`` (``_extraction.read_repository``).
+* The content that the current stream supplies. The text report shows it as
+  UTF-8. A hash with no supplied content says ``none supplied``
+  (:need:`SEG-SREQ-316`).
+
+A hash that only the case records has no current anchor. Its block says ``no
+current content`` and has no ``checkout`` and no ``worktree`` line
+(:need:`SEG-SREQ-330`).
+
+The JSON report has the keys ``id``, ``kind`` and ``hashes``. Each entry of
+``hashes`` has ``name``, ``status``, ``recorded``, ``current``,
+``recordedRevision``, ``checkout`` (``null`` without a current anchor, else
+``repository``, ``configured``, ``revision``, ``dirtyPaths`` and ``error``),
+``content`` and ``encoding``. The JSON is lossless (:need:`SEG-SREQ-328`):
+``content`` is the text and ``encoding`` is ``utf-8`` when the bytes are valid
+UTF-8. Otherwise ``content`` is their base64 form and ``encoding`` is
+``base64``. Both are ``null`` when no content exists. A refusal is
+``{"error": ...}``.
+
+The content comes from the protocol :class:`~affirmatrix.records.ContentSource`,
+which is separate from the record source. The verb asks the current stream for
+the bytes of each hash that has a current anchor. A stream that does not meet
+the protocol, such as the outcome reader, supplies none. The verb has a cost. It
+reads the whole current stream, because it must know that the identifier occurs
+once. Then it asks for the bytes of each hash, and the content extractor reads
+its source files again for each question.
 
 Showing and verifying a package
 ---------------------------------
@@ -199,15 +281,17 @@ Every verb funnels its final decision through
 exactly these three values:
 
 * **0** — the command's positive verdict (a buildable graph, a clean
-  status, an affirmation recorded, a ready package generated).
+  status, a ``node show`` whose hashes all match, an affirmation recorded, a
+  ready package generated).
 * **1** — the command's negative verdict, acted on (an unbuildable
-  ``graph check``, a ``graph status`` naming a suspect or broken edge, an
+  ``graph check``, a ``graph status`` naming a suspect or broken edge, a
+  ``node show`` with a hash that differs, an
   ``edge affirm`` selection with no affirmable member, a blocked
   ``proof check``, a refused ``proof generate``, a ``proof verify`` with a
   failed check, a ``case check`` naming a
   missing schema or an unreadable producer).
 * **2** — the command could not judge the request at all (a package that
-  cannot be read, a prefix that names two packages, a ``proof verify`` with
+  cannot be read, a ``node show`` for an identifier that the case does not hold, a prefix that names two packages, a ``proof verify`` with
   no failed check and a check that was asked for and not judged, a run bundle
   that is refused, an unbuildable
   current stream for ``graph status``, a selector matching nothing, an
@@ -234,7 +318,7 @@ that is not a refusal names what it checked by its location
 The first line of the text does so, and the structured rendering carries the
 key ``checked`` with the kind of the stream and its ``location``.
 ``--json`` on every read-only verb (``case check``, ``graph check``,
-``graph status``, ``edge show``, ``proof check``) prints the same report as
+``graph status``, ``node show``, ``edge show``, ``proof check``) prints the same report as
 a structured document; for ``proof check`` this is exactly
 :func:`affirmatrix.proof.coverage_report_document`, the same serialization a
 generated package's own ``coverage_report.jsonld`` uses.
@@ -249,7 +333,8 @@ current revision, checking that the paths an endpoint's anchors name match
 their committed content, and recovering the bytes a path held at a past
 revision for display. Every git call runs with ``--no-optional-locks``. Without
 it, ``git status`` refreshes the index of the repository, and a read must not
-write. Discovery and the cleanliness check together are how
+write. ``node show`` uses the revision read and the cleanliness read too. It reports
+their results and never refuses on them. Discovery and the cleanliness check together are how
 ``edge affirm`` and the proof gate's own revision fill a review event's
 source-revision fields without an operator typing a commit hash; the
 cleanliness check is what keeps a discovered revision honest — a dirty

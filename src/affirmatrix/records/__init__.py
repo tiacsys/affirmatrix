@@ -6,7 +6,9 @@ exchanges, and the protocol that yields them.
 * **The protocol.** One interface, several adapters: the store loader, the
   requirements reader, the content extractor, the outcome extractor, and the
   read face of the affirmation store. Swapping iteration 0's store loader for
-  the real extractors is an adapter change, not a rewrite.
+  the real extractors is an adapter change, not a rewrite. A second, separate
+  protocol, :class:`ContentSource`, belongs to the sources that read content: it
+  hands back the bytes behind one hash.
 * **Two roles.** A record stream is either *recorded* — what the affirmation
   store holds, edge records carrying the hash and state they were last
   affirmed with — or *current*, what a producer derives from today's content.
@@ -469,8 +471,33 @@ class RecordSource(Protocol):
         ...
 
 
+@runtime_checkable
+class ContentSource(Protocol):
+    """A record source that can hand back the bytes behind a content hash it supplied.
+
+    :implements: SEG-SREQ-311
+
+    A separate protocol, not a third method of :class:`RecordSource`. Only a
+    source that reads content can meet it. The recorded face of the case, the
+    derived stream and the outcome reader hold or build no such bytes. A source
+    of nodes and edges stays a record source without them. A caller that needs
+    the bytes asks ``isinstance(source, ContentSource)``. It treats a source that
+    fails the test like one that answers ``None``.
+    """
+
+    def content(self, local_id: str, hash_name: str) -> bytes | None:
+        """The bytes from which this source computed one hash of one node.
+
+        ``None`` when the source supplies no node with this identifier or no
+        hash of this name for it. The bytes are the ones whose SHA-256 is the
+        digest in the node's anchor, so a reader can check the pair.
+        """
+        ...
+
+
 __all__ = [
     "ContentAnchor",
+    "ContentSource",
     "EdgeRecord",
     "EdgeReference",
     "LinkState",

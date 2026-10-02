@@ -15,19 +15,12 @@ the hashes of one node is in ``node_show_support``.
 
 from __future__ import annotations
 
-import pytest
-
 from affirmatrix.drift import HashStatus
 from affirmatrix.records import NodeRecord
 
 from . import node_show_support as support
 
 
-def _reason(claim: str) -> str:
-    return f"{claim}: the suspect detector gives no comparison of the hashes of one node"
-
-
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-312"))
 def test_a_hash_with_the_same_digest_on_both_sides_matches() -> None:
     """The suspect detector reports a hash as matching when both digests are equal.
 
@@ -52,7 +45,6 @@ def test_a_hash_with_the_same_digest_on_both_sides_matches() -> None:
     assert items["contentHash"].current == moved
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-312"))
 def test_a_hash_with_another_digest_on_each_side_differs() -> None:
     """The suspect detector reports a hash as differing when the two digests are not equal.
 
@@ -73,7 +65,6 @@ def test_a_hash_with_another_digest_on_each_side_differs() -> None:
     assert items["contentHash"].current == current.content_anchors["contentHash"]
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-312"))
 def test_a_hash_that_only_the_case_holds_is_recorded_only() -> None:
     """The suspect detector reports a hash that only the case's record carries as recorded only.
 
@@ -96,7 +87,6 @@ def test_a_hash_that_only_the_case_holds_is_recorded_only() -> None:
     assert items["implHash"].current is None
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-312"))
 def test_a_hash_that_only_the_current_stream_carries_is_current_only() -> None:
     """The suspect detector reports a hash that only the current record carries as current only.
 
@@ -118,7 +108,6 @@ def test_a_hash_that_only_the_current_stream_carries_is_current_only() -> None:
     assert items["implHash"].current == current.content_anchors["implHash"]
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-312"))
 def test_each_hash_name_of_a_node_gets_its_own_result() -> None:
     """The suspect detector gives one result for each hash name, each judged by itself.
 
@@ -139,7 +128,6 @@ def test_each_hash_name_of_a_node_gets_its_own_result() -> None:
     assert items["bodyHash"].status == HashStatus.DIFFERING
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-312"))
 def test_a_node_that_only_one_side_holds_has_every_hash_on_one_side_only() -> None:
     """The suspect detector reports every hash of a node that only one side holds as one-sided.
 

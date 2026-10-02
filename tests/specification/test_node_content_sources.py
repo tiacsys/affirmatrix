@@ -21,16 +21,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from . import capture_support as shape
 from . import node_show_support as support
 
 WOULD_BE_STORE = Path(__file__).resolve().parents[1] / "fixtures" / "would_be_store"
-
-
-def _reason(claim: str) -> str:
-    return f"{claim}: a record source gives no bytes behind a hash"
 
 
 def _assert_bytes_match_every_hash(source, nodes) -> set[str]:
@@ -45,7 +39,6 @@ def _assert_bytes_match_every_hash(source, nodes) -> set[str]:
     return seen
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-311"))
 def test_the_requirements_reader_supplies_the_bytes_it_hashed(tmp_path: Path) -> None:
     """The requirements reader supplies the bytes from which it computed each hash.
 
@@ -71,7 +64,6 @@ def test_the_requirements_reader_supplies_the_bytes_it_hashed(tmp_path: Path) ->
         assert support.content_of(reader, record.local_id, "contentHash")
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-311"))
 def test_the_content_extractor_supplies_the_bytes_it_hashed(tmp_path: Path) -> None:
     """The content extractor supplies the bytes from which it computed each hash.
 
@@ -94,7 +86,6 @@ def test_the_content_extractor_supplies_the_bytes_it_hashed(tmp_path: Path) -> N
     assert seen == {"specHash", "implHash", "apiHash", "bodyHash"}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-311"))
 def test_the_would_be_store_supplies_the_bytes_it_hashed() -> None:
     """The would-be store supplies the bytes from which it computed each hash.
 
@@ -119,7 +110,6 @@ def test_the_would_be_store_supplies_the_bytes_it_hashed() -> None:
     assert seen == {"contentHash", "specHash", "implHash", "apiHash", "bodyHash"}
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-311"))
 def test_the_composed_producer_supplies_the_bytes_it_hashed(tmp_path: Path) -> None:
     """The composed producer supplies the bytes from which any of its readers computed a hash.
 

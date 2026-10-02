@@ -6,8 +6,8 @@ and no logic buried in command handlers, so a later interface — a web API, a
 review UI, a terminal UI — is another thin adapter over the same core rather
 than a second implementation of the same rules.
 
-Thirteen commands over four nouns: ``case init|check|sync|refresh|remove``,
-``graph check|status``, ``edge show|affirm``,
+Fourteen commands over five nouns: ``case init|check|sync|refresh|remove``,
+``graph check|status``, ``node show``, ``edge show|affirm``,
 ``proof check|generate|show|verify``. Every
 verb's outcome is the library's alone to decide (SEG-SREQ-068); this package
 renders that outcome and does no judgement of its own. One shared outcome
@@ -29,7 +29,7 @@ from pathlib import Path
 
 from affirmatrix import config as _config
 from affirmatrix.case import AffirmationStore, AffirmationStoreError
-from affirmatrix.cli import _case, _edge, _graph, _judgement, _outcome, _proof
+from affirmatrix.cli import _case, _edge, _graph, _judgement, _node, _outcome, _proof
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -137,6 +137,14 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_json(graph_status_verb, verbose=True)
     _graph.add_status_arguments(graph_status_verb)
     graph_status_verb.set_defaults(handler=_graph.handle_status)
+
+    node_parser = nouns.add_parser("node", parents=[globals_])
+    node_verbs = node_parser.add_subparsers(dest="verb")
+
+    node_show_verb = node_verbs.add_parser("show", parents=[globals_])
+    _add_json(node_show_verb, verbose=True)
+    _node.add_show_arguments(node_show_verb)
+    node_show_verb.set_defaults(handler=_node.handle_show)
 
     edge_parser = nouns.add_parser("edge", parents=[globals_])
     edge_verbs = edge_parser.add_subparsers(dest="verb")

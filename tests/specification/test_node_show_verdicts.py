@@ -31,11 +31,6 @@ from . import node_show_support as support
 pytestmark = support.requires_git
 
 
-def _reason(claim: str) -> str:
-    return f"{claim}: there is no node show verb, so the command gives no verdict"
-
-
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-320"))
 def test_node_show_exits_with_status_0_while_every_hash_matches(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -65,7 +60,6 @@ def test_node_show_exits_with_status_0_while_every_hash_matches(
                 assert shown.block_status(name) == support.MATCHING
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-320"))
 def test_node_show_exits_with_status_0_for_a_matching_hash_on_a_dirty_checkout(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -95,7 +89,6 @@ def test_node_show_exits_with_status_0_for_a_matching_hash_on_a_dirty_checkout(
     assert path in line and support.CLEAN not in line.lower()
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-321"))
 def test_node_show_exits_with_status_1_while_a_hash_differs(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -120,7 +113,6 @@ def test_node_show_exits_with_status_1_while_a_hash_differs(
     assert shown.entry("implHash")[support.KEY_STATUS] == support.DIFFERING
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-321"))
 def test_node_show_exits_with_status_1_while_a_hash_is_on_one_side_only(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -157,7 +149,6 @@ def test_node_show_exits_with_status_1_while_a_hash_is_on_one_side_only(
     assert shown.entry("apiHash")[support.KEY_STATUS] == support.CURRENT_ONLY
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-321"))
 def test_node_show_exits_with_status_1_while_the_current_stream_holds_no_such_node(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -182,7 +173,6 @@ def test_node_show_exits_with_status_1_while_the_current_stream_holds_no_such_no
     assert support.show(where, "REQ-B", capsys).status == 0
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-322"))
 def test_node_show_exits_with_status_2_for_an_identifier_the_case_does_not_hold(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -211,7 +201,6 @@ def test_node_show_exits_with_status_2_for_an_identifier_the_case_does_not_hold(
         assert support.KEY_HASHES not in shown.document
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-323"))
 def test_node_show_exits_with_status_2_when_it_cannot_read_the_current_stream(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -241,7 +230,6 @@ def test_node_show_exits_with_status_2_when_it_cannot_read_the_current_stream(
         assert support.KEY_HASHES not in shown.document
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-230"))
 def test_node_show_takes_no_run_bundle(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """node show takes no run bundle.
 
@@ -270,7 +258,6 @@ def test_node_show_takes_no_run_bundle(tmp_path: Path, capsys: pytest.CaptureFix
     assert base.snapshot(fixture.case) == before
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-142"))
 def test_node_show_without_a_current_stream_or_a_producer_cannot_be_judged(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

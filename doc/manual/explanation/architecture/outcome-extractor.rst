@@ -303,8 +303,8 @@ test evidence. The same directory named twice, also through a link, is read
 once (:need:`SEG-SREQ-232`); two copies of one bundle give the same outcome
 identities and are refused.
 
-``case sync``, ``case check``, ``graph check``, ``edge show`` and ``edge
-affirm`` take no ``--bundle`` (:need:`SEG-SREQ-230`): the option is an argument
+``case sync``, ``case check``, ``graph check``, ``node show``, ``edge show`` and
+``edge affirm`` take no ``--bundle`` (:need:`SEG-SREQ-230`): the option is an argument
 error for them, with exit status 2, and they never open a bundle. A bundle that
 the extractor refuses ends the verb with exit status 2 and no verdict
 (:need:`SEG-SREQ-231`). Naming bundles together with ``--current`` is refused
@@ -313,6 +313,10 @@ with exit status 2, because a given stream holds its own evidence
 configuration, or with a store at ``producer.root``, is refused with exit status
 2 (:need:`SEG-SREQ-235`): the extractor needs ``producer.specifications``. The
 implementation export is optional; without it, no Witnesses edge is supplied.
+
+This extractor supplies no content behind its hashes. Its hash covers a record
+that it builds from a run bundle, so it does not meet the protocol
+:class:`~affirmatrix.records.ContentSource` (:need:`SEG-SREQ-311`).
 
 The configuration names no run. A ``producer`` block that holds the key
 ``outcomes`` is refused when the file is read, whatever the key holds
