@@ -44,10 +44,15 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     :implements: SEG-SREQ-077
     :implements: SEG-SREQ-078
     :implements: SEG-SREQ-079
+    :implements: SEG-SREQ-291
 
     Over the one stream given: ``--current`` when given, the case itself
-    otherwise. An unbuildable stream is the negative verdict, and its
-    refusal renders the builder's own message with no count of anything.
+    otherwise. The report names what it checked by its location: the root of
+    the case, or the path given to ``--current``. The first line of the text
+    does so, and the structured rendering carries it as ``checked``, with the
+    stream's ``kind`` and its ``location``. An unbuildable stream is the
+    negative verdict, and its refusal renders the builder's own message with
+    no count of anything.
     """
     source = _current_or_case(args, config, store)
     try:
@@ -61,7 +66,13 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     pending = sum(
         1 for edge in built.edges if edge.state is LinkState.PENDING and edge.kind in strong
     )
+    checked = (
+        {"kind": "case", "location": str(store.root)}
+        if args.current is None
+        else {"kind": "current stream", "location": args.current}
+    )
     report = {
+        "checked": checked,
         "nodesByKind": dict(sorted(node_counts.items())),
         "edgesByKind": dict(sorted(edge_counts.items())),
         "pending": pending,
@@ -69,6 +80,7 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     if args.json:
         _outcome.render_json(report)
     else:
+        print(f"checked: {checked['kind']} at {checked['location']}")
         print(f"nodes by kind: {_outcome.counts_display(report['nodesByKind'])}")
         print(f"edges by kind: {_outcome.counts_display(report['edgesByKind'])}")
         print(f"pending: {pending}")

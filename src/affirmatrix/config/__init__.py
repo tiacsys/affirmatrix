@@ -32,10 +32,18 @@ The file is real YAML, read with ``yaml.safe_load``:
    roles: [SoftwareEngineer, TestEngineer]
 
 The producer block may also name the inputs the extraction readers consume —
-``repository``, ``requirements`` (``export``, ``types``, ``source``),
-``specifications`` and ``implementations`` (each ``export`` and ``doxygen``),
-Every named field of a sub-block present is required. A missing or mistyped
-field raises, naming its dotted key.
+``repository``, ``requirements``, ``specifications`` and ``implementations``.
+The requirements block names an ``export``, the ``types`` that are
+requirements, and one of ``source`` (the source directory) or ``source-map``
+(a mapping from a need's docname to its source file); it may also name a
+``parent-field``, the need field that holds the parent links. A test or
+implementation block names an ``export`` and a ``doxygen`` output; it may also
+name ``types`` (the need types the extractor reads) and ``doxygen-prefix`` (the
+text each Doxygen path begins with, which is removed to reach the file in the
+repository). Every reader block may name its own ``repository``; a reader with
+none uses ``producer.repository``. The fields named above as required are
+required, and the optional ones are ``None`` when the file does not give them.
+A missing or mistyped field raises, naming its dotted key.
 
 The file names no run. Run bundles are named when a command is run, with
 ``--bundle``, so a ``producer`` block that holds the key ``outcomes`` is
@@ -73,6 +81,9 @@ DEFAULT_CONFIG_PATH = Path("affirmatrix.yaml")
 #: Where the case root defaults to when neither the file nor the caller names one.
 DEFAULT_CASE = Path("case")
 
+#: The need field the requirements reader takes parent links from, when the file names none.
+DEFAULT_PARENT_FIELD = "refines"
+
 
 class ConfigError(Exception):
     """A configuration file exists but cannot be made sense of.
@@ -87,30 +98,59 @@ class ConfigError(Exception):
 class RequirementsInputs:
     """Where the requirements reader finds its inputs.
 
-    ``export`` is the requirement export, ``types`` the need types treated as
-    Requirements, and ``source`` the requirement document's source directory
-    against which a need's docname and doctype resolve to a source file.
+    ``export`` is the requirement export and ``types`` the need types treated
+    as Requirements. A source directory (``source``) or a source map
+    (``source_map``) says where a need's source file is, and exactly one of the
+    two is set: ``source`` is the directory against which a need's docname and
+    doctype resolve to a source file, and ``source_map`` maps a docname to its
+    source file. ``parent_field`` is the need field that holds the parent
+    links. ``repository`` is the name of the repository the requirement
+    document lives in, or ``None`` to use the default repository.
     """
 
     export: Path
     types: frozenset[str]
-    source: Path
+    source: Path | None = None
+    parent_field: str = DEFAULT_PARENT_FIELD
+    source_map: Mapping[str, Path] | None = None
+    repository: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.source_map is not None:
+            object.__setattr__(self, "source_map", MappingProxyType(dict(self.source_map)))
 
 
 @dataclass(frozen=True, slots=True)
 class SpecificationInputs:
-    """Where the content extractor finds a test specification's inputs."""
+    """Where the content extractor finds a test specification's inputs.
+
+    ``types`` are the need types of the export that are test cases, or ``None``
+    when every need is one. ``doxygen_prefix`` is the text that every path of the
+    Doxygen output begins with, kept as written, or ``None`` when there is none.
+    ``repository`` is the name of the repository the test sources live in, or
+    ``None`` to use the default repository.
+    """
 
     export: Path
     doxygen: Path
+    types: frozenset[str] | None = None
+    doxygen_prefix: str | None = None
+    repository: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class ImplementationInputs:
-    """Where the content extractor finds an implementation's inputs."""
+    """Where the content extractor finds an implementation's inputs.
+
+    The optional fields mean what they mean for :class:`SpecificationInputs`,
+    for the implementation export.
+    """
 
     export: Path
     doxygen: Path
+    types: frozenset[str] | None = None
+    doxygen_prefix: str | None = None
+    repository: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,8 +158,8 @@ class ProducerConfig:
     """The inputs of every stream of records the producer supplies.
 
     Each reader's block is ``None`` when the file does not configure it.
-    ``repository`` names the
-    repository against which the producer's anchors and paths are resolved.
+    ``repository`` names the repository against which the anchors and paths of
+    every reader without a repository of its own are resolved.
     """
 
     repository: str | None = None
@@ -326,38 +366,96 @@ def _producer(values: Mapping[str, object], base: Path) -> ProducerConfig | None
 
 
 def _producer_repository(producer: Mapping[str, object]) -> str | None:
-    """The name of the repository the producer's anchors and paths resolve against.
+    """The name of the repository that readers with none of their own resolve against.
 
     :implements: SEG-SREQ-192
     """
-    value = producer.get("repository")
+    return _optional_text(producer, "producer", "repository")
+
+
+def _optional_text(block: Mapping[str, object], where: str, key: str) -> str | None:
+    """A string the block may give, ``None`` when it does not; kept exactly as written."""
+    value = block.get(key)
     if value is None:
         return None
     if not isinstance(value, str):
-        raise ConfigError(f"'producer.repository' must be a string, not {value!r}")
+        raise ConfigError(f"'{where}.{key}' must be a string, not {value!r}")
     return value
+
+
+def _optional_types(block: Mapping[str, object], where: str) -> frozenset[str] | None:
+    """The need types the block names, ``None`` when it names none."""
+    value = block.get("types")
+    if value is None:
+        return None
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ConfigError(f"'{where}.types' must be a list of strings")
+    return frozenset(value)
 
 
 def _requirements_inputs(
     producer: Mapping[str, object], base: Path
 ) -> RequirementsInputs | None:
-    """The requirement export, the Requirement need types and the source directory.
+    """The requirement export, the Requirement need types and where the sources are.
 
     :implements: SEG-SREQ-193
     :implements: SEG-SREQ-194
     :implements: SEG-SREQ-198
+    :implements: SEG-SREQ-284
+    :implements: SEG-SREQ-286
+    :implements: SEG-SREQ-288
+    :implements: SEG-SREQ-289
+
+    The block names the source directory or the source map, never both and
+    never neither: with both, two rules could place one need, and with neither,
+    none could. A map value is a path like every other, taken from the
+    directory of the file.
     """
     block = _block(producer, "requirements")
     if block is None:
         return None
-    types = _required(block, "producer.requirements", "types")
-    if not isinstance(types, list) or not all(isinstance(item, str) for item in types):
-        raise ConfigError("'producer.requirements.types' must be a list of strings")
+    where = "producer.requirements"
+    types = _optional_types(block, where)
+    if types is None:
+        raise ConfigError(f"'{where}.types' is required")
+    has_source = block.get("source") is not None
+    has_map = block.get("source-map") is not None
+    if has_source == has_map:
+        raise ConfigError(f"exactly one of '{where}.source' and '{where}.source-map' is required")
     return RequirementsInputs(
-        export=_path(block, "producer.requirements", "export", base),
-        types=frozenset(types),
-        source=_path(block, "producer.requirements", "source", base),
+        export=_path(block, where, "export", base),
+        types=types,
+        source=_path(block, where, "source", base) if has_source else None,
+        parent_field=_parent_field(block, where),
+        source_map=_source_map(block, where, base) if has_map else None,
+        repository=_optional_text(block, where, "repository"),
     )
+
+
+def _parent_field(block: Mapping[str, object], where: str) -> str:
+    """The need field that holds parent links: the one named, else ``refines``."""
+    name = _optional_text(block, where, "parent-field")
+    if name is None:
+        return DEFAULT_PARENT_FIELD
+    if not name:
+        raise ConfigError(f"'{where}.parent-field' must not be empty")
+    return name
+
+
+def _source_map(block: Mapping[str, object], where: str, base: Path) -> dict[str, Path]:
+    """The map from a need's docname to its source file, each file taken from ``base``."""
+    value = block["source-map"]
+    if not isinstance(value, Mapping):
+        raise ConfigError(f"'{where}.source-map' must be a mapping of docname to path")
+    result: dict[str, Path] = {}
+    for docname, path in value.items():
+        if not isinstance(docname, str) or not isinstance(path, str):
+            raise ConfigError(
+                f"'{where}.source-map' entry {docname!r}: {path!r} must be a string docname "
+                "and a string path"
+            )
+        result[docname] = _anchored(base, path)
+    return result
 
 
 def _specification_inputs(
@@ -366,13 +464,20 @@ def _specification_inputs(
     """The test-case export and the Doxygen output read for test specifications.
 
     :implements: SEG-SREQ-195
+    :implements: SEG-SREQ-285
+    :implements: SEG-SREQ-286
+    :implements: SEG-SREQ-287
     """
     block = _block(producer, "specifications")
     if block is None:
         return None
+    where = "producer.specifications"
     return SpecificationInputs(
-        export=_path(block, "producer.specifications", "export", base),
-        doxygen=_path(block, "producer.specifications", "doxygen", base),
+        export=_path(block, where, "export", base),
+        doxygen=_path(block, where, "doxygen", base),
+        types=_optional_types(block, where),
+        doxygen_prefix=_optional_text(block, where, "doxygen-prefix"),
+        repository=_optional_text(block, where, "repository"),
     )
 
 
@@ -382,13 +487,20 @@ def _implementation_inputs(
     """The implementation export and the Doxygen output read for implementations.
 
     :implements: SEG-SREQ-196
+    :implements: SEG-SREQ-285
+    :implements: SEG-SREQ-286
+    :implements: SEG-SREQ-287
     """
     block = _block(producer, "implementations")
     if block is None:
         return None
+    where = "producer.implementations"
     return ImplementationInputs(
-        export=_path(block, "producer.implementations", "export", base),
-        doxygen=_path(block, "producer.implementations", "doxygen", base),
+        export=_path(block, where, "export", base),
+        doxygen=_path(block, where, "doxygen", base),
+        types=_optional_types(block, where),
+        doxygen_prefix=_optional_text(block, where, "doxygen-prefix"),
+        repository=_optional_text(block, where, "repository"),
     )
 
 
@@ -428,6 +540,7 @@ __all__ = [
     "ConfigError",
     "DEFAULT_CASE",
     "DEFAULT_CONFIG_PATH",
+    "DEFAULT_PARENT_FIELD",
     "ImplementationInputs",
     "ProducerConfig",
     "RequirementsInputs",

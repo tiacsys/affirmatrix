@@ -23,22 +23,31 @@ ADR-0011. A record's locator names the symbol (``symbol:<name>#api``,
 output is ever hashed: the XML is asked for names, kinds and locations only
 (SEG-SREQ-170).
 
-Every need in the implementation export is an Implementation and every need in
-the test-case export a TestSpecification: no type filter is configured for
-them. The symbol a need names is its ``title`` on an implementation need and its
-``test_function`` on a test-case need.
+Where need types are configured for an export, only the needs of those types
+are read: a need of another type supplies no record and is never refused, even
+when it has no symbol. Where none are configured, every need in the
+implementation export is an Implementation and every need in the test-case
+export a TestSpecification. The symbol a need names is its ``title`` on an
+implementation need and its ``test_function`` on a test-case need.
+
+Each stream names its own repository and, optionally, the prefix that every
+path of its Doxygen output begins with. The prefix is removed to give the path
+inside the repository; that path is what is read, what an anchor names, and
+what a test's module is compared with.
 
 **When an error is raised.** What the exports and the Doxygen trees alone can
 show is checked when the extractor is constructed, before any record is
-supplied: an unreadable export, one with several versions or a build timestamp
-(SEG-SREQ-158), a need that lacks its symbol, a Doxygen tree that is missing or
-does not parse. What needs a location or a source is checked when
-:meth:`CSourceExtractor.nodes` reaches the node, and it raises there: it never
-skips a node, so the stream is never short, and the records supplied before
-the failing node have already been supplied. A consumer may rely on that only
-because it consumes the whole stream before it writes anything, as the drift
-derivation consumes both record streams completely. Every message names the
-need.
+supplied, and the first such failure is raised: an unreadable export, one with
+several versions or a build timestamp (SEG-SREQ-158), a need that lacks its
+symbol, a Doxygen tree that is missing or does not parse. What needs a location
+or a source is checked for every node as :meth:`CSourceExtractor.nodes` reaches
+it. A node that fails does not stop the pass and is never skipped: the records
+of the other nodes are supplied as they are reached, and at the end of the
+stream one :class:`UnsuppliedNodesError` names every node it cannot supply, each
+on one line with its need, its symbol and its reason (SEG-SREQ-282). A consumer
+may rely on the stream never being silently short only because it consumes the
+whole stream before it writes anything, as the drift derivation consumes both
+record streams completely.
 
 **Python, located by ``ast``.** The docstring-field markers declare identity
 and edges: ``:implements:`` on an implementation, ``:verifies:`` and
@@ -61,7 +70,7 @@ import re
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from affirmatrix import config
@@ -72,8 +81,12 @@ from affirmatrix.sources import SourceError, _exports
 __all__ = [
     "CSourceExtractor",
     "ExtractorError",
+    "NodeFailure",
+    "Placement",
+    "UnsuppliedNodesError",
     "declaration_end",
     "find_comment",
+    "find_test_comment",
     "head_end",
     "span",
     "split_lines",
@@ -89,14 +102,65 @@ _LOCATOR_SUFFIX = {"apiHash": "api", "bodyHash": "body", "specHash": "spec", "im
 #: documentation comment and the line it documents (ADR-0011).
 _GUARD_LINE = re.compile(rb"^[ \t]*#[ \t]*if(n?def)?\b")
 
+#: A line whose first non-blank text is any conditional directive. The search
+#: above a test steps over it as well as over blank lines and plain comments (ADR-0011).
+_CONDITIONAL_LINE = re.compile(rb"^[ \t]*#[ \t]*(if(n?def)?|elif|else|endif)\b")
+
 
 class ExtractorError(SourceError):
     """A node, or an input, cannot be turned into content the extractor may hash.
 
     Raised at construction for what the exports and the Doxygen trees alone
-    show, and while the node stream is consumed for what needs a location or a
-    source. The message of a per-node error names the need.
+    show, and for one node while it is located and cut. The message of a
+    per-node error names the need once it reaches the caller of
+    :meth:`CSourceExtractor.nodes`, as a line of :class:`UnsuppliedNodesError`.
     """
+
+
+@dataclass(frozen=True, slots=True)
+class Placement:
+    """Where a stream's sources are: the repository's configured name and its path.
+
+    The name is what an anchor carries (never a path); the path is the directory
+    the source files of the stream are read from.
+    """
+
+    repository: str
+    root: Path
+
+
+@dataclass(frozen=True, slots=True)
+class NodeFailure:
+    """One node the extractor cannot supply: its need, its symbol and the reason."""
+
+    label: str
+    need_id: str
+    symbol: str
+    reason: str
+
+    def line(self) -> str:
+        """The failure as one line."""
+        return f"{self.label} need {self.need_id!r} (symbol {self.symbol!r}): {self.reason}"
+
+
+class UnsuppliedNodesError(ExtractorError):
+    """Every node of a pass that cannot be supplied, each with its reason.
+
+    The message has a header line and then one line for each failure, so a
+    reader finds one need on one line. :attr:`failures` holds the same facts in
+    stream order, implementations before test specifications.
+
+    :implements: SEG-SREQ-282
+    """
+
+    def __init__(self, failures: Sequence[NodeFailure]) -> None:
+        self.failures = tuple(failures)
+        super().__init__(
+            _exports.itemized(
+                f"{len(self.failures)} node(s) cannot be supplied",
+                [failure.line() for failure in self.failures],
+            )
+        )
 
 
 def split_lines(data: bytes) -> list[bytes]:
@@ -149,21 +213,77 @@ def find_comment(lines: Sequence[bytes], located: int) -> tuple[int, int]:
         closer -= 1
     if closer < 1 or not lines[closer - 1].rstrip().endswith(b"*/"):
         raise ExtractorError(f"no documentation comment directly above line {located}")
-    opener = closer
-    while opener >= 1 and b"/*" not in lines[opener - 1]:
-        opener -= 1
-    if opener < 1:
-        raise ExtractorError(f"the comment closing on line {closer} has no opener")
-    text = lines[opener - 1]
-    start = text.index(b"/*")
-    token = text[start : start + 4]
-    documenting = token[:3] in (b"/**", b"/*!") and token not in (b"/**/", b"/***")
-    if not documenting:
+    opener = _opener_line(lines, closer)
+    if not _documents(lines[opener - 1]):
         raise ExtractorError(
             f"the comment opening on line {opener} is not a documentation comment "
             "(it must start with /** or /*!)"
         )
     return opener, closer
+
+
+def find_test_comment(lines: Sequence[bytes], located: int) -> tuple[int, int]:
+    """The opener and the closer of the documentation comment above the test at ``located``.
+
+    Starting at the line above, step upward over blank lines, conditional lines
+    (``#if``, ``#ifdef``, ``#ifndef``, ``#elif``, ``#else``, ``#endif``) and
+    plain block comments, those being block comments that are not documentation
+    comments and that have only white space before their opener on its line. The
+    first line that is none of these must end with ``*/``: it is the closer, and
+    its opener must be ``/**`` or ``/*!``. Anything else is an error, never an
+    empty run: code, any other directive (``#include``, ``#define``,
+    ``#pragma``), a line comment (``//``, ``///``, ``//!``), a block comment
+    that follows code on its line, or the top of the file.
+
+    Returns the two line numbers, 1-based. The lines stepped over lie outside
+    the run from opener to closer, so a blank line, a plain comment or a
+    conditional line added or removed there changes no hash. The Implementation
+    search, :func:`find_comment`, is narrower and stays as it is.
+
+    :implements: SEG-SREQ-166
+    :implements: SEG-SREQ-283
+    """
+    if not 1 <= located <= len(lines):
+        raise ExtractorError(f"line {located} is not inside a file of {len(lines)} lines")
+    line = located - 1
+    while line >= 1:
+        text = lines[line - 1]
+        if not text.strip() or _CONDITIONAL_LINE.match(text):
+            line -= 1
+            continue
+        if not text.rstrip().endswith(b"*/"):
+            break
+        opener = _opener_line(lines, line)
+        if _documents(lines[opener - 1]):
+            return opener, line
+        opening = lines[opener - 1]
+        if opening[: opening.index(b"/*")].strip():
+            break
+        line = opener - 1
+    raise ExtractorError(
+        f"no documentation comment above line {located}, past blank lines, "
+        "plain comments and conditional lines"
+    )
+
+
+def _opener_line(lines: Sequence[bytes], closer: int) -> int:
+    """The nearest line at or above ``closer`` that holds a comment opener."""
+    opener = closer
+    while opener >= 1 and b"/*" not in lines[opener - 1]:
+        opener -= 1
+    if opener < 1:
+        raise ExtractorError(f"the comment closing on line {closer} has no opener")
+    return opener
+
+
+def _documents(opening: bytes) -> bool:
+    """Whether the comment opened on this line is a documentation comment.
+
+    It must start with ``/**`` or ``/*!``; ``/**/`` and ``/***`` are plain.
+    """
+    start = opening.index(b"/*")
+    token = opening[start : start + 4]
+    return token[:3] in (b"/**", b"/*!") and token not in (b"/**/", b"/***")
 
 
 def declaration_end(lines: Sequence[bytes], located: int) -> int:
@@ -262,6 +382,9 @@ class _Stream:
     hash_names: tuple[str, str]
     link_field: str
     edge_kind: str
+    placement: Placement
+    prefix: str | None
+    module_field: str | None
 
 
 def _index_members(directory: Path, label: str) -> dict[str, dict[tuple[Any, ...], _Member]]:
@@ -305,6 +428,35 @@ def _resolve(root: Path, relative: str) -> Path:
     if not target.is_relative_to(root.resolve()):
         raise ExtractorError(f"the path {relative!r} lies outside the root {root}")
     return target
+
+
+def _inside_repository(path: str, prefix: str | None) -> str:
+    """The path inside the repository: the Doxygen path with the prefix removed.
+
+    The prefix is text and is removed as written. A path that does not begin
+    with it is an error, so a path is never read as it stands when a prefix says
+    where Doxygen's paths come from.
+
+    :implements: SEG-SREQ-279
+    :implements: SEG-SREQ-280
+    """
+    if not prefix:
+        return path
+    if not path.startswith(prefix):
+        raise ExtractorError(f"the path {path!r} does not begin with the prefix {prefix!r}")
+    return path[len(prefix) :]
+
+
+def _lies_within(member: _Member, prefix: str | None, directory: PurePosixPath) -> bool:
+    """Whether the member's file, inside the repository, lies within ``directory``."""
+    named = member.location.get("file")
+    if named is None:
+        return False
+    try:
+        inside = _inside_repository(named, prefix)
+    except ExtractorError:
+        return False
+    return PurePosixPath(inside).is_relative_to(directory)
 
 
 def _check_symbol(symbol: str, lines: Sequence[bytes], number: int, what: str) -> None:
@@ -376,7 +528,7 @@ def _spec_span(lines: Sequence[bytes], located: int) -> tuple[int, int]:
 
     :implements: SEG-SREQ-166
     """
-    return find_comment(lines, located)
+    return find_test_comment(lines, located)
 
 
 @dataclass(frozen=True, slots=True)
@@ -384,11 +536,14 @@ class CSourceExtractor:
     """Implementation and TestSpecification records for C, from exports and located source.
 
     ``root`` is the directory the source files are read from, ``repository`` the
-    configured name of the repository they belong to (a name, never a path).
-    ``implementations`` and ``specifications`` each name a need export and the
-    Doxygen output that locates its symbols; a stream that is ``None`` supplies
-    nothing. Identity and edges come from the exports; content comes from the
-    lines the Doxygen output locates in the files under ``root``.
+    configured name of the repository they belong to (a name, never a path);
+    together they are the default place of a stream that has none of its own.
+    ``implementation_placement`` and ``specification_placement`` give a stream
+    its own repository and root. ``implementations`` and ``specifications`` each
+    name a need export and the Doxygen output that locates its symbols; a stream
+    that is ``None`` supplies nothing. Identity and edges come from the exports;
+    content comes from the lines the Doxygen output locates in the files under
+    the stream's root.
 
     The exports and the Doxygen trees are read and checked once, here; no source
     file is opened until :meth:`nodes` needs it.
@@ -396,11 +551,13 @@ class CSourceExtractor:
     :implements: SEG-SREQ-152
     """
 
-    root: Path
+    root: Path | None = None
     _: KW_ONLY
-    repository: str
+    repository: str | None = None
     implementations: config.ImplementationInputs | None
     specifications: config.SpecificationInputs | None
+    implementation_placement: Placement | None = None
+    specification_placement: Placement | None = None
     _streams: tuple[_Stream, ...] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -412,35 +569,45 @@ class CSourceExtractor:
         if self.implementations is not None:
             streams.append(
                 self._read_stream(
-                    self.implementations.export,
-                    self.implementations.doxygen,
+                    self.implementations,
+                    self._placement(self.implementation_placement, "implementations"),
                     kind=_IMPLEMENTATION,
                     label="implementation",
                     symbol_field="title",
                     hash_names=("apiHash", "bodyHash"),
                     link_field="satisfies",
                     edge_kind=_IMPLEMENTS,
+                    module_field=None,
                 )
             )
         if self.specifications is not None:
             streams.append(
                 self._read_stream(
-                    self.specifications.export,
-                    self.specifications.doxygen,
+                    self.specifications,
+                    self._placement(self.specification_placement, "specifications"),
                     kind=_TEST_SPECIFICATION,
                     label="test-case",
                     symbol_field="test_function",
                     hash_names=("specHash", "implHash"),
                     link_field="verifies",
                     edge_kind=_VERIFIES,
+                    module_field="test_module",
                 )
             )
         object.__setattr__(self, "_streams", tuple(streams))
 
+    def _placement(self, own: Placement | None, block: str) -> Placement:
+        """The stream's own place, else the default place, else a refusal."""
+        if own is not None:
+            return own
+        if self.root is None or self.repository is None:
+            raise ExtractorError(f"the {block} stream has no repository and no default is given")
+        return Placement(self.repository, self.root)
+
     @staticmethod
     def _read_stream(
-        export: Path,
-        doxygen: Path,
+        inputs: config.ImplementationInputs | config.SpecificationInputs,
+        placement: Placement,
         *,
         kind: str,
         label: str,
@@ -448,12 +615,26 @@ class CSourceExtractor:
         hash_names: tuple[str, str],
         link_field: str,
         edge_kind: str,
+        module_field: str | None,
     ) -> _Stream:
-        """One stream: the export's needs, checked, and the tree's members, indexed.
+        """One stream: the export's needs of the configured types, checked, and the tree indexed.
+
+        A need whose type is not one of the configured types is dropped before
+        any check, so it can neither supply a record nor be refused. Without
+        configured types every need is read.
 
         :implements: SEG-SREQ-153
+        :implements: SEG-SREQ-275
+        :implements: SEG-SREQ-276
+        :implements: SEG-SREQ-277
         """
-        needs = _exports.read_needs(export, f"{label} export", ExtractorError)
+        export = inputs.export
+        every = _exports.read_needs(export, f"{label} export", ExtractorError)
+        needs = {
+            key: need
+            for key, need in every.items()
+            if inputs.types is None or need.get("type") in inputs.types
+        }
         for key, need in needs.items():
             _exports.check_need(
                 export,
@@ -471,11 +652,14 @@ class CSourceExtractor:
             label=label,
             export=export,
             needs=needs,
-            members=_index_members(doxygen, label),
+            members=_index_members(inputs.doxygen, label),
             symbol_field=symbol_field,
             hash_names=hash_names,
             link_field=link_field,
             edge_kind=edge_kind,
+            placement=placement,
+            prefix=inputs.doxygen_prefix,
+            module_field=module_field,
         )
 
     @staticmethod
@@ -515,35 +699,61 @@ class CSourceExtractor:
         Each hash is the SHA-256 of a run of whole lines of a source file and of
         nothing the Doxygen output says in words (SEG-SREQ-170). A source file is
         read once per call, so every node of one pass sees the same bytes, and a
-        second call reads again. An error for a node is raised when the stream
-        reaches it, never skipped; the consumer must take the whole stream before
-        it writes (see the module docstring).
+        second call reads again. A node that fails is not skipped and does not
+        stop the pass: every node is tried, the records of the good ones are
+        given as they are reached, and at the end of the stream one
+        :class:`UnsuppliedNodesError` names every node that failed. A consumer
+        must therefore take the whole stream before it writes, and the stream is
+        never silently short.
 
         :implements: SEG-SREQ-170
+        :implements: SEG-SREQ-282
         """
         files: dict[Path, list[bytes]] = {}
+        failures: list[NodeFailure] = []
         for stream in self._streams:
             for need in stream.needs.values():
                 need_id = self._identifier(need)
                 symbol = need[stream.symbol_field]
                 try:
-                    node = self._node(stream, need_id, symbol, files)
+                    node = self._node(stream, need, need_id, symbol, files)
                 except ExtractorError as error:
-                    raise ExtractorError(
-                        f"{stream.label} need {need_id!r} (symbol {symbol!r}): {error}"
-                    ) from error
-                yield node
+                    failures.append(
+                        NodeFailure(stream.label, need_id, symbol, " ".join(str(error).split()))
+                    )
+                else:
+                    yield node
+        if failures:
+            raise UnsuppliedNodesError(failures)
 
-    def _locate(self, stream: _Stream, symbol: str) -> _Member:
+    def _locate(self, stream: _Stream, need: Mapping[str, Any], symbol: str) -> _Member:
         """The one Doxygen member whose name is the symbol.
+
+        Where several members share the name and the need names a test module,
+        the members whose file lies within the module's directory are the
+        candidates. The path compared is the one inside the repository, with the
+        prefix removed, and containment is by whole path components, so
+        ``tests/a`` does not contain ``tests/ab``. After that choice, anything
+        but exactly one member is an error.
 
         :implements: SEG-SREQ-159
         :implements: SEG-SREQ-160
         :implements: SEG-SREQ-161
+        :implements: SEG-SREQ-278
         """
         found = list(stream.members.get(symbol, {}).values())
         if not found:
             raise ExtractorError("no member of the Doxygen output has this name")
+        module = need.get(stream.module_field) if stream.module_field else None
+        if len(found) > 1 and isinstance(module, str) and module:
+            directory = PurePosixPath(module)
+            candidates = [m for m in found if _lies_within(m, stream.prefix, directory)]
+            if len(candidates) != 1:
+                raise ExtractorError(
+                    f"the Doxygen output defines {len(found)} members with this name, "
+                    f"and {len(candidates)} of them lie within the test module {module!r}"
+                )
+            return candidates[0]
         if len(found) > 1:
             raise ExtractorError(f"the Doxygen output defines {len(found)} members with this name")
         return found[0]
@@ -558,10 +768,15 @@ class CSourceExtractor:
         return files[path]
 
     def _node(
-        self, stream: _Stream, need_id: str, symbol: str, files: dict[Path, list[bytes]]
+        self,
+        stream: _Stream,
+        need: Mapping[str, Any],
+        need_id: str,
+        symbol: str,
+        files: dict[Path, list[bytes]],
     ) -> NodeRecord:
         """The record of one need: locate, resolve, check, cut, hash, anchor."""
-        member = self._locate(stream, symbol)
+        member = self._locate(stream, need, symbol)
         location = member.location
         kind = member.kind
         if stream.kind == _IMPLEMENTATION and kind == "define":
@@ -575,7 +790,8 @@ class CSourceExtractor:
         for name in paths:
             if name not in location:
                 raise ExtractorError(f"the location has no {name!r}")
-        resolved = {name: _resolve(self.root, location[name]) for name in paths}
+        inside = {name: _inside_repository(location[name], stream.prefix) for name in paths}
+        resolved = {name: _resolve(stream.placement.root, inside[name]) for name in paths}
         body_first, body_last = _body_span(location)
         body_lines = self._lines(files, resolved["bodyfile"])
         _check_symbol(symbol, body_lines, body_first, "the body start")
@@ -615,33 +831,36 @@ class CSourceExtractor:
 
         api_name, body_name = stream.hash_names
         spans = {
-            api_name: (location[api_path], span(api_lines, api_first, api_last)),
-            body_name: (location["bodyfile"], span(body_lines, body_first, body_last)),
+            api_name: (inside[api_path], span(api_lines, api_first, api_last)),
+            body_name: (inside["bodyfile"], span(body_lines, body_first, body_last)),
         }
         return NodeRecord(
             local_id=need_id,
             kind=stream.kind,
-            content_anchors=self._anchors(symbol, spans),
+            content_anchors=self._anchors(stream, symbol, spans),
         )
 
+    @staticmethod
     def _anchors(
-        self, symbol: str, spans: Mapping[str, tuple[str, bytes]]
+        stream: _Stream, symbol: str, spans: Mapping[str, tuple[str, bytes]]
     ) -> dict[str, ContentAnchor]:
         """Each named hash, anchored at the file its span was read from.
 
-        The repository is the configured name; the path is the file as Doxygen
-        names it; the locator names the symbol and the hash, never a line.
+        The repository is the configured name of the stream's repository; the
+        path is the file's path inside that repository, as Doxygen names it with
+        the prefix removed; the locator names the symbol and the hash, never a line.
 
         :implements: SEG-SREQ-171
         :implements: SEG-SREQ-172
         :implements: SEG-SREQ-173
         :implements: SEG-SREQ-174
         :implements: SEG-SREQ-134
+        :implements: SEG-SREQ-281
         """
         return {
             name: ContentAnchor(
                 digest=content_hash(data),
-                repository=self.repository,
+                repository=stream.placement.repository,
                 path=path,
                 locator=f"symbol:{symbol}#{_LOCATOR_SUFFIX[name]}",
             )

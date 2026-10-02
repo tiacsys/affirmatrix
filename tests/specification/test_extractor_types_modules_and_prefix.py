@@ -98,7 +98,6 @@ def _opened(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return opened
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-275: every need is read, whatever its type")
 def test_configured_need_types_and_only_those_supply_records(tmp_path: Path) -> None:
     """Configured need types, and only those, supply records.
 
@@ -143,7 +142,6 @@ def test_without_configured_types_every_need_supplies_a_record(tmp_path: Path) -
     assert set(nodes) == {"T-ALPHA", "T-GAMMA"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-277: a need of another type is refused")
 def test_a_need_of_another_type_is_not_refused(tmp_path: Path) -> None:
     """A need of another type is not refused.
 
@@ -164,7 +162,6 @@ def test_a_need_of_another_type_is_not_refused(tmp_path: Path) -> None:
     assert set(nodes) == {"T-ALPHA", "T-GAMMA"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-278: several members of one name are refused")
 def test_a_shared_symbol_is_narrowed_by_the_test_module(tmp_path: Path) -> None:
     """A symbol that several members share is narrowed by the test module.
 
@@ -199,7 +196,6 @@ def test_a_shared_symbol_is_narrowed_by_the_test_module(tmp_path: Path) -> None:
     _refused(_specifications(tmp_path, narrow, "modules-component"), "T-NONE")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-278: a shared symbol behind a prefix is refused")
 def test_the_test_module_is_compared_with_the_path_after_the_prefix(tmp_path: Path) -> None:
     """The test module is compared with the file's path after the prefix is removed.
 
@@ -225,7 +221,6 @@ def test_the_test_module_is_compared_with_the_path_after_the_prefix(tmp_path: Pa
     _refused(_specifications(tmp_path, before, "prefixed-modules", **prefix), "T-WITH")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-279: the path is read as Doxygen names it")
 def test_a_doxygen_path_is_mapped_into_the_repository_by_the_prefix(tmp_path: Path) -> None:
     """A Doxygen path is mapped into the repository by a configured prefix.
 
@@ -252,7 +247,6 @@ def test_a_doxygen_path_is_mapped_into_the_repository_by_the_prefix(tmp_path: Pa
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-280: no prefix is configured, so none is checked")
 def test_a_path_outside_the_prefix_is_an_error_and_is_not_read(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -285,7 +279,6 @@ def test_a_path_outside_the_prefix_is_an_error_and_is_not_read(
     assert os.path.realpath(real) not in opened
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-281: an anchor holds the Doxygen path as it is")
 def test_an_anchor_names_the_repository_of_its_stream_and_the_path_inside_it(
     tmp_path: Path,
 ) -> None:
@@ -331,7 +324,6 @@ def test_after_the_module_choice_not_exactly_one_member_is_an_error(tmp_path: Pa
     _refused(_specifications(tmp_path, elsewhere, "modules"), "T-ELSEWHERE")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-162: the root is the default repository")
 def test_a_path_outside_the_repository_of_the_stream_is_an_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

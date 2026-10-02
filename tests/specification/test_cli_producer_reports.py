@@ -91,7 +91,6 @@ def test_case_sync_over_a_stream_that_cannot_be_built_writes_nothing(
     assert _tree(root) == before
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-290: case check prints a boolean and no reason")
 def test_case_check_says_why_the_producer_cannot_be_read(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -120,7 +119,6 @@ def test_case_check_says_why_the_producer_cannot_be_read(
     assert any(reason in text for text in _strings(report))
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-291: graph check names no stream")
 def test_graph_check_says_which_stream_it_checked(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -161,9 +159,6 @@ def test_graph_check_says_which_stream_it_checked(
     assert {key: json_case[key] for key in counts} == {key: json_stream[key] for key in counts}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-292: no reader is named, an own repository is ignored"
-)
 def test_a_reader_with_no_usable_repository_cannot_be_judged(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

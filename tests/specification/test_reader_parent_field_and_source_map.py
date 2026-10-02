@@ -41,7 +41,6 @@ def _with_refines_field(needs: dict[str, dict[str, Any]]) -> None:
         need["refines"] = list(need.pop("trace"))
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-271: the parent field is fixed to refines")
 def test_parent_links_come_from_the_configured_field(tmp_path: Path) -> None:
     """Parent links come from the configured need field.
 
@@ -70,7 +69,6 @@ def test_the_parent_field_defaults_to_refines(tmp_path: Path) -> None:
     assert _refines_edges(edges) == {("R-2", "R-DECOY")}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-273: the anchor is the generated document path")
 def test_a_requirement_is_anchored_at_its_mapped_source_file(tmp_path: Path) -> None:
     """A Requirement is anchored at its mapped source file.
 
@@ -103,7 +101,6 @@ def test_a_requirement_is_anchored_at_its_mapped_source_file(tmp_path: Path) -> 
         assert anchor.digest == plain[ident].content_anchors[support.CONTENT_HASH].digest
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-274: a source map is not read")
 def test_a_docname_the_source_map_does_not_cover_is_refused(tmp_path: Path) -> None:
     """A docname the source map does not cover is refused, and every one is named.
 
@@ -133,7 +130,6 @@ def test_a_docname_the_source_map_does_not_cover_is_refused(tmp_path: Path) -> N
         assert covered not in message
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-147: the parent field is fixed to refines")
 def test_a_content_hash_covers_the_parent_links_of_the_configured_field(tmp_path: Path) -> None:
     """A content hash covers the parent links of the configured field.
 
@@ -159,7 +155,6 @@ def test_a_content_hash_covers_the_parent_links_of_the_configured_field(tmp_path
         assert digest == twin[ident].content_anchors[support.CONTENT_HASH].digest
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-148: the parent field is fixed to refines")
 def test_the_order_of_parent_links_does_not_change_the_hash(tmp_path: Path) -> None:
     """The order of the parent links does not change the content hash.
 
@@ -186,7 +181,6 @@ def test_the_order_of_parent_links_does_not_change_the_hash(tmp_path: Path) -> N
     assert after["R-3"].content_anchors[key].digest == expected
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-149: Refines edges are read from refines only")
 def test_refines_edges_come_from_declared_parent_links_only(tmp_path: Path) -> None:
     """Refines edges come from the declared parent links, and from no back-link field.
 
@@ -204,7 +198,6 @@ def test_refines_edges_come_from_declared_parent_links_only(tmp_path: Path) -> N
     assert not [edge for edge in refines if edge.from_id == "R-1"]
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-151: a reader has no repository of its own")
 def test_a_requirement_is_anchored_in_the_repository_of_the_reader(tmp_path: Path) -> None:
     """A Requirement is anchored in the repository configured for the requirements reader.
 

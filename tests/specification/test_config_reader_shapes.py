@@ -39,7 +39,6 @@ _IMPLEMENTATIONS = (
 )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-284: the parent field is not carried")
 def test_the_parent_field_is_carried(tmp_path: Path) -> None:
     """The name of the parent-link field is carried.
 
@@ -54,9 +53,6 @@ def test_the_parent_field_is_carried(tmp_path: Path) -> None:
     assert support.attribute(requirements, support.ATTR_PARENT) == "trace"
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-285: the types of tests and implementations are not read"
-)
 def test_the_types_of_test_cases_and_implementations_are_carried(tmp_path: Path) -> None:
     """The need types of the test-case and implementation exports are carried.
 
@@ -82,7 +78,6 @@ def test_the_types_of_test_cases_and_implementations_are_carried(tmp_path: Path)
     assert set(implementations) == {"impl"}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-286: a reader has no repository of its own")
 def test_a_reader_may_name_its_own_repository(tmp_path: Path) -> None:
     """A reader's own repository name is carried.
 
@@ -102,7 +97,6 @@ def test_a_reader_may_name_its_own_repository(tmp_path: Path) -> None:
     assert producer.repository == "suite"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-287: the Doxygen prefix is not carried")
 def test_the_doxygen_prefix_is_carried_for_each_output(tmp_path: Path) -> None:
     """The Doxygen path prefix is carried for each Doxygen output, as written.
 
@@ -127,7 +121,6 @@ def test_the_doxygen_prefix_is_carried_for_each_output(tmp_path: Path) -> None:
     assert str(support.attribute(producer.implementations, support.ATTR_PREFIX)) == "lib-src/"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-288: the source map is not carried")
 def test_the_source_map_is_carried(tmp_path: Path) -> None:
     """The map from need docnames to source files is carried.
 
@@ -154,7 +147,6 @@ def test_the_source_map_is_carried(tmp_path: Path) -> None:
     }
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-289: both forms, or only a map, are not handled")
 def test_a_source_directory_and_a_source_map_exclude_each_other(tmp_path: Path) -> None:
     """A source directory and a source map exclude each other.
 

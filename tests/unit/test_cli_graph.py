@@ -325,9 +325,10 @@ def test_graph_check_renders_counts_by_kind_as_words(
     """SEG-SREQ-077: the counts read as words, not as a Python literal."""
     main(["graph", "check", "--current", str(would_be_store_copy)])
     lines = capsys.readouterr().out.splitlines()
-    assert lines[0].startswith("nodes by kind: Implementation ")
-    assert lines[1].startswith("edges by kind: ")
-    assert "{" not in lines[0] + lines[1]
+    assert lines[0].startswith("checked: current stream at ")
+    assert lines[1].startswith("nodes by kind: Implementation ")
+    assert lines[2].startswith("edges by kind: ")
+    assert "{" not in lines[1] + lines[2]
 
 
 def test_graph_check_json_keeps_the_by_kind_mappings(would_be_store_copy: Path, capsys) -> None:

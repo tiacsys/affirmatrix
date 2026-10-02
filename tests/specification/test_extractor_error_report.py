@@ -19,7 +19,6 @@ from affirmatrix.sources import SourceError
 from . import capture_support as support
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-282: extraction stops at the first bad node")
 def test_every_node_that_cannot_be_supplied_is_reported_in_one_error(tmp_path: Path) -> None:
     """Every node that cannot be supplied is reported in one error, each with its reason.
 

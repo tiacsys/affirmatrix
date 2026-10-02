@@ -29,6 +29,15 @@ from typing import Any
 _TIMESTAMP_KEY = "created"
 
 
+def itemized(header: str, items: Sequence[str]) -> str:
+    """A message of one header line and one indented line for each of ``items``.
+
+    A refusal that has several things to name gives each its own line, so a
+    reader of the message, or a program that reads it, finds one thing on one line.
+    """
+    return "\n".join([header, *(f"  {item}" for item in items)])
+
+
 def refuse_timestamps(
     export: Path, label: str, error: type[Exception], holder: Mapping[str, Any], where: str
 ) -> None:

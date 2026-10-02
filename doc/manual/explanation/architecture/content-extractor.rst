@@ -25,24 +25,41 @@ What it reads
        specifications=config.SpecificationInputs(
            export=Path("needs/test-specification/needs.json"),
            doxygen=Path("xml/dox-safe-data-testspec"),
+           types=frozenset({"test_case"}),
+           doxygen_prefix="checkout/",
        ),
+       specification_placement=Placement("tests-repository", Path("tests-checkout")),
    )
 
 Three kinds of input, each for one purpose:
 
 * the **need exports** give the structure: which nodes exist, their identity
-  and their links (:need:`SEG-SREQ-153`). Every need in the implementation export is an
-  Implementation and every need in the test-case export a TestSpecification;
-  no need type is configured for them. The symbol a need names is its ``title``
-  on an implementation need and its ``test_function`` on a test-case need;
+  and their links (:need:`SEG-SREQ-153`). Where need types are configured for an
+  export, only the needs of those types supply a record, and a need of another
+  type is never refused (:need:`SEG-SREQ-275`, :need:`SEG-SREQ-277`). Where none
+  are configured, every need in the implementation export is an Implementation
+  and every need in the test-case export a TestSpecification
+  (:need:`SEG-SREQ-276`). The symbol a need names is its ``title`` on an
+  implementation need and its ``test_function`` on a test-case need;
 * the **Doxygen output** gives the location: the file and the lines of a
   symbol's declaration and body. Only names, kinds and ``<location>``
   attributes are read from it; none of its text reaches a hash (:need:`SEG-SREQ-170`);
-* the **source files** under ``root`` give the bytes that are hashed.
+* the **source files** under the stream's root give the bytes that are hashed.
 
-``repository`` is the configured name of the repository the files belong to,
-never a path (:need:`SEG-SREQ-134`). A stream set to ``None`` supplies nothing, and
-with both ``None`` the extractor supplies nothing at all.
+Each stream has its own place: the configured name of the repository its files
+belong to, never a path (:need:`SEG-SREQ-134`), and the path of that repository.
+A stream without a ``Placement`` of its own takes ``repository`` and ``root`` as
+its place. A stream set to ``None`` supplies nothing, and with both ``None`` the
+extractor supplies nothing at all.
+
+The paths in a Doxygen output come from Doxygen's own base directory. A stream
+may name a prefix, the text that each of those paths begins with
+(:need:`SEG-SREQ-279`). The extractor removes the prefix as written, and reads
+the rest within the stream's repository. A path that does not begin with the
+prefix is an error for its node and is not read (:need:`SEG-SREQ-280`). With no
+prefix, the path is used as it stands. A prefix is text, not a path, so the
+configuration file's directory plays no part in it. It should end with the path
+separator.
 
 What it supplies
 ----------------
@@ -64,16 +81,22 @@ indexed by name, each tree separately, so an implementation's symbol is never
 looked up in the test tree. A node is located through the one member whose name
 is its symbol (:need:`SEG-SREQ-160`). "One" means one distinct definition: a member
 listed in two compounds with the same ``id`` and location counts once, but two
-``id`` values, or one ``id`` at two locations, are two, and a symbol with none
-or with several is an error for its node (:need:`SEG-SREQ-161`). Members no need names
+``id`` values, or one ``id`` at two locations, are two. Where several members
+share the symbol and a test-case need names a ``test_module``, the members
+whose file lies within that directory are the candidates
+(:need:`SEG-SREQ-278`). The file is compared as a path inside the repository,
+after the prefix is removed, and by whole path components: ``tests/a`` does not
+contain ``tests/ab``. After that choice, a symbol with none or with several
+members is an error for its node (:need:`SEG-SREQ-161`). Members no need names
 are never consulted, which is why the test tree's duplicate
 ``SAFE_CONTAINER_DEFINE`` costs nothing. The index of Doxygen's own listing is
 not followed: it lists members repeatedly and gives no location.
 
-Before a file is opened, every path the node's location names is resolved under
-``root`` (links included) and must stay inside it; ``..``, an absolute path and
-a link that leads out are errors, and the file outside is not read
-(:need:`SEG-SREQ-162`). Then the line each location names must contain the symbol as a
+Before a file is opened, every path the node's location names has its prefix
+removed and is resolved under the root of the node's stream (links included). It
+must stay inside that root; ``..``, an absolute path and a link that leads out
+are errors, and the file outside is not read (:need:`SEG-SREQ-162`). A path
+inside the root of another stream is outside this one. Then the line each location names must contain the symbol as a
 whole identifier: ``line`` and ``declline`` in the declaration file, and
 ``bodystart`` in the body file, never ``bodyend`` (:need:`SEG-SREQ-175`). A location
 that Doxygen left stale, pointing at another function's lines, is refused
@@ -106,19 +129,34 @@ content. ADR-0011 fixes where each run starts and ends:
      - ``bodystart``
      - ``bodyend``
    * - TestSpecification, ``specHash``
-     - the opener of the comment above the test
+     - the opener of the comment the search for a test finds above it
      - the closer of that comment
    * - TestSpecification, ``implHash``
      - ``bodystart``
      - ``bodyend``
 
-The documentation comment is found from the line above the declaration,
-stepping over ``#if``, ``#ifdef`` and ``#ifndef`` lines only. The next line
-must end the comment with ``*/``, and its opener must be ``/**`` or ``/*!``. A
-blank line, a plain comment or code there means the node has no documentation
-comment, an error and never an empty hash (:need:`SEG-SREQ-169`). A guard line between
-the comment and the declaration lies inside the span; one above the comment lies
-outside. When the end of a declaration is sought, text in comments is skipped,
+The documentation comment of an Implementation is found from the line above the
+declaration, stepping over ``#if``, ``#ifdef`` and ``#ifndef`` lines only. The
+next line must end the comment with ``*/``, and its opener must be ``/**`` or
+``/*!``. A blank line, a plain comment or code there means the node has no
+documentation comment, an error and never an empty hash
+(:need:`SEG-SREQ-169`). A guard line between the comment and the declaration lies
+inside the span; one above the comment lies outside.
+
+The search for a test is wider, as Doxygen attaches a comment to the next
+member (:need:`SEG-SREQ-166`). From the line above the test, it steps over blank
+lines, over conditional lines (``#if``, ``#ifdef``, ``#ifndef``, ``#elif``,
+``#else`` and ``#endif``) and over plain comments. A plain comment is a block
+comment that is not a documentation comment, with only white space before its
+opener on its line. The first other line must end a documentation comment. Code,
+any other directive, a line comment or the top of the file there means the test
+has no documentation comment, an error and never an empty hash
+(:need:`SEG-SREQ-283`). The span runs from the opener to the closer, so the lines
+stepped over lie outside it and changing them changes no hash. The search does
+not read the text of the comment. A test that loses its own comment can
+therefore take a group comment above it, when only such lines lie between.
+A test whose member Doxygen finds in one branch of a conditional, with its
+comment above the other branch, is still an error, because code lies between. When the end of a declaration is sought, text in comments is skipped,
 and a ``{`` at parenthesis depth zero before the ``;``, an unbalanced ``)`` or
 no ``;`` at all is an error: such a declaration is not one this rule can end. A
 body that Doxygen records as ending at ``-1`` has no lines and is an error too.
@@ -138,11 +176,13 @@ The anchors
 -----------
 
 Each hash is supplied with an anchor of three parts, naming where its bytes
-came from: the configured repository name; the file as Doxygen names it, which
-for an ``apiHash`` is the declaration file and for a ``bodyHash`` or
-``implHash`` the body file; and the locator ``symbol:<name>#api``, ``#body``,
-``#spec`` or ``#impl`` (:need:`SEG-SREQ-171` to :need:`SEG-SREQ-174`). No line number is
-recorded, so moving a function within its file changes no anchor.
+came from: the configured name of the stream's repository; the path of the file
+inside that repository (:need:`SEG-SREQ-281`), which is the file as Doxygen names
+it with the prefix removed, and which for an ``apiHash`` is the declaration file
+and for a ``bodyHash`` or ``implHash`` the body file; and the locator
+``symbol:<name>#api``, ``#body``, ``#spec`` or ``#impl`` (:need:`SEG-SREQ-171` to
+:need:`SEG-SREQ-174`). No line number is recorded, so moving a function within its
+file changes no anchor.
 
 Errors
 ------
@@ -156,12 +196,17 @@ Doxygen directory that is missing or a file of it that does not parse. The
 export checks are the requirements reader's, shared through one private helper.
 
 Everything that needs a location or a source is checked when
-:meth:`~affirmatrix.sources.content.CSourceExtractor.nodes` reaches the node,
-and the message names the need. The stream raises there and never skips the
-node, so it is never short; the records before the failing node have been
-supplied already. A consumer that writes as it reads could leave half a graph
-behind, so it must consume the whole stream before it writes, as the drift
-derivation consumes both record streams completely.
+:meth:`~affirmatrix.sources.content.CSourceExtractor.nodes` reaches the node.
+A node that fails does not stop the pass and is never skipped. The records of
+the other nodes are supplied as they are reached. At the end of the stream the
+extractor raises one :class:`~affirmatrix.sources.content.UnsuppliedNodesError`
+that names every node it cannot supply (:need:`SEG-SREQ-282`). The first line
+of its message gives the count. Each next line holds one need, its symbol and
+its reason, so a reader finds one need on one line. The same facts are in the
+``failures`` attribute. The stream is never silently short. A consumer that
+writes as it reads could leave half a graph behind, so it must consume the whole
+stream before it writes, as the drift derivation consumes both record streams
+completely.
 
 Reading the sources
 -------------------
@@ -169,8 +214,8 @@ Reading the sources
 Each source file is read once for one pass of ``nodes()``, so every node of that
 pass sees the same bytes; a second pass reads again. The functions that cut the
 spans are public so that an auditor can call them without building an
-extractor: ``split_lines``, ``span``, ``find_comment``, ``declaration_end`` and
-``head_end``.
+extractor: ``split_lines``, ``span``, ``find_comment``, ``find_test_comment``,
+``declaration_end`` and ``head_end``.
 
 The Python binding
 ------------------

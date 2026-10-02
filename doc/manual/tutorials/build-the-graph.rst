@@ -64,6 +64,7 @@ Check the graph
 .. code-block:: console
 
    $ affirmatrix graph check
+   checked: case at case
    nodes by kind: Implementation 79, Requirement 139, TestSpecification 10
    edges by kind: Implements 141, Refines 128, Verifies 10
    pending: 279
@@ -88,6 +89,10 @@ The same report, structured rather than rendered for a person to read:
 
    $ affirmatrix graph check --json
    {
+     "checked": {
+       "kind": "case",
+       "location": "case"
+     },
      "edgesByKind": {
        "Implements": 141,
        "Refines": 128,

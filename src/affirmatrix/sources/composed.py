@@ -17,17 +17,21 @@ are being taken is already a :class:`~affirmatrix.sources.SourceError`.
   when no reader is configured.
 * Otherwise the requirements reader (when ``producer.requirements`` is set),
   then the content extractor (when ``producer.implementations`` or
-  ``producer.specifications`` is set), chained in that order. Both anchor every
-  record to the repository ``producer.repository`` names, which must be a key
-  of ``repositories``.
+  ``producer.specifications`` is set), chained in that order. Each reader has
+  one repository: the one its own block names, else the one
+  ``producer.repository`` names. It must be a key of ``repositories``, and it is
+  the repository the reader anchors every record to and reads its paths in. A
+  reader with none, or with one that is not a key, is refused, and the message
+  names the reader by the name of its block.
 * The configuration loader takes every relative path from the directory of the
-  file, but the requirements reader wants its source directory relative to the
-  repository, because an anchor's path is repository-relative. The source
-  directory is therefore re-derived as its path relative to the repository's
-  path (a lexical computation: nothing is opened, and the directory need not
-  exist), and a source directory that does not lie under the repository is
-  refused. The extractor's root is the repository's path itself, since Doxygen
-  names files relative to it.
+  file, but the requirements reader wants its source directory, and each file
+  of its source map, relative to the reader's repository, because an anchor's
+  path is repository-relative. Each is therefore re-derived as its path
+  relative to the repository's path (a lexical computation: nothing is opened,
+  and the path need not exist), and one that does not lie under the repository
+  is refused. The extractor reads each of its streams in that stream's
+  repository path, since Doxygen names files relative to it, after the
+  stream's prefix is removed.
 * The run bundles the caller names (``bundles``) are the evidence view. They
   go to one outcome extractor, chained last, which reads and checks every one
   of them (SEG-SREQ-229). With none named, no extractor is built, no bundle is
@@ -46,10 +50,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from affirmatrix.config import Config
+from affirmatrix.config import Config, ProducerConfig
 from affirmatrix.records import EdgeRecord, NodeRecord, RecordSource
 from affirmatrix.sources import SourceError
-from affirmatrix.sources.content import CSourceExtractor
+from affirmatrix.sources.content import CSourceExtractor, Placement
 from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
 from affirmatrix.sources.reqs import RequirementsReader
 from affirmatrix.sources.store import StoreLoader
@@ -111,11 +115,11 @@ def from_config(config: Config, *, bundles: Sequence[Path] = ()) -> RecordSource
     :implements: SEG-SREQ-235
 
     Raises :class:`~affirmatrix.sources.SourceError` when no producer is
-    configured, when ``producer.repository`` is missing or not a configured
-    repository, when the requirements source directory does not lie under
-    that repository, when bundles are named without ``producer.specifications``,
-    and (from the readers and the outcome extractor) when an input cannot be
-    read.
+    configured, when a reader has no repository or one that is not a configured
+    repository, when the requirements source directory or a file of its source
+    map does not lie under the reader's repository, when bundles are named
+    without ``producer.specifications``, and (from the readers and the outcome
+    extractor) when an input cannot be read.
     """
     producer = config.producer
     if bundles and (producer is None or producer.specifications is None):
@@ -135,37 +139,52 @@ def from_config(config: Config, *, bundles: Sequence[Path] = ()) -> RecordSource
             )
         return StoreLoader(root=config.producer_root)
 
-    name = producer.repository
-    if name is None:
-        raise SourceError(
-            "producer.repository is not set; the configured readers anchor their "
-            "records to a named repository"
-        )
-    repository_path = config.repository(name)
-    if repository_path is None:
-        known = ", ".join(sorted(config.repositories)) or "none"
-        raise SourceError(
-            f"producer.repository {name!r} is not a configured repository (configured: {known})"
-        )
-
     members: list[RecordSource] = []
     if producer.requirements is not None:
         requirements = producer.requirements
+        placement = _placement(config, producer, "requirements", requirements.repository)
+        source_directory = None
+        source_map = None
+        if requirements.source is not None:
+            source_directory = _under(
+                requirements.source, placement, "producer.requirements.source"
+            )
+        if requirements.source_map is not None:
+            source_map = {
+                docname: _under(
+                    path, placement, f"producer.requirements.source-map entry {docname!r}"
+                )
+                for docname, path in requirements.source_map.items()
+            }
         members.append(
             RequirementsReader(
                 export=requirements.export,
                 types=requirements.types,
-                repository=name,
-                source_directory=_under(requirements.source, repository_path, name),
+                repository=placement.repository,
+                source_directory=source_directory,
+                source_map=source_map,
+                parent_field=requirements.parent_field,
             )
         )
     if content_configured:
         members.append(
             CSourceExtractor(
-                repository_path,
-                repository=name,
                 implementations=producer.implementations,
                 specifications=producer.specifications,
+                implementation_placement=(
+                    None
+                    if producer.implementations is None
+                    else _placement(
+                        config, producer, "implementations", producer.implementations.repository
+                    )
+                ),
+                specification_placement=(
+                    None
+                    if producer.specifications is None
+                    else _placement(
+                        config, producer, "specifications", producer.specifications.repository
+                    )
+                ),
             )
         )
     if bundles and producer.specifications is not None:
@@ -180,19 +199,47 @@ def from_config(config: Config, *, bundles: Sequence[Path] = ()) -> RecordSource
     return ComposedProducer(members)
 
 
-def _under(source: Path, repository_path: Path, name: str) -> Path:
+def _placement(config: Config, producer: ProducerConfig, block: str, own: str | None) -> Placement:
+    """The repository of the reader ``block``: its own, else the default; or a refusal.
+
+    The refusal names the reader by the name of its block in the configuration.
+
+    :implements: SEG-SREQ-286
+    :implements: SEG-SREQ-292
+    """
+    if own is not None:
+        name, origin = own, f"producer.{block}.repository"
+    elif producer.repository is not None:
+        name, origin = producer.repository, "producer.repository"
+    else:
+        raise SourceError(
+            f"producer.repository is not set and the {block} reader names no repository of its "
+            f"own (producer.{block}.repository); a configured reader anchors its records to "
+            "a named repository"
+        )
+    path = config.repository(name)
+    if path is None:
+        known = ", ".join(sorted(config.repositories)) or "none"
+        raise SourceError(
+            f"{origin} {name!r} is not a configured repository "
+            f"(reader: {block}; configured: {known})"
+        )
+    return Placement(name, path)
+
+
+def _under(source: Path, placement: Placement, what: str) -> Path:
     """``source`` relative to the repository's path; refused when it lies outside."""
     try:
-        relative = Path(os.path.relpath(source, repository_path))
+        relative = Path(os.path.relpath(source, placement.root))
     except ValueError as error:
         raise SourceError(
-            f"producer.requirements.source {source} cannot be made relative to "
-            f"repository {name!r} at {repository_path}: {error}"
+            f"{what} {source} cannot be made relative to "
+            f"repository {placement.repository!r} at {placement.root}: {error}"
         ) from error
     if relative.parts[:1] == ("..",):
         raise SourceError(
-            f"producer.requirements.source {source} does not lie under repository "
-            f"{name!r} at {repository_path}"
+            f"{what} {source} does not lie under repository "
+            f"{placement.repository!r} at {placement.root}"
         )
     return relative
 

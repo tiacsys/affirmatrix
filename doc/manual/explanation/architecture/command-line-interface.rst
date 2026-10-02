@@ -59,13 +59,19 @@ store) apply. Absent all of them, or when a configured input cannot be read, the
 command exits 2: it was asked to judge something with no second stream to
 compare against.
 
-The readers anchor every record to the repository ``producer.repository``
-names, by name and by repository-relative path. The configuration file's
-paths are all taken from the file's directory, so the composition re-derives
-the requirements source directory relative to the repository's path. A source
-directory that does not lie under the repository, a ``producer.repository``
-that is missing or not in ``repositories``, an unreadable export and a source
-file that cannot be read are each a request it could not judge (exit 2).
+Each reader anchors its records to one repository, by name and by
+repository-relative path. That is the repository its own block names with
+``repository``, or else the one ``producer.repository`` names
+(:need:`SEG-SREQ-286`). The configuration file's paths are all taken from the
+file's directory, so the composition re-derives the requirements source
+directory, or each file of the source map, relative to the reader's repository.
+A source path that does not lie under the repository, a reader with no
+repository, a repository that is not in ``repositories``, an unreadable export
+and a source file that cannot be read are each a request it could not judge
+(exit 2). The message names the reader by the name of its block:
+``requirements``, ``specifications`` or ``implementations`` (:need:`SEG-SREQ-292`).
+A content extractor that cannot supply some nodes is the same request, and its
+message names every such node, so one run shows every repair to make.
 The configuration names no run bundle. A ``producer`` block that holds the key
 ``outcomes`` is refused when the file is read (exit 2). The operator names the
 bundles with ``--bundle`` when a command runs, so a new run is a new option
@@ -212,12 +218,20 @@ exactly these three values:
 content, so its own rule is simpler than the others': 0 while every
 declared schema is present and the producer is readable, 1 otherwise —
 never 2, since inspecting a case is always something ``case check`` can do.
+When the producer cannot be read, ``case check`` gives the reason the library
+gave (:need:`SEG-SREQ-290`): a line ``producer reason`` in the text, and the key
+``producerReason`` in the structured rendering, which is ``null`` for a readable
+producer.
 
 A refusal always renders the library's own report — a ``GraphError``'s
 message, the affirmation recorder's reason per non-affirmable edge, a
 blocked package's coverage diagnostics — never a rewording of it. A refused
 ``graph check`` prints no count of anything, the one place a refusal's
-rendering is *narrower* than a success's rather than merely present.
+rendering is *narrower* than a success's rather than merely present. A report
+that is not a refusal names what it checked by its location
+(:need:`SEG-SREQ-291`): the root of the case, or the path given to ``--current``.
+The first line of the text does so, and the structured rendering carries the
+key ``checked`` with the kind of the stream and its ``location``.
 ``--json`` on every read-only verb (``case check``, ``graph check``,
 ``graph status``, ``edge show``, ``proof check``) prints the same report as
 a structured document; for ``proof check`` this is exactly

@@ -46,23 +46,29 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     """Report the case's five judgements.
 
     :implements: SEG-SREQ-071
+    :implements: SEG-SREQ-290
 
     Layout and schema set are read whether or not the case is otherwise
     readable; record counts default to zero for a case that is not yet
     self-describing rather than propagating that refusal, since a fresh
-    root reporting zero of everything is itself the honest report.
+    root reporting zero of everything is itself the honest report. A producer
+    that cannot be read is reported with the reason the library gave, as
+    ``producerReason`` in the structured rendering (``null`` when the
+    producer is readable) and as a line of its own in the text.
     """
     layout = sorted(store.layout())
     missing_schemas = sorted(store.missing_schemas())
     counts = _record_counts(store)
     config_found = (args.config_path is not None and args.config_path.is_file())
-    producer_readable = _producer_readable(args, config)
+    producer_reason = _producer_unreadable_reason(args, config)
+    producer_readable = producer_reason is None
     report = {
         "layout": layout,
         "missingSchemas": missing_schemas,
         "recordCounts": counts,
         "configurationFound": config_found,
         "producerReadable": producer_readable,
+        "producerReason": producer_reason,
     }
     if args.json:
         _outcome.render_json(report)
@@ -77,6 +83,8 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
         print(f"record counts: {_outcome.counts_display(shown)}")
         print(f"configuration found: {config_found}")
         print(f"producer readable: {producer_readable}")
+        if producer_reason is not None:
+            print(f"producer reason: {producer_reason}")
     healthy = not missing_schemas and producer_readable
     return _outcome.exit_for(_outcome.POSITIVE if healthy else _outcome.NEGATIVE)
 
@@ -210,13 +218,14 @@ def _record_counts(store: AffirmationStore) -> dict[str, int]:
         return {"nodes": 0, "edges": 0, "reviewEvents": 0}
 
 
-def _producer_readable(args: argparse.Namespace, config: Config) -> bool:
+def _producer_unreadable_reason(args: argparse.Namespace, config: Config) -> str | None:
+    """The reason the producer cannot be read, in the library's own words, or ``None``."""
     try:
         current = _judgement.resolve_current(args.current, config)
         list(current.nodes())
-    except (_judgement.JudgementError, SourceError):
-        return False
-    return True
+    except (_judgement.JudgementError, SourceError) as error:
+        return str(error)
+    return None
 
 
 def _report_refusal(message: str, status: int) -> int:

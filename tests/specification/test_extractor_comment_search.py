@@ -76,7 +76,6 @@ def _expected(root: Path, cases) -> dict[str, bytes]:
     return {case: support.sha(support.comment_run(lines, f"S-{case}")) for case in cases}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-166: a blank line, #elif, #else, #endif stop it")
 def test_a_spechash_steps_over_blank_lines_and_conditional_lines(tmp_path: Path) -> None:
     """A specHash steps over blank lines and conditional lines above the test.
 
@@ -94,7 +93,6 @@ def test_a_spechash_steps_over_blank_lines_and_conditional_lines(tmp_path: Path)
     assert _spec_digests(_tests(tmp_path, cases), cases) == _expected(support.REPOS, cases)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-166: a plain comment stops the search")
 def test_a_spechash_steps_over_plain_comments(tmp_path: Path) -> None:
     """A specHash steps over plain block comments above the test.
 
@@ -113,7 +111,6 @@ def test_a_spechash_steps_over_plain_comments(tmp_path: Path) -> None:
     assert _spec_digests(_tests(tmp_path, cases), cases) == _expected(support.REPOS, cases)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-166: the lines between are not stepped over")
 def test_the_lines_stepped_over_are_outside_the_spechash(tmp_path: Path) -> None:
     """The lines stepped over lie outside the specHash.
 
