@@ -47,7 +47,8 @@ command is invoked, and their identity is fixed by the proof.
 - ``graph status``, ``proof check`` and ``proof generate`` take each run
   bundle as an option, ``--bundle PATH``, which may be given more than once.
   The configuration names no run bundle and no digest. The other commands
-  read no bundle, as before.
+  read no bundle, as before. A configuration that names a run is refused with
+  exit status 2.
 - No digest is expected before a proof. The tool computes the digest of each
   bundle it reads, by the rule above, and the proof records the digest of
   every bundle it used. Until a proof fixes it, the identity of a bundle does
