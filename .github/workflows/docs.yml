@@ -1,20 +1,19 @@
 # Builds the documentation and publishes it to GitHub Pages
-# (https://tobiaskaestner.github.io/safety-evidence-graph/).
+# (https://tiacsys.github.io/affirmatrix/).
 #
 # - Pull request: test run, build and checks only.
-# - Push to tool, or a manual run on tool: the same, then deploy.
+# - Push to main, or a manual run on main: the same, then deploy.
 #
 # The test report shows the test run of this job, so a failing test run
 # stops the job and nothing is published.
 #
-# One-time repository settings: Settings > Pages > Source = "GitHub Actions";
-# tool is the default branch.
+# One-time repository setting: Settings > Pages > Source = "GitHub Actions".
 
 name: Documentation
 
 on:
   push:
-    branches: [tool]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -27,7 +26,7 @@ concurrency:
 
 env:
   # Every cross-document link is written against this URL.
-  DOC_BASE_URL: https://tobiaskaestner.github.io/safety-evidence-graph
+  DOC_BASE_URL: https://tiacsys.github.io/affirmatrix
 
 jobs:
   build:
@@ -110,7 +109,7 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/tool'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-24.04
     permissions:

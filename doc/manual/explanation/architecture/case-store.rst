@@ -16,12 +16,16 @@ branch cannot touch the case at all. A commit to the lineage by an authorised
 committer is a store act; the kind of store act that introduces review events
 is an affirmation.
 
-A fresh clone has no case. Building the tool and running its suite need none;
-verifying the evidence requires fetching the branch and adding the worktree:
+A fresh clone has no case. Building the tool and running its suite need none.
+The published repository carries the code branch only; the maintainer keeps
+the ``case`` lineage in a working repository of their own. A clone starts a
+lineage of its own and adds the worktree (see the installation tutorial):
 
 .. code-block:: console
 
-   git fetch origin case
+   git switch --orphan case
+   git commit --allow-empty -m "case: initialise the affirmation lineage"
+   git switch main
    git worktree add case case
 
 The graph's state is the committed state of that lineage; anything

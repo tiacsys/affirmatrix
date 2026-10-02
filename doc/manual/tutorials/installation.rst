@@ -14,7 +14,7 @@ Install the package
 
 .. code-block:: console
 
-   $ git clone <repository-url> affirmatrix && cd affirmatrix
+   $ git clone https://github.com/tiacsys/affirmatrix.git && cd affirmatrix
    $ python -m venv .venv
    $ .venv/bin/pip install -e .
    $ .venv/bin/affirmatrix --version
@@ -28,16 +28,19 @@ Mount the case
 --------------
 
 The evidence graph — the *case* — is not part of the code branch. Its
-persisted state is an independent commit lineage in the same repository
+persisted state is an independent commit lineage
 (see :doc:`../explanation/architecture/case-store`), so a fresh clone has
-code but no evidence. Mount it:
+code but no evidence. The published repository carries the code branch
+only, so you start the lineage yourself and mount it:
 
 .. code-block:: console
 
-   $ git fetch origin case
+   $ git switch --orphan case
+   $ git commit --allow-empty -m "case: initialise the affirmation lineage"
+   $ git switch main
    $ git worktree add case case
 
-``case/`` now holds the store: node and edge records, review events,
+``case/`` is where the store lives: node and edge records, review events,
 proofs. Everything the tool writes lands here as plain files; everything
 that makes those files *count* is a git commit you make yourself. That
 division is the deepest rule in the design — the tool computes, a human
@@ -46,16 +49,8 @@ affirms — and you will feel it in every tutorial that follows.
 Starting from nothing
 ---------------------
 
-If you were adopting affirmatrix for your own project instead, there would
-be no lineage to fetch. The bootstrap is deliberately git-native rather
-than hidden behind the tool:
-
-.. code-block:: console
-
-   $ git switch --orphan case
-   $ git commit --allow-empty -m "case: initialise the affirmation lineage"
-   $ git switch main
-   $ git worktree add case case
+The same four commands start a case for your own project. The bootstrap
+is deliberately git-native rather than hidden behind the tool.
 
 The tool never runs git (ADR-0008, ADR-0009): there is no ``affirmatrix
 init`` that would do this invisibly. What the tool does once a worktree
