@@ -206,6 +206,22 @@ class RequirementsReader:
             locator=f"need:{self._identifier(need)}",
         )
 
+    def content(self, local_id: str, hash_name: str) -> bytes | None:
+        """The canonical form from which the reader computed the hash of one requirement.
+
+        :implements: SEG-SREQ-311
+
+        The bytes are the canonical form of :func:`canonical_form`, verbatim
+        (not a readable rendering of the need): the exact input of the hash.
+        They are built from the export that the reader holds since it was
+        constructed, so the call opens no file. ``None`` for an identifier that
+        is not a need of a configured type, and for any name but ``contentHash``.
+        """
+        need = self._needs.get(local_id)
+        if hash_name != _CONTENT_HASH or need is None or need.get("type") not in self.types:
+            return None
+        return canonical_form(need, self.parent_field)
+
     def nodes(self) -> Iterator[NodeRecord]:
         """A Requirement record per need of a configured type, in export order."""
         for need in self._configured():

@@ -27,10 +27,6 @@ from . import node_show_support as support
 pytestmark = support.requires_git
 
 
-def _reason(claim: str) -> str:
-    return f"{claim}: there is no node show verb, so the command cannot be run"
-
-
 def _synced_with_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], data: bytes
 ) -> base.Fixture:
@@ -42,7 +38,6 @@ def _synced_with_file(
     return fixture
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-328"))
 def test_node_show_gives_valid_utf8_content_as_text_in_json(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -66,7 +61,6 @@ def test_node_show_gives_valid_utf8_content_as_text_in_json(
     assert support.hex_of(support.content_bytes(entry)) == entry[support.KEY_CURRENT]
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-328"))
 def test_node_show_gives_other_content_as_base64_in_json(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -92,7 +86,6 @@ def test_node_show_gives_other_content_as_base64_in_json(
     assert support.hex_of(data) == entry[support.KEY_CURRENT]
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-329"))
 def test_node_show_exits_with_status_2_for_an_identifier_the_current_stream_holds_twice(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -124,7 +117,6 @@ def test_node_show_exits_with_status_2_for_an_identifier_the_current_stream_hold
     assert base.snapshot(fixture.case) == before
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-330"))
 def test_node_show_reports_no_current_content_for_a_hash_only_the_case_records(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -155,7 +147,6 @@ def test_node_show_reports_no_current_content_for_a_hash_only_the_case_records(
     assert support.NO_CURRENT_CONTENT not in shown.block_text("specHash").lower()
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-331"))
 def test_node_show_reports_a_repository_that_cannot_be_read_with_the_reason(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

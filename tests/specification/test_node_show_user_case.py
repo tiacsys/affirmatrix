@@ -29,11 +29,6 @@ pytestmark = support.requires_git
 CHANGED = "a new statement of REQ-B\nwith a second line\n"
 
 
-def _reason(claim: str) -> str:
-    return f"{claim}: there is no node show verb, so the operator cannot ask the question"
-
-
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-313"))
 def test_node_show_answers_what_changed_and_where_the_recorded_content_was_read(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -73,7 +68,6 @@ def test_node_show_answers_what_changed_and_where_the_recorded_content_was_read(
     assert support.show(where, "REQ-C", capsys).status == 0
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-317"))
 def test_node_show_gives_no_fallback_revision_for_a_node_record_with_none(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

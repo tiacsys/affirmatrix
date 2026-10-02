@@ -184,10 +184,22 @@ and for a ``bodyHash`` or ``implHash`` the body file; and the locator
 :need:`SEG-SREQ-174`). No line number is recorded, so moving a function within its
 file changes no anchor.
 
+The bytes behind a hash
+-----------------------
+
+The extractor meets the protocol :class:`~affirmatrix.records.ContentSource`
+(:need:`SEG-SREQ-311`). The method ``content(local_id, hash_name)`` gives the
+span that the hash covers. It finds the need in the stream. It locates the member
+in the Doxygen index, which exists since the extractor was built. Then it cuts
+the span from the source files as they are now. ``nodes()`` and ``content()`` read through
+one function, so a hash and its bytes cannot follow two rules. A call reads at
+most three source files and keeps nothing. The answer is ``None`` for an unknown
+identifier and for a name that is not one of the stream's two hashes.
+
 Errors
 ------
 
-:class:`~affirmatrix.sources.content.ExtractorError` is raised in two places.
+:class:`~affirmatrix.sources.content.ExtractorError` is raised in three places.
 When the extractor is built it refuses what the exports and the Doxygen trees
 alone show, before any record is supplied: an export that cannot be read, that
 holds no or several versions or no ``needs``, or that carries a build timestamp
@@ -208,11 +220,15 @@ writes as it reads could leave half a graph behind, so it must consume the whole
 stream before it writes, as the drift derivation consumes both record streams
 completely.
 
+The third place is ``content()``. A node that cannot be located or cut raises an
+``UnsuppliedNodesError`` that holds this one failure.
+
 Reading the sources
 -------------------
 
 Each source file is read once for one pass of ``nodes()``, so every node of that
-pass sees the same bytes; a second pass reads again. The functions that cut the
+pass sees the same bytes; a second pass reads again, and so does each call of
+``content()``. The functions that cut the
 spans are public so that an auditor can call them without building an
 extractor: ``split_lines``, ``span``, ``find_comment``, ``find_test_comment``,
 ``declaration_end`` and ``head_end``.

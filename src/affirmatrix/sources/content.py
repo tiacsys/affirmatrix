@@ -767,6 +767,34 @@ class CSourceExtractor:
                 raise ExtractorError(f"{path} cannot be read: {cause}") from cause
         return files[path]
 
+    def content(self, local_id: str, hash_name: str) -> bytes | None:
+        """The bytes of the span that one hash of one node covers.
+
+        :implements: SEG-SREQ-311
+
+        The same span :meth:`nodes` hashed. It is located in the Doxygen index that
+        the extractor holds since it was constructed. Then it is cut from the
+        source files as they are now. Each call reads the source files that the
+        node's two spans need (at most three) and keeps nothing, so a call is as
+        current as the files. The answer is ``None`` for an unknown identifier
+        and for a name that is not one of the stream's two hashes. A node that
+        cannot be located or cut raises :class:`UnsuppliedNodesError`. It holds
+        the one failure and its reason, as :meth:`nodes` does for the whole pass.
+        """
+        for stream in self._streams:
+            need = stream.needs.get(local_id)
+            if need is None:
+                continue
+            if hash_name not in stream.hash_names:
+                return None
+            symbol = need[stream.symbol_field]
+            try:
+                return self._spans(stream, need, symbol, {})[hash_name][1]
+            except ExtractorError as error:
+                failure = NodeFailure(stream.label, local_id, symbol, " ".join(str(error).split()))
+                raise UnsuppliedNodesError([failure]) from error
+        return None
+
     def _node(
         self,
         stream: _Stream,
@@ -775,7 +803,26 @@ class CSourceExtractor:
         symbol: str,
         files: dict[Path, list[bytes]],
     ) -> NodeRecord:
-        """The record of one need: locate, resolve, check, cut, hash, anchor."""
+        """The record of one need: its spans, hashed and anchored."""
+        return NodeRecord(
+            local_id=need_id,
+            kind=stream.kind,
+            content_anchors=self._anchors(stream, symbol, self._spans(stream, need, symbol, files)),
+        )
+
+    def _spans(
+        self,
+        stream: _Stream,
+        need: Mapping[str, Any],
+        symbol: str,
+        files: dict[Path, list[bytes]],
+    ) -> dict[str, tuple[str, bytes]]:
+        """The two spans of one need, by hash name: locate, resolve, check, cut.
+
+        Each value is the path inside the repository that the span was read from,
+        and its bytes. Both :meth:`nodes` and :meth:`content` read through this
+        one function, so a hash and the bytes behind it cannot come from two rules.
+        """
         member = self._locate(stream, need, symbol)
         location = member.location
         kind = member.kind
@@ -830,15 +877,10 @@ class CSourceExtractor:
             api_first, api_last = _same_file_api(api_lines, body_first, body_last)
 
         api_name, body_name = stream.hash_names
-        spans = {
+        return {
             api_name: (inside[api_path], span(api_lines, api_first, api_last)),
             body_name: (inside["bodyfile"], span(body_lines, body_first, body_last)),
         }
-        return NodeRecord(
-            local_id=need_id,
-            kind=stream.kind,
-            content_anchors=self._anchors(stream, symbol, spans),
-        )
 
     @staticmethod
     def _anchors(

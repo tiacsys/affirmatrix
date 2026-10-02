@@ -36,11 +36,6 @@ from . import node_show_support as support
 pytestmark = support.requires_git
 
 
-def _reason(claim: str, what: str) -> str:
-    return f"{claim}: there is no node show verb, so the command does not {what}"
-
-
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-313", "show a node"))
 def test_node_show_resolves_a_node_by_its_identifier(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -73,7 +68,6 @@ def test_node_show_resolves_a_node_by_its_identifier(
     assert "REQ-C" in other.text and "REQ-B" not in other.text
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-314", "compare each hash"))
 def test_node_show_compares_every_named_hash_of_the_node(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -106,7 +100,6 @@ def test_node_show_compares_every_named_hash_of_the_node(
     )
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-315", "show the current content"))
 def test_node_show_shows_the_current_content_of_every_hash(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -143,7 +136,6 @@ def test_node_show_shows_the_current_content_of_every_hash(
             assert support.NONE_SUPPLIED not in shown.block_text(name).lower()
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-316", "say that no content is supplied"))
 def test_node_show_says_when_the_source_supplies_no_content(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -178,7 +170,6 @@ def test_node_show_says_when_the_source_supplies_no_content(
         assert shown.shown_content("contentHash") == []
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-317", "show the recorded revision"))
 def test_node_show_reports_the_recorded_revision_of_the_recorded_anchors_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -212,7 +203,6 @@ def test_node_show_reports_the_recorded_revision_of_the_recorded_anchors_reposit
         assert implemented in line and required not in line
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-317", "say that no revision is recorded"))
 def test_node_show_says_when_the_case_records_no_extraction_revision(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -244,7 +234,6 @@ def test_node_show_says_when_the_case_records_no_extraction_revision(
     assert shown.entry("contentHash")[support.KEY_RECORDED_REVISION] == revision
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-318", "show the checkout's revision"))
 def test_node_show_reports_the_revision_the_current_anchors_repository_is_at(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -275,7 +264,6 @@ def test_node_show_reports_the_revision_the_current_anchors_repository_is_at(
     assert first in line and second not in line
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-318", "say that none is configured"))
 def test_node_show_says_when_no_repository_is_configured_for_the_current_anchor(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -305,7 +293,6 @@ def test_node_show_says_when_no_repository_is_configured_for_the_current_anchor(
     assert shown.entry("contentHash")[support.KEY_RECORDED_REVISION] == recorded
 
 
-@pytest.mark.xfail(strict=True, reason=_reason("SEG-SREQ-319", "name the paths that differ"))
 def test_node_show_names_each_anchored_path_that_differs_from_its_commit(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
