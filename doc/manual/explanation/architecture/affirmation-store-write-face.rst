@@ -252,6 +252,7 @@ computes them. Until then the store refuses every proof document kind, because
 a document with no schema cannot be shown to be valid, and writing it anyway
 would put an unvalidated file in a case that claims all of them are.
 
-*Version control.* The tool runs no git (ADR-0008). It writes files; a
-maintainer reviews the working tree and records it, and that commit is what
-turns a proposed affirmation into an affirmed one (ADR-0009).
+*Version control.* The store runs no git (ADR-0008, ADR-0010). It writes files.
+A maintainer reviews the working tree and records it, and that commit is what
+turns a proposed affirmation into an affirmed one (ADR-0009). The command line
+can read the history of those commits, and never writes it (ADR-0015).

@@ -24,7 +24,6 @@ from .provenance_support import ALICE, BOB, moment
 pytestmark = support.requires_git
 
 
-@support.red(293, "edge show names no recording commit yet")
 def test_edge_show_names_the_earliest_commit_that_holds_the_event_not_the_one_that_made_the_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -58,7 +57,6 @@ def test_edge_show_names_the_earliest_commit_that_holds_the_event_not_the_one_th
     )
 
 
-@support.red(293, "edge show names no recording commit yet")
 def test_edge_show_names_one_commit_for_every_event_that_the_commit_adds(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -86,7 +84,6 @@ def test_edge_show_names_one_commit_for_every_event_that_the_commit_adds(
         assert support.hex_prefix(start) not in shown.block_text(from_id)
 
 
-@support.red(293, "edge show names no recording commit yet")
 def test_edge_show_matches_the_whole_identifier_of_an_event(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -127,7 +124,6 @@ def test_edge_show_matches_the_whole_identifier_of_an_event(
     assert support.hex_prefix(early) not in shown.block_text(support.OTHER)
 
 
-@support.red(293, "edge show names no recording commit yet")
 def test_edge_show_does_not_take_a_reason_that_names_an_event_for_the_event(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -163,7 +159,6 @@ def test_edge_show_does_not_take_a_reason_that_names_an_event_for_the_event(
     assert support.is_found_at(shown, early, support.FROM)
 
 
-@support.red(293, "edge show names no recording commit yet")
 def test_edge_show_names_the_earliest_commit_for_an_event_removed_and_added_again(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -197,7 +192,6 @@ def test_edge_show_names_the_earliest_commit_for_an_event_removed_and_added_agai
     assert support.hex_prefix(back) not in shown.block_text()
 
 
-@support.red(293, "edge show names no recording commit yet")
 def test_edge_show_names_the_commit_of_the_last_affirmation_of_an_edge(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -228,7 +222,6 @@ def test_edge_show_names_the_commit_of_the_last_affirmation_of_an_edge(
     assert ALICE.email not in shown.block_text()
 
 
-@support.red(299, "edge show names no commit yet, so it cannot name the new one")
 def test_edge_show_names_the_new_commit_after_an_amend(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

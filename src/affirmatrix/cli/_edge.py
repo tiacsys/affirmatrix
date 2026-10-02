@@ -1,8 +1,10 @@
 """The edge noun: inspect a selection, and affirm it (SEG-SREQ-084).
 
-``edge show`` renders the per-hash comparison and, for an affirmed edge,
-recovered before-content; ``edge affirm`` records an affirmation over every
-affirmable member of a selection.
+``edge show`` renders the per-hash comparison. For an affirmed edge it also
+renders recovered before-content. For every edge that has a last affirmation it
+also says who recorded that affirmation, as the history of the case says
+(:mod:`affirmatrix.cli._provenance`). ``edge affirm`` records an affirmation over
+every affirmable member of a selection.
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ from collections.abc import Mapping
 
 from affirmatrix import affirmation, drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore
-from affirmatrix.cli import _extraction, _judgement, _outcome, _selector
+from affirmatrix.cli import _extraction, _judgement, _outcome, _provenance, _selector
 from affirmatrix.config import Config
 from affirmatrix.records import EdgeReference, LinkState
 from affirmatrix.sources import SourceError
@@ -56,6 +58,13 @@ def handle_show(args: argparse.Namespace, config: Config, store: AffirmationStor
 
     :implements: SEG-SREQ-085
     :implements: SEG-SREQ-103
+    :implements: SEG-SREQ-293
+    :implements: SEG-SREQ-303
+
+    Every row whose edge has a last affirmation also carries the provenance
+    of that affirmation, whatever the state of the edge. The history of the
+    case is read at most once for the checks of the whole case and once for
+    each event. What it holds never changes the exit status.
     """
     built, error_status = _build(args, config, store)
     if built is None:
@@ -64,7 +73,12 @@ def handle_show(args: argparse.Namespace, config: Config, store: AffirmationStor
     if not matched:
         _outcome.render_refusal("the selector matched no edge", as_json=args.json)
         return _outcome.exit_for(_outcome.INDETERMINATE)
-    rows = [_shown(built, edge, store, config, verbose=args.verbose) for edge in matched]
+    identifiers = store.latest_review_event_identifiers()
+    history = _provenance.CaseHistory(store.root, store.review_events_path())
+    rows = [
+        _shown(built, edge, store, config, history, identifiers, verbose=args.verbose)
+        for edge in matched
+    ]
     if args.json:
         _outcome.render_json({"edges": rows})
     else:
@@ -205,7 +219,16 @@ def _state_reason(edge) -> str:
     return _STATE_REASONS.get(edge.state, "not affirmable")
 
 
-def _shown(built, edge, store: AffirmationStore, config: Config, *, verbose: bool) -> dict:
+def _shown(
+    built,
+    edge,
+    store: AffirmationStore,
+    config: Config,
+    history: _provenance.CaseHistory,
+    identifiers: Mapping[EdgeReference, str],
+    *,
+    verbose: bool,
+) -> dict:
     row: dict[str, object] = {
         "from": edge.from_id,
         "to": edge.to_id,
@@ -216,8 +239,11 @@ def _shown(built, edge, store: AffirmationStore, config: Config, *, verbose: boo
         tag = _RE_AFFIRMATION_TAGS.get(edge.state)
         if tag:
             row["tag"] = tag
+    reference = EdgeReference(kind=edge.kind, from_id=edge.from_id, to_id=edge.to_id)
+    event_identifier = identifiers.get(reference)
+    if event_identifier is not None:
+        row[_provenance.KEY] = history.provenance(event_identifier)
     if edge.edge_hash is not None and edge.state is not LinkState.BROKEN:
-        reference = EdgeReference(kind=edge.kind, from_id=edge.from_id, to_id=edge.to_id)
         latest = store.latest_review_event(reference)
         if latest is not None:
             comparison = drift.compare(
@@ -275,6 +301,9 @@ def _print_shown(rows: list[dict[str, object]]) -> None:
     for row in rows:
         tag = f" [{row['tag']}]" if row.get("tag") else ""
         print(f"{row['from']} --[{row['kind']}]--> {row['to']} ({row['state']}){tag}")
+        if _provenance.KEY in row:
+            for line in _provenance.text_lines(row[_provenance.KEY]):
+                print(line)
         for item in row.get("comparison", []) or []:
             recorded = item["recorded"] if item["recorded"] is not None else "—"
             current = item["current"] if item["current"] is not None else "—"

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 
 from affirmatrix.case._errors import AffirmationStoreError
@@ -178,6 +178,11 @@ def edge_document(root: Path, kind: str) -> Path:
 def events_document(root: Path) -> Path:
     """The document that holds the case's review events."""
     return resolved_under(root, EVENTS_DIRECTORY, f"{EVENTS_DOCUMENT}{DOCUMENT_SUFFIX}")
+
+
+def events_document_name() -> PurePosixPath:
+    """The name of the events document under a case root, spelled as a repository names it."""
+    return PurePosixPath(EVENTS_DIRECTORY, f"{EVENTS_DOCUMENT}{DOCUMENT_SUFFIX}")
 
 
 def proof_document(root: Path, snapshot_id: str, document_name: str) -> Path:

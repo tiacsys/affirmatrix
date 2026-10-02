@@ -220,10 +220,13 @@ Now ask about one edge again:
 
    $ affirmatrix edge show --kind Implements --from affirmatrix.taxonomy.node_kinds --to SEG-SREQ-029
    affirmatrix.taxonomy.node_kinds --[Implements]--> SEG-SREQ-029 (active)
+     recorded in the case history: not committed
      from apiHash: fd33…a6e7 → fd33…a6e7 (matching)
      from bodyHash: edca…ab58 → edca…ab58 (matching)
      to contentHash: 82f6…7b65 → 82f6…7b65 (matching)
 
+The second line says that no commit of the case holds the review event yet.
+After the commit below, it names that commit, its committer and its date.
 Active, and each named hash of each endpoint shown recorded → current,
 matching. The digests are abbreviated; ``edge show -v`` prints them in
 full. The next tutorial is about the day one of those pairs stops

@@ -113,6 +113,9 @@ edge:
 
    $ affirmatrix edge show --current ./store-copy --kind Implements --from affirmatrix.taxonomy.propagates --to SEG-SREQ-030
    affirmatrix.taxonomy.propagates --[Implements]--> SEG-SREQ-030 (directlyOutdated) [needs re-affirmation]
+     recorded in the case history as: <your name> <your e-mail>, committed <date>
+       commit <id> "<your message>"
+       signature: none
      from apiHash: f6bd…9ccc → f6bd…9ccc (matching)
      from bodyHash: dab9…6301 → fc00…cd4c (differing)
      to contentHash: 9068…2c04 → 9068…2c04 (matching)
@@ -127,6 +130,9 @@ transitively suspect one:
 
    $ affirmatrix edge show --current ./store-copy --kind Refines --from SEG-SREQ-030 --to SEG-SYS-009
    SEG-SREQ-030 --[Refines]--> SEG-SYS-009 (transitivelySuspect)
+     recorded in the case history as: <your name> <your e-mail>, committed <date>
+       commit <id> "<your message>"
+       signature: none
      from contentHash: 9068…2c04 → 9068…2c04 (matching)
      to contentHash: 21c4…90a7 → 21c4…90a7 (matching)
 
@@ -183,6 +189,7 @@ Now ask again, over the same two copies:
    0
    $ affirmatrix edge show --case ./case-copy --current ./store-copy --kind Refines --from SEG-SREQ-030 --to SEG-SYS-009
    SEG-SREQ-030 --[Refines]--> SEG-SYS-009 (active)
+     recorded in the case history: not available
      from contentHash: 9068…2c04 → 9068…2c04 (matching)
      to contentHash: 21c4…90a7 → 21c4…90a7 (matching)
 

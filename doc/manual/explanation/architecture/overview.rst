@@ -68,7 +68,9 @@ Four things stand around the tool.
   writes, and the independent commit lineage that a human commits it to
   (:doc:`case-store`). The store never runs git; the commit is a separate act
   by someone entitled to make it, and the working tree is the review surface
-  between the two.
+  between the two. The command-line adapter reads the history of the case, to
+  say which commit recorded an affirmation (:doc:`command-line-interface`). It
+  never writes to that history.
 - **The source repositories.** Where requirements, code and test results
   live. The library never opens one. The command-line adapter reads them for
   exactly three purposes: discovering the revision a working tree is at,
@@ -211,7 +213,7 @@ things:
   checkable rather than promised.
 - ``_hashing`` is the only module that imports the hash library.
 - ``cli/_repository.py`` is the only module that imports ``subprocess``, so the
-  three repository reads are the only place git is run.
+  four repository reads are the only place git is run.
 - The record sources and the affirmation store sit below the graph and never
   import it; the store also never imports ``proof`` or ``affirmation``, which
   depend on it instead.
@@ -240,7 +242,9 @@ suspect ones. Walked through in :doc:`../../tutorials/build-the-graph` and
 :doc:`../../tutorials/detect-drift`.
 
 **Affirmation.** ``edge show`` compares an edge's endpoints with what its
-affirming review event recorded, hash by hash. ``edge affirm`` resolves the
+affirming review event recorded, hash by hash. For every edge with a last
+affirmation, it also names the commit of the case history that recorded it, and
+who made that commit. ``edge affirm`` resolves the
 judgement's inputs (role, reason, and each endpoint's revision, either given
 or discovered and checked), has the recorder compose the review event and the
 affirmed edge record, and has the store persist both. Walked through in

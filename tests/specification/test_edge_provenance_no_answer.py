@@ -44,7 +44,6 @@ def _says_nothing_of_the_history(shown: support.Shown, *absent: str) -> bool:
     return not [item for item in absent if item in shown.text or item in shown.raw]
 
 
-@support.red(300, "edge show reports no provenance yet, so no state not committed")
 def test_edge_show_reports_a_draft_event_as_not_committed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -72,7 +71,6 @@ def test_edge_show_reports_a_draft_event_as_not_committed(
     assert _says_nothing_of_the_history(shown, CAROL.email, support.hex_prefix(start))
 
 
-@support.red(300, "edge show reports no provenance yet, so no state not committed")
 def test_edge_show_does_not_fall_back_to_an_earlier_affirmation_of_a_draft_edge(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -102,7 +100,6 @@ def test_edge_show_does_not_fall_back_to_an_earlier_affirmation_of_a_draft_edge(
     assert _says_nothing_of_the_history(shown, ALICE.email, support.hex_prefix(first))
 
 
-@support.red(301, "edge show reports no provenance yet, so no state not available")
 def test_edge_show_reports_the_history_of_a_case_with_no_repository_as_not_available(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -130,7 +127,6 @@ def test_edge_show_reports_the_history_of_a_case_with_no_repository_as_not_avail
     assert support.is_found_at(control, original)
 
 
-@support.red(301, "edge show reports no provenance yet, so no state not available")
 def test_edge_show_never_answers_from_the_repository_that_holds_the_case(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -156,7 +152,6 @@ def test_edge_show_never_answers_from_the_repository_that_holds_the_case(
     assert _says_nothing_of_the_history(shown, DAN.email, support.hex_prefix(outer))
 
 
-@support.red(301, "edge show reports no provenance yet, so no state not available")
 def test_edge_show_reports_a_history_that_cannot_be_read_as_not_available(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -181,7 +176,6 @@ def test_edge_show_reports_a_history_that_cannot_be_read_as_not_available(
     assert _says_nothing_of_the_history(shown, ALICE.email)
 
 
-@support.red(301, "edge show reports no provenance yet, so it names no worktree commit")
 def test_edge_show_reads_the_history_of_a_case_that_is_a_worktree_of_another_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -216,7 +210,6 @@ def test_edge_show_reads_the_history_of_a_case_that_is_a_worktree_of_another_rep
     assert support.hex_prefix(host_commit) not in shown.text + shown.raw
 
 
-@support.red(302, "edge show reports no provenance yet, so it reports no shallow history")
 def test_edge_show_reports_a_shallow_history_with_the_identity(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -251,7 +244,6 @@ def test_edge_show_reports_a_shallow_history_with_the_identity(
         assert support.WORD_SHALLOW not in full.block_text(from_id).lower()
 
 
-@support.red(293, "edge show reports no provenance yet, for an edge in any state")
 def test_edge_show_reports_the_provenance_of_an_edge_that_is_no_longer_active(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -278,7 +270,6 @@ def test_edge_show_reports_the_provenance_of_an_edge_that_is_no_longer_active(
     assert ALICE.email in shown.block_text()
 
 
-@support.red(300, "edge show reports no provenance yet, so no state not committed")
 def test_edge_show_reports_an_event_in_a_repository_with_no_commit_as_not_committed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -304,7 +295,6 @@ def test_edge_show_reports_an_event_in_a_repository_with_no_commit_as_not_commit
     assert _says_nothing_of_the_history(shown)
 
 
-@support.red(301, "edge show reports no provenance yet, so it has no null fields")
 def test_edge_show_gives_no_signature_and_no_shallow_flag_without_a_commit(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
