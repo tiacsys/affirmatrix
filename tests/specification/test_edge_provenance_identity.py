@@ -26,7 +26,6 @@ pytestmark = support.requires_git
 BODY = "Checked the new text of the requirement.\nThe link is sound.\n"
 
 
-@support.red(294, "edge show gives no committer and no commit date yet")
 def test_edge_show_reports_the_committer_and_the_commit_date_as_the_identity(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -59,7 +58,6 @@ def test_edge_show_reports_the_committer_and_the_commit_date_as_the_identity(
     assert BOB.email not in line
 
 
-@support.red(299, "edge show names no commit and no subject line yet")
 def test_edge_show_reports_the_identifier_and_the_subject_of_the_recording_commit(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -89,7 +87,6 @@ def test_edge_show_reports_the_identifier_and_the_subject_of_the_recording_commi
     assert "Checked the new text" not in shown.block_text()
 
 
-@support.red(293, "edge show reports no provenance for an edge of a selection yet")
 def test_edge_show_reports_every_affirmed_edge_of_a_selection_with_no_option(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -126,7 +123,6 @@ def test_edge_show_reports_every_affirmed_edge_of_a_selection_with_no_option(
         assert other.email not in shown.block_text(from_id)
 
 
-@support.red(295, "edge show reports no author yet")
 def test_edge_show_reports_an_author_that_is_not_the_committer(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -158,7 +154,6 @@ def test_edge_show_reports_an_author_that_is_not_the_committer(
     assert support.line_has(shown.recorded_line(), ALICE, moment(3))
 
 
-@support.red(295, "edge show reports no provenance yet, so it has no author field to be null")
 def test_edge_show_reports_no_author_when_the_author_is_the_committer(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -186,7 +181,6 @@ def test_edge_show_reports_no_author_when_the_author_is_the_committer(
     assert support.line_has(shown.recorded_line(), ALICE, moment(3))
 
 
-@support.red(296, "edge show reports no Signed-off-by line yet")
 def test_edge_show_reports_each_signed_off_by_line_as_written_in_order(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -225,7 +219,6 @@ def test_edge_show_reports_each_signed_off_by_line_as_written_in_order(
     assert joined.index(zed.written) < joined.index(amy.written)
 
 
-@support.red(296, "edge show reports no provenance yet, so it has no list of sign-offs")
 def test_edge_show_reports_no_signed_off_by_line_when_the_message_has_none(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -249,7 +242,6 @@ def test_edge_show_reports_no_signed_off_by_line_when_the_message_has_none(
     assert shown.labelled(support.LABEL_SIGNED_OFF_BY) == []
 
 
-@support.red(294, "edge show gives no committer yet, so no mailmap rule can hold")
 def test_edge_show_reports_the_committer_as_recorded_and_applies_no_mailmap(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -279,7 +271,6 @@ def test_edge_show_reports_the_committer_as_recorded_and_applies_no_mailmap(
     assert "mapped@example.invalid" not in shown.text + shown.raw
 
 
-@support.red(295, "edge show reports no provenance yet, so it has no author field to be null")
 def test_edge_show_reports_no_author_for_the_same_person_with_another_author_date(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

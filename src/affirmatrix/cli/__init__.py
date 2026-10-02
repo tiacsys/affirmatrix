@@ -13,9 +13,13 @@ verb's outcome is the library's alone to decide (SEG-SREQ-068); this package
 renders that outcome and does no judgement of its own. One shared outcome
 vocabulary (:mod:`affirmatrix.cli._outcome`), one edge selection grammar
 (:mod:`affirmatrix.cli._selector`), one judgement-inputs resolver
-(:mod:`affirmatrix.cli._judgement`) that also holds the three read-only
-repository operations (:mod:`affirmatrix.cli._repository`), and one module
-per noun.
+(:mod:`affirmatrix.cli._judgement`), and one module per noun. The one module
+that runs git is :mod:`affirmatrix.cli._repository`. It makes four read-only
+reads. Three are in the source repositories: the revision, the cleanliness of
+the anchored paths and the before-content. One is in the repository of the case.
+That read finds the commit that recorded a review event. ``edge show`` reports
+the facts of that commit for every edge that has a last affirmation
+(:mod:`affirmatrix.cli._provenance`).
 
 Iteration-0 backlog item B19.
 """

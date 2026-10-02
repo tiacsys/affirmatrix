@@ -43,7 +43,9 @@ commits as a store act.
 **The read face, as built.** The same class presents the case back as a record
 source: ``nodes()`` and ``edges()`` satisfy the protocol structurally and
 supply the *recorded* stream, and ``review_events()`` — outside the protocol —
-returns the recorded judgements in the order they were appended. Every call
+returns the recorded judgements in the order they were appended, and
+``latest_review_event_identifiers()`` gives, for each edge, the identifier the
+events document holds for its last event, as written. Every call
 re-reads the case, validates each entry against the case's own schemas, and
 reconstructs records carrying case-local identifiers again — the minting of
 ADR-0007 undone at the one boundary that performed it. Reading writes nothing.
@@ -79,7 +81,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from importlib import resources
 from importlib.resources.abc import Traversable
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 
 from affirmatrix import taxonomy
@@ -164,6 +166,32 @@ class AffirmationStore:
                 latest = event
         return latest
 
+    def latest_review_event_identifiers(self) -> Mapping[EdgeReference, str]:
+        """The identifier of the last review event of every edge that has one.
+
+        Each identifier is the one the events document holds for the event, as
+        written. It is never minted again from the position of the event. A
+        search of the history of the case needs the text that the document
+        holds. The last event of an edge is the one that
+        :meth:`latest_review_event` chooses, by the order of appending. An edge
+        that was never affirmed has no entry. One read of the document serves
+        every edge.
+        """
+        latest: dict[EdgeReference, str] = {}
+        for identifier, event in self._identified_review_events(self._readable()):
+            latest[EdgeReference(kind=event.kind, from_id=event.from_id, to_id=event.to_id)] = (
+                identifier
+            )
+        return MappingProxyType(latest)
+
+    def review_events_path(self) -> PurePosixPath:
+        """The path of the events document under the case root, as a repository names it.
+
+        Report-only: it reads nothing. A reader that searches the history of
+        the case for a review event needs this name and does not assemble it.
+        """
+        return _layout.events_document_name()
+
     def snapshot_ids(self) -> tuple[str, ...]:
         """The identifier of every evidence package the case holds, in name order.
 
@@ -236,12 +264,19 @@ class AffirmationStore:
                 yield _documents.edge_record(entry, kind, document)
 
     def _review_event_records(self, schemas: _validation.SchemaSet) -> Iterator[ReviewEvent]:
+        for _, event in self._identified_review_events(schemas):
+            yield event
+
+    def _identified_review_events(
+        self, schemas: _validation.SchemaSet
+    ) -> Iterator[tuple[str, ReviewEvent]]:
+        """Each review event with the identifier its entry holds, in the order appended."""
         document = _layout.events_document(self.root)
         for entry in _documents.read_entries(document):
             _validation.validate_entry(
                 schemas, entry, _layout.EVENT_SCHEMA, f"{document} holds {entry['id']}, which"
             )
-            yield _documents.review_event_record(entry, document)
+            yield str(entry["id"]), _documents.review_event_record(entry, document)
 
     def write_nodes(self, records: Iterable[NodeRecord]) -> None:
         """Persist node records, one document rewritten per kind touched.

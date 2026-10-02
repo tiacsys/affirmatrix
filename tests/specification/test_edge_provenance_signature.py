@@ -25,7 +25,6 @@ from .provenance_support import ALICE, moment
 pytestmark = support.requires_git
 
 
-@support.red(297, "edge show reports no signature status yet")
 def test_edge_show_reports_an_unsigned_commit_as_signature_none(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -50,7 +49,6 @@ def test_edge_show_reports_an_unsigned_commit_as_signature_none(
     assert support.normal("none") in support.normal(line.partition(":")[2])
 
 
-@support.red(297, "edge show reports no signature status yet")
 def test_edge_show_reports_each_signature_status_as_git_gives_it(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -85,7 +83,6 @@ def test_edge_show_reports_each_signature_status_as_git_gives_it(
         assert not [other for other in others if other in said], (letter, line)
 
 
-@support.red(298, "edge show gives no label and no provenance yet")
 def test_edge_show_presents_the_identity_as_recorded_and_never_as_verified(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
