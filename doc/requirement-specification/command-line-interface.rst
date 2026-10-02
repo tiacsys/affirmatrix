@@ -284,9 +284,10 @@ signature is verified.
    :id: SEG-SREQ-293
    :refines: SEG-SYS-014
 
-   The command-line interface shall have edge show report, for every affirmed
-   edge a selection includes, who made the edge's last affirmation and when,
-   as the recording commit of that affirmation records it.
+   The command-line interface shall have edge show report, for every edge a
+   selection includes that has a last affirmation, whatever its current
+   state, who made that last affirmation and when, as the recording commit of
+   that affirmation records it.
 
 .. sreq:: The committer and the commit date are the identity and the time
    :id: SEG-SREQ-294
@@ -299,9 +300,9 @@ signature is verified.
    :id: SEG-SREQ-295
    :refines: SEG-SREQ-293
 
-   Where the author of an affirmation's recording commit differs from its
-   committer, the command-line interface shall report the author and the
-   author date as well.
+   Where the author (name and e-mail) of an affirmation's recording commit
+   differs from its committer, the command-line interface shall report the
+   author and the author date as well.
 
 .. sreq:: Signed-off-by lines are reported as written
    :id: SEG-SREQ-296
