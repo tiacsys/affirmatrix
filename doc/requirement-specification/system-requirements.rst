@@ -89,3 +89,15 @@ time a verdict needs it.
 
    affirmatrix shall take the test evidence of every verdict, at the time of
    that verdict, from identified run bundles alone.
+
+.. sys:: An affirmation's maker and time are reported from the case history
+   :id: SEG-SYS-014
+
+   affirmatrix shall report, for an affirmed edge, who made its last
+   affirmation and when, as the history of the case records them.
+
+.. sys:: A node's current content is compared with its recorded hashes
+   :id: SEG-SYS-015
+
+   affirmatrix shall report, for a node of the graph, whether its current
+   content matches each content hash the case recorded for it.

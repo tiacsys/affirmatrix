@@ -103,3 +103,26 @@ case's own copy of the schemas.
 
    If a write names a test outcome node or an edge of kind Confirms, Witnesses
    or Excuses, then the affirmation store shall refuse the write.
+
+Extraction revisions
+--------------------
+
+An *extraction revision* is the revision of a repository at which the content
+behind a node record's content hashes was read. A node record can carry one for
+each repository its content anchors name. It is a reference, like an anchor.
+It never enters a hash.
+
+.. sreq:: A node record keeps the extraction revisions it is given
+   :id: SEG-SREQ-304
+   :refines: SEG-SYS-007
+
+   Where an extraction revision is supplied for a repository that a node
+   record's content anchors name, the affirmation store shall persist that
+   revision with the node record.
+
+.. sreq:: A node record without an extraction revision is read back as written
+   :id: SEG-SREQ-305
+   :refines: SEG-SYS-007
+
+   The affirmation store shall read back a node record that carries no
+   extraction revision as written.
