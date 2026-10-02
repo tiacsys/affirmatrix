@@ -2,11 +2,12 @@
 
 Loads ``doc/documents.yaml`` and derives, for one document, everything that
 refers to the *other* documents: intersphinx mappings, sphinx-needs external
-needs, and the cross-document navigation groups. The deploy directory (where
-stage 1 published every document's ``objects.inv`` and ``needs.json``) is
-taken from ``$AFFIRMATRIX_DOC_DEPLOY``, set by the ``python -m doc`` driver;
-without it, cross-document references degrade gracefully to nothing so a
-single document still builds standalone.
+needs, and the cross-document navigation groups. The indices (every
+document's ``objects.inv`` and ``needs.json``, in the deploy tree's layout) are
+read from ``$AFFIRMATRIX_DOC_DEPLOY``. The ``python -m doc`` driver sets it to
+a copy of the deploy tree's indices, taken before each stage; without it,
+cross-document references degrade gracefully to nothing so a single document
+still builds standalone.
 """
 
 from __future__ import annotations

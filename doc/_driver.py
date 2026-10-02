@@ -10,6 +10,12 @@ is encoded literally:
            reference (intersphinx, needs_external_needs) resolves against the
            stage-1 indices. Doctrees are reused between stages.
 
+The documents of a stage build at the same time and rewrite their indices in
+the deploy tree as they finish. So no document reads the deploy tree: before
+each stage the driver copies every index there into a snapshot directory,
+and the documents of the stage read the snapshot. A stage thus reads the
+indices of the stage before it, whole, whichever document finishes first.
+
 Sphinx's own doctree cache provides incrementality; this driver provides
 selection, the barrier, parallelism, and cleanup.
 
@@ -45,6 +51,10 @@ DOC_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = DOC_ROOT.parent
 BUILD_ROOT = REPO_ROOT / "build" / "doc"
 DEPLOY = BUILD_ROOT / "deploy"
+#: The indices a stage reads: a copy of the deploy tree's indices, taken
+#: before the stage starts, in the deploy tree's layout.
+INDICES = BUILD_ROOT / "_indices"
+INDEX_FILES = ("objects.inv", "needs.json")
 TEST_RUN = REPO_ROOT / "build" / "test-run"
 RUN_ENV = "AFFIRMATRIX_TEST_RUN"
 #: The memory cap and the time limit of a test run: a runaway test is a
@@ -62,13 +72,29 @@ def doc_ids(reg: dict) -> list[str]:
     return [d["id"] for d in reg["documents"]]
 
 
+def snapshot_indices(docs: list[str]) -> None:
+    """Copy the indices the deploy tree holds now into ``INDICES``.
+
+    Called while no document builds, so every file copied is whole. A
+    document with no index yet is left out, as the deploy tree has none.
+    """
+    shutil.rmtree(INDICES, ignore_errors=True)
+    for doc in docs:
+        for name in INDEX_FILES:
+            source = DEPLOY / doc / "html" / name
+            if source.is_file():
+                target = INDICES / doc / "html" / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+
+
 def sphinx(doc: str, builder: str, *, out: Path, extra_env: dict | None = None) -> int:
     src = DOC_ROOT / doc
     doctrees = BUILD_ROOT / doc / "doctrees"
     logdir = BUILD_ROOT / doc
     logdir.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
-    env = os.environ | {"AFFIRMATRIX_DOC_DEPLOY": str(DEPLOY)} | (extra_env or {})
+    env = os.environ | {"AFFIRMATRIX_DOC_DEPLOY": str(INDICES)} | (extra_env or {})
     cmd = [
         sys.executable, "-m", "sphinx",
         "-b", builder,
@@ -82,6 +108,7 @@ def sphinx(doc: str, builder: str, *, out: Path, extra_env: dict | None = None) 
 
 
 def build_stage(docs: list[str], builder: str, jobs: int, label: str) -> None:
+    snapshot_indices(doc_ids(registry()))
     failures = []
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = {
@@ -271,8 +298,10 @@ def cmd_check_site(args: argparse.Namespace) -> None:
 def cmd_clean(args: argparse.Namespace) -> None:
     targets = args.docs or doc_ids(registry())
     for doc in targets:
-        for path in (BUILD_ROOT / doc, DEPLOY / doc):
+        for path in (BUILD_ROOT / doc, DEPLOY / doc, INDICES / doc):
             shutil.rmtree(path, ignore_errors=True)
+    if not args.docs:
+        shutil.rmtree(INDICES, ignore_errors=True)
     if not args.docs and BUILD_ROOT.exists() and not any(BUILD_ROOT.iterdir()):
         shutil.rmtree(BUILD_ROOT.parent, ignore_errors=True)
     print("cleaned")
