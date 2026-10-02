@@ -28,6 +28,19 @@ supplies content and nothing else. Where exactly a span starts and ends is
 fixed in the architecture documentation, not here; these requirements say what
 each hash covers.
 
+A *plain comment* is a block comment that is not a documentation comment. A
+*conditional line* is a line whose first non-blank text is ``#if``,
+``#ifdef``, ``#ifndef``, ``#elif``, ``#else`` or ``#endif``. A test's
+documentation comment may lie above the test behind blank lines, plain
+comments and conditional lines, as Doxygen attaches it; ADR-0011 fixes the
+exact search.
+
+Doxygen names a file by a path from its own base directory. A configured
+path prefix maps such a path into the repository: the extractor removes the
+prefix and reads the rest within the repository of the stream. Each stream
+names its own repository, and an anchor holds the path inside that
+repository.
+
 .. sreq:: The content extractor supplies C nodes from exports and located source
    :id: SEG-SREQ-152
    :refines: SEG-SYS-001
@@ -101,9 +114,10 @@ each hash covers.
    :id: SEG-SREQ-161
    :refines: SEG-SREQ-159
 
-   If the Doxygen output does not hold exactly one member named by a
-   node's symbol, then the content extractor shall report an error for
-   that node instead of omitting it.
+   If, after the choice by test module where that applies, the Doxygen
+   output does not hold exactly one member named by a node's symbol, then
+   the content extractor shall report an error for that node instead of
+   omitting it.
 
 .. sreq:: An Implementation's symbol is its need's title
    :id: SEG-SREQ-200
@@ -123,9 +137,9 @@ each hash covers.
    :id: SEG-SREQ-162
    :refines: SEG-SREQ-159
 
-   If a path the Doxygen output names lies outside the repository the
-   content extractor is configured to read, then the content extractor
-   shall report an error instead of reading it.
+   If a path the Doxygen output names lies outside the repository
+   configured for the node's stream, then the content extractor shall
+   report an error for that node instead of reading it.
 
 .. sreq:: apiHash covers the declaration and its documentation comment
    :id: SEG-SREQ-163
@@ -156,8 +170,9 @@ each hash covers.
    :refines: SEG-SREQ-152
 
    The content extractor shall compute a TestSpecification's specHash over
-   the verbatim bytes of the documentation comment that immediately
-   precedes the test function.
+   the verbatim bytes of the documentation comment above the test
+   function, which has only blank lines, plain comments and conditional
+   lines between it and the test function, and over no other line.
 
 .. sreq:: implHash covers the test's located body
    :id: SEG-SREQ-167
@@ -179,9 +194,9 @@ each hash covers.
    :id: SEG-SREQ-169
    :refines: SEG-SREQ-152
 
-   If no documentation comment immediately precedes a node's declaration,
-   then the content extractor shall report an error for that node instead
-   of hashing an empty comment.
+   If no documentation comment immediately precedes an Implementation's
+   declaration, then the content extractor shall report an error for that
+   node instead of hashing an empty comment.
 
 .. sreq:: No hashed byte comes from the Doxygen output's text
    :id: SEG-SREQ-170
@@ -229,3 +244,76 @@ each hash covers.
    If the source line a Doxygen location names does not contain the symbol
    that location is for, then the content extractor shall report an error
    for that node instead of hashing it.
+
+.. sreq:: Configured need types, and only those, supply records
+   :id: SEG-SREQ-275
+   :refines: SEG-SREQ-153
+
+   Where need types are configured for an export, the content extractor
+   shall supply a record for a need of that export when, and only when,
+   the need's type is one of those types.
+
+.. sreq:: Without configured types, every need supplies a record
+   :id: SEG-SREQ-276
+   :refines: SEG-SREQ-153
+
+   While no need type is configured for an export, the content extractor
+   shall supply a record for every need of that export.
+
+.. sreq:: A need of another type is not refused
+   :id: SEG-SREQ-277
+   :refines: SEG-SREQ-153
+
+   Where need types are configured for an export, the content extractor
+   shall not refuse the export because of a need whose type is not one of
+   those types.
+
+.. sreq:: A symbol that several members share is narrowed by the test module
+   :id: SEG-SREQ-278
+   :refines: SEG-SREQ-159
+
+   Where the Doxygen output holds several members named by the symbol of a
+   test-case need and the need names a test module, the content extractor
+   shall locate the need through the member whose file lies within the
+   directory the test module names.
+
+.. sreq:: A Doxygen path is mapped into the repository by a configured prefix
+   :id: SEG-SREQ-279
+   :refines: SEG-SREQ-159
+
+   Where a path prefix is configured for a Doxygen output, the content
+   extractor shall resolve each path that output names by removing the
+   prefix and reading the remainder within the repository configured for
+   that output's stream.
+
+.. sreq:: A path outside the prefix is an error
+   :id: SEG-SREQ-280
+   :refines: SEG-SREQ-159
+
+   If a path a Doxygen output names does not begin with the path prefix
+   configured for that output, then the content extractor shall report an
+   error for that node instead of reading it.
+
+.. sreq:: An anchor names the repository of its stream and the path within it
+   :id: SEG-SREQ-281
+   :refines: SEG-SREQ-143
+
+   The content extractor shall name, in the anchor of each node's content
+   hash, the repository configured for the node's stream and the path of
+   the anchored file within that repository.
+
+.. sreq:: Every node that cannot be supplied is reported in one error
+   :id: SEG-SREQ-282
+   :refines: SEG-SREQ-152
+
+   If the content extractor cannot supply one or more nodes, then it shall
+   report every one of them in a single error, each with its reason.
+
+.. sreq:: A test without a documentation comment is an error
+   :id: SEG-SREQ-283
+   :refines: SEG-SREQ-152
+
+   If a test function has no documentation comment above it with only
+   blank lines, plain comments and conditional lines between them, then
+   the content extractor shall report an error for that node instead of
+   hashing an empty comment.

@@ -106,6 +106,12 @@ configuration loader carries where each of those inputs lives and
 which repository their anchors name; every path is resolved as any other path
 in the file is.
 
+A reader may name a repository of its own. A reader that names none uses the
+default repository. The Doxygen path prefix is text, not a path: the loader
+does not resolve it against the file's directory. The values of the source
+map follow the same rule as every other relative path in the file
+(SEG-SREQ-135).
+
 .. sreq:: The configuration loader carries where the producer's inputs are
    :id: SEG-SREQ-191
    :refines: SEG-SREQ-117
@@ -114,12 +120,13 @@ in the file is.
    producer supplies other than test outcomes, the locations of the inputs
    that stream is read from.
 
-.. sreq:: The producer's repository is named
+.. sreq:: The default repository is named
    :id: SEG-SREQ-192
    :refines: SEG-SREQ-191
 
    The configuration loader shall carry the name of the repository against
-   which the producer's anchors and paths are resolved.
+   which the anchors and paths of every reader without a repository of its
+   own are resolved.
 
 .. sreq:: The requirement export's location is carried
    :id: SEG-SREQ-193
@@ -155,9 +162,9 @@ in the file is.
    :id: SEG-SREQ-198
    :refines: SEG-SREQ-191
 
-   The configuration loader shall carry the location of the requirement
-   document's source directory, against which a need's docname and doctype
-   resolve to the source file.
+   Where the configuration names a source directory for the requirements
+   reader, the configuration loader shall carry its location, against
+   which a need's docname and doctype resolve to the source file.
 
 .. sreq:: A configuration that names a run is refused
    :id: SEG-SREQ-234
@@ -165,3 +172,48 @@ in the file is.
 
    If the configuration names a run, then the configuration loader shall
    refuse the configuration.
+
+.. sreq:: The parent-link field is carried
+   :id: SEG-SREQ-284
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the name of the need field from
+   which the requirements reader takes parent links.
+
+.. sreq:: The types of test-case and implementation needs are carried
+   :id: SEG-SREQ-285
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry, for the test-case export and for
+   the implementation export, the need types the content extractor treats
+   as test cases and as implementations.
+
+.. sreq:: A reader may name its own repository
+   :id: SEG-SREQ-286
+   :refines: SEG-SREQ-191
+
+   Where the configuration names a repository for a reader, the
+   configuration loader shall carry that name for that reader.
+
+.. sreq:: The Doxygen path prefix is carried
+   :id: SEG-SREQ-287
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry, for each Doxygen output the
+   content extractor reads, the path prefix by which that output's paths
+   are mapped into the repository.
+
+.. sreq:: The source map is carried
+   :id: SEG-SREQ-288
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry the map from need docnames to the
+   source files of the requirement document.
+
+.. sreq:: A source directory and a source map exclude each other
+   :id: SEG-SREQ-289
+   :refines: SEG-SREQ-191
+
+   If the configuration names both a source directory and a source map for
+   the requirements reader, or neither, then the configuration loader
+   shall refuse the configuration.

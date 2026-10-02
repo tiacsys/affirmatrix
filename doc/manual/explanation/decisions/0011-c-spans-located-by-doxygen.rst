@@ -7,7 +7,11 @@ Status
 Accepted, 2026-09-29. Amended 2026-09-29: the search for a documentation
 comment no longer steps over blank lines, so only guard lines may lie between
 the comment's closer and the located line; the paragraph *Finding the
-documentation comment* is rewritten and no worked digest changes. Binds, for
+documentation comment* is rewritten and no worked digest changes. Amended 2026-10-02: for a test, the
+search for the documentation comment also steps over blank lines, plain
+comments and every conditional line, as Doxygen attaches a comment to the next
+member. The rule for an Implementation does not change. No digest of a node
+that the earlier rule accepted changes. Binds, for
 C source, the principle of :need:`SEG-SREQ-001`: the
 parser only locates a span, and the hash is over the verbatim bytes of the
 source file. :need:`SEG-SREQ-163` to :need:`SEG-SREQ-170` state *what* each hash covers; this
@@ -61,20 +65,47 @@ enter a record: the locator a record carries names the symbol
 names the file the span was read from (:need:`SEG-SREQ-171` to :need:`SEG-SREQ-174`).
 
 **Finding the documentation comment.** Each construct below names a *located
-line* ``L``, the line its declaration starts on. Start at line ``L - 1`` and
-step upward over every *guard line*, a line whose first non-blank text is
-``#if``, ``#ifdef`` or ``#ifndef``. A blank line is not a guard line and ends
-the step: the line reached must end with ``*/``, ignoring trailing whitespace,
-and it is the *closer*. The *opener* is the nearest line at or above the closer
-that contains a comment opener, and that opener must be ``/**`` or ``/*!``
-(``/**/`` and ``/***`` are plain comments). Anything else -- a blank line, a
-plain ``/*``, code, any other preprocessor line, the top of the file -- means
-the node has no documentation comment, which is an error for that node and
-never an empty hash (:need:`SEG-SREQ-169`). The span runs contiguously from the opener
-downward, so guard lines lying between the closer and ``L`` are inside it. A
-guard line *above* the opener is outside it. The forms ``///`` and ``//!``,
-whether a run of lines or trailing as ``///<``, are not recognised as
-documentation comments.
+line* ``L``, the line its declaration starts on. The search starts at line
+``L - 1``. It has one rule for an Implementation and one rule for a test.
+
+For an Implementation, step upward over every *guard line*, a line whose first
+non-blank text is ``#if``, ``#ifdef`` or ``#ifndef``. A blank line is not a
+guard line and ends the step. The line reached must end with ``*/``, ignoring
+trailing whitespace, and it is the *closer*. The *opener* is the nearest line
+at or above the closer that contains a comment opener, and that opener must be
+``/**`` or ``/*!`` (``/**/`` and ``/***`` are plain comments). Anything else
+means the node has no documentation comment: a blank line, a plain ``/*``,
+code, any other preprocessor line, the top of the file. That is an error for
+the node and never an empty hash (:need:`SEG-SREQ-169`). The span runs
+contiguously from the opener downward, so guard lines between the closer and
+``L`` are inside it. A guard line above the opener is outside it.
+
+For a test, ``L`` is the ``ZTEST`` line. Doxygen attaches a documentation
+comment to the next member, and a blank line, a plain comment or a conditional
+line does not break that link. The extractor follows the same rule. Step upward
+over every line of these three kinds:
+
+- a *blank line*: a line that holds nothing, or white space only;
+- a *conditional line*: a line whose first non-blank text is ``#if``,
+  ``#ifdef``, ``#ifndef``, ``#elif``, ``#else`` or ``#endif``;
+- a *plain comment*: a block comment that is not a documentation comment,
+  from its closer line up to its opener line, where only white space comes
+  before the opener on its line.
+
+The first line that is none of these must end with ``*/``, ignoring trailing
+whitespace. It is the closer. The opener is found as for an Implementation,
+and it must be ``/**`` or ``/*!``. Any other line ends the search with no
+documentation comment: code, a preprocessor line such as ``#include``,
+``#define`` or ``#pragma``, a line comment (``//``, ``///`` or ``//!``), or the
+top of the file. That is an error for the node and never an empty hash
+(:need:`SEG-SREQ-283`). The span of a ``specHash`` runs from the opener to the
+closer. The lines the search stepped over lie outside it. So a blank line, a
+plain comment or a conditional line added or removed between the comment and
+the test does not change the ``specHash``.
+
+The forms ``///`` and ``//!``, whether a run of lines or trailing as ``///<``,
+are not recognised as documentation comments, for an Implementation or for a
+test.
 
 **The span each hash covers.** ``declfile``, ``declline``, ``bodyfile``,
 ``bodystart`` and ``bodyend`` are the attributes of the member's
@@ -128,7 +159,7 @@ documentation comments.
        ``line`` equals ``bodystart``); ``L`` is ``line``
      - ``specHash``
      - ``file``
-     - the opener of the comment above ``L``
+     - the opener of the comment the search for a test finds above ``L``
      - the closer of that comment
    * -
      - ``implHash``
@@ -227,13 +258,17 @@ record, and the requirements reader's own requirements (:need:`SEG-SREQ-147`,
 
 A Requirement's content hash is the SHA-256 of the RFC 8785 canonical JSON, in
 UTF-8, of the object ``{"content": <the need's content>, "refines": <the
-identifiers of the needs it refines, sorted ascending byte-wise, duplicates
-kept>, "title": <the need's title>}``. Its keys are exactly those three. The
+identifiers of the needs it names as parents, sorted ascending byte-wise, duplicates
+kept>, "title": <the need's title>}``. Its keys are exactly those three.
+The parents are read from the need field that the configuration names for them,
+and from the field called ``refines`` when it names none. The key in the object
+stays ``refines`` whatever the field is called, so the same parents give the
+same hash for every producer. The
 need's ``id`` is excluded, because identity enters the graph through the
 edges. Status, tags, sections, positions, back-links, timestamps and the
 export's version key are excluded: each is derived by the build or is metadata
 that changes as a review moves while the statement does not. An absent or null
-``refines`` reads as the empty list. The forward links are part of the
+parent field reads as the empty list. The forward links are part of the
 content, so adding a second parent to a requirement makes its existing edges
 directly outdated, exactly as adding a second ``@verifies`` to a C comment
 does. The worked example, with the hash, is on
@@ -247,12 +282,25 @@ the file alone.
 Consequences
 ------------
 
-- A documentation comment must sit directly above its declaration, behind at
-  most guard lines. A blank line between them, or a comment deleted and its
-  lines emptied, is an error for the node; an unrelated comment further up can
-  never be found in its place. Without this, deleting the comment above
-  ``safe_data_init`` would have hashed the ``@addtogroup`` comment two lines
-  earlier as though it were the function's own.
+- For an Implementation, a documentation comment must sit directly above its
+  declaration, behind at most guard lines. A blank line between them is an
+  error for the node. Without this rule, deleting the comment above
+  ``safe_data_init`` would hash the ``@addtogroup`` comment two lines earlier as
+  though it were the function's own.
+- For a test, the comment may stand further up, behind blank lines, plain
+  comments and conditional lines. A test that loses its own comment can now take
+  an earlier documentation comment, when only such lines lie between. Doxygen
+  does the same. The extractor does not read the text of the comment, so it
+  cannot tell a group comment from a test's own comment. A reviewer sees the
+  mistake at the next affirmation, because the hash changes.
+- A test whose Doxygen member lies in one branch of a conditional, with its
+  comment above the other branch, is still an error. An example is a test
+  defined in the ``#if`` branch and again as an empty stub in the ``#else``
+  branch. The member sits in the branch the preprocessor keeps, and code lies
+  between that member and the comment.
+- No hash that the earlier rule produced changes. The new search steps over
+  every line the old search stepped over, and it stops at the same closer. Only
+  a node that was an error before can become a hash.
 - A locator names a symbol and never a line. Moving a function within its
   file, or editing code above it, leaves the locator valid and changes no hash
   unless a covered line changed; the extractor finds the lines again from the

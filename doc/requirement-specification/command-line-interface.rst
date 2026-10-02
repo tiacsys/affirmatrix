@@ -69,9 +69,10 @@ migration step, and its verdicts do not depend on them.
    :id: SEG-SREQ-136
    :refines: SEG-SREQ-072
 
-   If case sync cannot build a graph from the current stream it is given,
-   then the command-line interface shall write nothing to the case and exit
-   with status 2, a request it could not judge.
+   If case sync cannot build the current stream it is given, or cannot
+   build a graph from it, then the command-line interface shall write
+   nothing to the case and exit with status 2, a request it could not
+   judge.
 
 .. sreq:: Vanished edges are reported, not silently dropped
    :id: SEG-SREQ-074
@@ -111,6 +112,14 @@ migration step, and its verdicts do not depend on them.
    The command-line interface shall let the operator request the refresh of
    a case's schema copy, rendering the differences the affirmation store
    reports.
+
+.. sreq:: case check says why a producer cannot be read
+   :id: SEG-SREQ-290
+   :refines: SEG-SREQ-069
+
+   If the producer cannot be read, then the command-line interface shall
+   have case check report the reason the library gave, in the
+   human-readable and in the machine-readable rendering.
 
 Graph
 -----
@@ -201,6 +210,13 @@ Graph
    recorded at the current revision, the count of test outcomes recorded at
    another revision, and the count of edges of kind Confirms, Witnesses or
    Excuses that touch an absent node.
+
+.. sreq:: graph check says which stream it checked
+   :id: SEG-SREQ-291
+   :refines: SEG-SREQ-076
+
+   The command-line interface shall have graph check report whether it
+   checked the case or the current stream the operator gave.
 
 Edge
 ----
@@ -679,6 +695,14 @@ from the working directory.
    run bundle and the configuration gives no test-case export, then the
    command-line interface shall exit with status 2, a request it could not
    judge.
+
+.. sreq:: A reader with no usable repository cannot be judged
+   :id: SEG-SREQ-292
+   :refines: SEG-SREQ-105
+
+   If a configured reader has no repository, or the repository it names is
+   absent from the repository map, then the command-line interface shall
+   exit with status 2, a request it could not judge, naming the reader.
 
 Draft posture
 -------------
