@@ -368,7 +368,9 @@ Node
 ----
 
 A node is addressed by its case-local identifier. ``node show`` compares what
-the case recorded for the node with what the current stream supplies now.
+the case recorded for the node with what the current stream supplies now. It
+reads the node records of both and builds no graph, so a hash that one side
+holds and the other does not reaches its report.
 
 .. sreq:: The operator shows a node by its identifier
    :id: SEG-SREQ-313
@@ -462,6 +464,40 @@ the case recorded for the node with what the current stream supplies now.
    :refines: SEG-SREQ-313
 
    The command-line interface shall write nothing in response to node show.
+
+.. sreq:: node show renders content without loss
+   :id: SEG-SREQ-328
+   :refines: SEG-SREQ-315
+
+   The command-line interface shall render the content node show reports for
+   a content hash, in the machine-readable rendering, as the text the bytes
+   encode where they are valid UTF-8, and otherwise as their base64 encoding
+   together with the name of that encoding.
+
+.. sreq:: An identifier the current stream holds twice cannot be judged
+   :id: SEG-SREQ-329
+   :refines: SEG-SREQ-313
+
+   If the current stream holds more than one node with the identifier given
+   to node show, then the command-line interface shall exit with status 2, a
+   request it could not judge, naming the identifier.
+
+.. sreq:: A hash recorded only in the case has no current content
+   :id: SEG-SREQ-330
+   :refines: SEG-SREQ-313
+
+   If a named content hash of the node is recorded only in the case's node
+   record, then the command-line interface shall have node show report that
+   it has no current content, and report no checkout for it.
+
+.. sreq:: A repository that cannot be read is reported with the reason
+   :id: SEG-SREQ-331
+   :refines: SEG-SREQ-318
+
+   If a configured repository that a content hash's current anchor names
+   cannot be read, then the command-line interface shall have node show
+   report that it cannot be read, with the reason, and derive node show's
+   exit status without regard to it.
 
 Proof
 -----
