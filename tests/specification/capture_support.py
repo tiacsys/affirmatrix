@@ -29,12 +29,14 @@ from affirmatrix.sources.composed import from_config
 
 KEY_REPOSITORY = "repository"
 KEY_PREFIX = "doxygen-prefix"
+KEY_PATH_ROOT = "path-root"
 KEY_PARENT = "parent-field"
 KEY_MAP = "source-map"
 KEY_TYPES = "types"
 
 ATTR_REPOSITORY = "repository"
 ATTR_PREFIX = "doxygen_prefix"
+ATTR_PATH_ROOT = "path_root"
 ATTR_PARENT = "parent_field"
 ATTR_MAP = "source_map"
 ATTR_TYPES = "types"
