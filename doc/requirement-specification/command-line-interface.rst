@@ -236,8 +236,33 @@ Edge
 
    The command-line interface shall have edge show render, for every edge
    a selection includes, the per-hash comparison of its endpoints and, for
-   an edge that has been affirmed, the content recovered at its last
-   affirmation's revision.
+   an edge that has been affirmed, when the verbose rendering is asked for,
+   the content recovered at its last affirmation's revision.
+
+When the before-content of an endpoint cannot be read, the entry for that
+endpoint in the machine-readable report keeps its ``revision`` and has
+``content`` null. It also has an ``error`` key, a text that names the
+repository and gives the reason. The key is null or absent when the read
+worked. The text rendering prints one line for the endpoint, ``before-content
+@ <endpoint> (revision <revision>): not available: <repository>: <reason>``.
+The other endpoint keeps its own content.
+
+.. sreq:: edge show reports before-content it cannot read as not available
+   :id: SEG-SREQ-365
+   :refines: SEG-SREQ-085
+
+   If the content repository that holds an endpoint's before-content cannot
+   be read, then the command-line interface shall have edge show report that
+   the before-content of that endpoint is not available, naming the
+   repository and giving the reason.
+
+.. sreq:: An unreadable before-content does not change the exit of edge show
+   :id: SEG-SREQ-366
+   :refines: SEG-SREQ-085
+
+   If the content repository that holds an endpoint's before-content cannot
+   be read, then the command-line interface shall derive the exit status of
+   edge show without regard to it.
 
 .. sreq:: edge affirm records an affirmation over its affirmable members
    :id: SEG-SREQ-086
@@ -889,6 +914,45 @@ from the working directory.
    committed content, an untracked file included, naming the differing
    paths.
 
+A revision given with ``--revision`` is neither discovered nor checked. So an
+unreadable content repository does not stop edge affirm when a revision is
+given. The rules for extraction revisions apply to the node records it writes.
+
+.. sreq:: edge affirm refuses when it cannot read a repository it needs
+   :id: SEG-SREQ-363
+   :refines: SEG-SREQ-105
+
+   If edge affirm reads a content repository to discover or to check the
+   source revision of an endpoint, and that repository cannot be read, then
+   the command-line interface shall refuse the request, naming the repository
+   and giving the reason, and exit with status 2, a request it could not
+   judge.
+
+.. sreq:: A refused edge affirm writes nothing
+   :id: SEG-SREQ-364
+   :refines: SEG-SREQ-086
+
+   If the command-line interface refuses edge affirm because a content
+   repository cannot be read, then it shall write no review event, no edge
+   record and no node record.
+
+.. sreq:: The implementation repository that cannot be read is named
+   :id: SEG-SREQ-367
+   :refines: SEG-SREQ-208
+
+   If proof check, proof generate or, where the current stream holds a test
+   outcome, graph status needs the implementation revision and the
+   implementation repository cannot be read, then the command-line interface
+   shall report that it cannot be read, naming the repository and giving the
+   reason.
+
+.. sreq:: A proof generate that cannot read the implementation repository writes nothing
+   :id: SEG-SREQ-368
+   :refines: SEG-SREQ-208
+
+   If the implementation repository cannot be read, then the command-line
+   interface shall have proof generate write no evidence package.
+
 .. sreq:: A configured role vocabulary is enforced
    :id: SEG-SREQ-113
    :refines: SEG-SREQ-105
@@ -1061,6 +1125,12 @@ Draft posture
 
 Repository reads
 ----------------
+
+A content repository cannot be read when a read of it fails. A read fails when
+the version-control system is not on the path, when the repository is absent
+or is not a repository, when its objects are missing, when it does not hold
+the revision or the path asked for, or when any part of a read made in parts
+fails. A repository that is not configured is a different case.
 
 The command line reads a content repository, and the history of the case,
 by running the version-control system in that repository. The answer must
