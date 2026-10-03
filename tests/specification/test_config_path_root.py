@@ -50,10 +50,6 @@ def _root(loaded: config.Config, block: str) -> Any:
     return getattr(_inputs(loaded, block), support.ATTR_PATH_ROOT)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-348: the loader drops path-root; it carries no path root",
-)
 @pytest.mark.parametrize("block", DOXYGEN_BLOCKS)
 def test_the_loader_carries_the_path_root_of_a_doxygen_block(block: str, tmp_path: Path) -> None:
     """The loader carries the path root of a specifications block and of an implementations block.
@@ -82,10 +78,6 @@ def test_the_loader_carries_the_path_root_of_a_doxygen_block(block: str, tmp_pat
     assert not absent and not empty and not null
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-348: the loader drops path-root, so a root that is not text is not refused",
-)
 @pytest.mark.parametrize("block", DOXYGEN_BLOCKS)
 @pytest.mark.parametrize("value", [7, ["include"], {"dir": "include"}, True])
 def test_a_path_root_that_is_not_text_is_refused_naming_the_block(
@@ -107,10 +99,6 @@ def test_a_path_root_that_is_not_text_is_refused_naming_the_block(
         _load(tmp_path / "bad", block, **{support.KEY_PATH_ROOT: value})
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-341: the loader accepts need types that hold an empty text",
-)
 @pytest.mark.parametrize("block", sorted(BLOCKS))
 @pytest.mark.parametrize("types", [[""], ["impl", ""]])
 def test_a_need_type_that_is_empty_text_is_refused_naming_the_block(

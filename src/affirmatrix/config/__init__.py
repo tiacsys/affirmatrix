@@ -127,14 +127,17 @@ class SpecificationInputs:
     ``types`` are the need types of the export that are test cases, or ``None``
     when every need is one. ``doxygen_prefix`` is the text that every path of the
     Doxygen output begins with, kept as written, or ``None`` when there is none.
-    ``repository`` is the name of the repository the test sources live in, or
-    ``None`` to use the default repository.
+    ``path_root`` is the path inside the repository that goes in front of the
+    path left after the prefix is removed, kept as written, or ``None`` when
+    there is none. ``repository`` is the name of the repository the test sources
+    live in, or ``None`` to use the default repository.
     """
 
     export: Path
     doxygen: Path
     types: frozenset[str] | None = None
     doxygen_prefix: str | None = None
+    path_root: str | None = None
     repository: str | None = None
 
 
@@ -150,6 +153,7 @@ class ImplementationInputs:
     doxygen: Path
     types: frozenset[str] | None = None
     doxygen_prefix: str | None = None
+    path_root: str | None = None
     repository: str | None = None
 
 
@@ -387,7 +391,8 @@ def _optional_types(block: Mapping[str, object], where: str) -> frozenset[str] |
     """The need types the block names, ``None`` when it names none.
 
     A value that is not a non-empty list of text is refused, naming the block.
-    A null value means the block names none.
+    So is a list that holds an empty text. A null value means the block names
+    none.
 
     :implements: SEG-SREQ-341
     """
@@ -396,6 +401,8 @@ def _optional_types(block: Mapping[str, object], where: str) -> frozenset[str] |
         return None
     if not value or not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise ConfigError(f"'{where}.types' must be a non-empty list of strings")
+    if "" in value:
+        raise ConfigError(f"'{where}.types' must not hold an empty text: {value!r}")
     return frozenset(value)
 
 
@@ -479,6 +486,7 @@ def _specification_inputs(producer: Mapping[str, object], base: Path) -> Specifi
         doxygen=_path(block, where, "doxygen", base),
         types=_optional_types(block, where),
         doxygen_prefix=_optional_text(block, where, "doxygen-prefix"),
+        path_root=_optional_text(block, where, "path-root"),
         repository=_optional_text(block, where, "repository"),
     )
 
@@ -502,6 +510,7 @@ def _implementation_inputs(
         doxygen=_path(block, where, "doxygen", base),
         types=_optional_types(block, where),
         doxygen_prefix=_optional_text(block, where, "doxygen-prefix"),
+        path_root=_optional_text(block, where, "path-root"),
         repository=_optional_text(block, where, "repository"),
     )
 

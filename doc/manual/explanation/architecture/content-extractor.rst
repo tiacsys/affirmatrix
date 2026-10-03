@@ -36,7 +36,9 @@ Three kinds of input, each for one purpose:
 * the **need exports** give the structure: which nodes exist, their identity
   and their links (:need:`SEG-SREQ-153`). Where need types are configured for an
   export, only the needs of those types supply a record, and a need of another
-  type is never refused (:need:`SEG-SREQ-275`, :need:`SEG-SREQ-277`). Where none
+  type is never refused (:need:`SEG-SREQ-275`, :need:`SEG-SREQ-277`). The loader
+  refuses a list of types that holds an empty text (:need:`SEG-SREQ-341`), and a
+  null list means none are configured (:need:`SEG-SREQ-369`). Where none
   are configured, every need in the implementation export is an Implementation
   and every need in the test-case export a TestSpecification
   (:need:`SEG-SREQ-276`). The symbol a need names is its ``title`` on an
@@ -62,6 +64,20 @@ error names the path and the prefix (:need:`SEG-SREQ-342`). A prefix that ends
 with the separator avoids that error. With no prefix, the path is used as it
 stands. A prefix is text, not a path, so the configuration file's directory
 plays no part in it. It should end with the path separator.
+
+A stream may also name a path root: a directory inside the repository that is
+put in front of each path after the prefix is removed (:need:`SEG-SREQ-348`,
+:need:`SEG-SREQ-349`). Doxygen often names a header by the path that a
+programmer writes in an include line, which is not the path in the repository.
+The root bridges the two. The prefix is removed first, with the errors above,
+and then the root is put in front, with one separator between them whether or
+not the root ends with one. An empty root and an absent root put nothing in
+front. The joined path is the path inside the repository everywhere below: it is
+the file that is read, the path of the anchor, and the path that a test's module
+is compared with. The text of a node (:need:`SEG-SREQ-311`) is read from it
+too. The extractor does not clean the joined path. A root that is absolute or
+leads out of the repository gives a path that the next step refuses, naming the
+node.
 
 What it supplies
 ----------------
@@ -90,9 +106,9 @@ whose file lies within that directory are the candidates
 names no module (:need:`SEG-SREQ-343`). One that is present and is neither null
 nor text is an error for its node, found before the members are looked up
 (:need:`SEG-SREQ-344`). The file is compared as a path inside the repository,
-after the prefix is removed, and by whole path components: ``tests/a`` does not
-contain ``tests/ab``. A member whose remainder after the prefix is no relative
-path is an error for the node, not a member outside the module. After that
+after the prefix is removed and the path root is put in front, and by whole path
+components: ``tests/a`` does not contain ``tests/ab``. A member whose remainder
+after the prefix is no relative path is an error for the node, not a member outside the module. After that
 choice, a symbol with none or with several
 members is an error for its node (:need:`SEG-SREQ-161`). Members no need names
 are never consulted, which is why the test tree's duplicate
@@ -100,7 +116,8 @@ are never consulted, which is why the test tree's duplicate
 not followed: it lists members repeatedly and gives no location.
 
 Before a file is opened, every path the node's location names has its prefix
-removed and is resolved under the root of the node's stream (links included). It
+removed, its path root put in front, and is resolved under the root of the
+node's stream (links included). It
 must stay inside that root; ``..``, an absolute path and a link that leads out
 are errors, and the file outside is not read (:need:`SEG-SREQ-162`). A path
 inside the root of another stream is outside this one. Then the line each location names must contain the symbol as a
@@ -185,7 +202,8 @@ The anchors
 Each hash is supplied with an anchor of three parts, naming where its bytes
 came from: the configured name of the stream's repository; the path of the file
 inside that repository (:need:`SEG-SREQ-281`), which is the file as Doxygen names
-it with the prefix removed, and which for an ``apiHash`` is the declaration file
+it with the prefix removed and the path root put in front, and which for an
+``apiHash`` is the declaration file
 and for a ``bodyHash`` or ``implHash`` the body file; and the locator
 ``symbol:<name>#api``, ``#body``, ``#spec`` or ``#impl`` (:need:`SEG-SREQ-171` to
 :need:`SEG-SREQ-174`). No line number is recorded, so moving a function within its
