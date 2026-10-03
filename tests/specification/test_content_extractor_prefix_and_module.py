@@ -30,7 +30,6 @@ from affirmatrix.cli import main
 from affirmatrix.sources import SourceError
 
 from . import capture_support as support
-from .need_types_support import red
 
 PREFIX = "inc"
 LIBRARY_PREFIX = "libsrc"
@@ -86,7 +85,6 @@ def _refusal(path: Path) -> str:
     return str(caught.value)
 
 
-@red(342, "the error names neither the path nor the prefix")
 def test_a_path_whose_remainder_after_the_prefix_is_not_a_relative_path_is_an_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -138,7 +136,6 @@ def _both_streams(tmp_path: Path, tests: str, library: str) -> Path:
     )
 
 
-@red(342, "the line of a node holds neither its path nor the prefix")
 def test_case_sync_names_every_node_whose_path_does_not_fit_the_prefix(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -223,7 +220,6 @@ def test_a_test_module_that_is_absent_null_or_empty_names_no_module(tmp_path: Pa
     assert len(set(refusals)) == 1
 
 
-@red(344, "a test module that is not text counts as none and the need is located")
 @pytest.mark.parametrize("module", [7, ["tests/mod_a"], {"path": "tests/mod_a"}, True])
 def test_a_test_module_that_is_not_text_is_an_error_for_that_need(
     module: Any, tmp_path: Path
@@ -254,7 +250,6 @@ def test_a_test_module_that_is_not_text_is_an_error_for_that_need(
     assert "T-GOOD" not in str(caught.value)
 
 
-@red(342, "a shared symbol with a bad prefix gets the module error and not the prefix error")
 def test_a_shared_symbol_with_a_prefix_that_leaves_no_path_gets_the_prefix_error(
     tmp_path: Path,
 ) -> None:

@@ -22,8 +22,6 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 from affirmatrix import config, gates, graph
 from affirmatrix.records import (
     ContentAnchor,
@@ -43,19 +41,6 @@ SPECIFICATION = "TC-1"
 IMPLEMENTATION = "IMPL-1"
 EVALUATION_DATE = date(2026, 6, 1)
 AFFIRMED = bytes(range(32))
-
-#: What a red specification may raise: a failed assertion, or a call that did not raise.
-RED = (AssertionError, pytest.fail.Exception)
-
-
-def red(claim: int, why: str, *raises: type[BaseException]) -> pytest.MarkDecorator:
-    """Mark a specification that is red until the claim is built. Strict: a pass is a failure.
-
-    The mark names the claim and what is missing. ``raises`` adds the error types a red run
-    may end with, besides a failed assertion.
-    """
-    return pytest.mark.xfail(strict=True, raises=(*RED, *raises), reason=f"SEG-SREQ-{claim}: {why}")
-
 
 #: One result of a board: the test identifier and the status of the artifact.
 Result = tuple[str, str]

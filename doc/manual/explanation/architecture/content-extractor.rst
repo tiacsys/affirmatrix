@@ -56,10 +56,12 @@ The paths in a Doxygen output come from Doxygen's own base directory. A stream
 may name a prefix, the text that each of those paths begins with
 (:need:`SEG-SREQ-279`). The extractor removes the prefix as written, and reads
 the rest within the stream's repository. A path that does not begin with the
-prefix is an error for its node and is not read (:need:`SEG-SREQ-280`). With no
-prefix, the path is used as it stands. A prefix is text, not a path, so the
-configuration file's directory plays no part in it. It should end with the path
-separator.
+prefix is an error for its node and is not read (:need:`SEG-SREQ-280`). So is a
+path whose remainder after the prefix is empty or begins with a separator. The
+error names the path and the prefix (:need:`SEG-SREQ-342`). A prefix that ends
+with the separator avoids that error. With no prefix, the path is used as it
+stands. A prefix is text, not a path, so the configuration file's directory
+plays no part in it. It should end with the path separator.
 
 What it supplies
 ----------------
@@ -84,9 +86,14 @@ listed in two compounds with the same ``id`` and location counts once, but two
 ``id`` values, or one ``id`` at two locations, are two. Where several members
 share the symbol and a test-case need names a ``test_module``, the members
 whose file lies within that directory are the candidates
-(:need:`SEG-SREQ-278`). The file is compared as a path inside the repository,
+(:need:`SEG-SREQ-278`). A ``test_module`` that is absent, null or empty text
+names no module (:need:`SEG-SREQ-343`). One that is present and is neither null
+nor text is an error for its node, found before the members are looked up
+(:need:`SEG-SREQ-344`). The file is compared as a path inside the repository,
 after the prefix is removed, and by whole path components: ``tests/a`` does not
-contain ``tests/ab``. After that choice, a symbol with none or with several
+contain ``tests/ab``. A member whose remainder after the prefix is no relative
+path is an error for the node, not a member outside the module. After that
+choice, a symbol with none or with several
 members is an error for its node (:need:`SEG-SREQ-161`). Members no need names
 are never consulted, which is why the test tree's duplicate
 ``SAFE_CONTAINER_DEFINE`` costs nothing. The index of Doxygen's own listing is

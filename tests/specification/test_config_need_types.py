@@ -19,8 +19,6 @@ import yaml
 
 from affirmatrix import config
 
-from .need_types_support import red
-
 #: The three reader blocks that name need types, with the keys each block needs.
 BLOCKS: dict[str, dict[str, str]] = {
     "requirements": {"export": "needs/requirements.json", "source": "reqs"},
@@ -44,7 +42,6 @@ def _refused(tmp_path: Path, block: str, types: Any) -> None:
         _load(tmp_path / re.sub(r"\W", "_", repr(types)), block, types)
 
 
-@red(341, "an empty list of need types loads")
 @pytest.mark.parametrize("block", sorted(BLOCKS))
 def test_an_empty_list_of_need_types_is_refused_naming_the_block(
     block: str, tmp_path: Path

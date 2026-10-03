@@ -435,28 +435,40 @@ def _inside_repository(path: str, prefix: str | None) -> str:
 
     The prefix is text and is removed as written. A path that does not begin
     with it is an error, so a path is never read as it stands when a prefix says
-    where Doxygen's paths come from.
+    where Doxygen's paths come from. A remainder that is empty or begins with a
+    separator is an error too: it is no path inside the repository, and it would
+    read as the root of the file system or as the repository itself.
 
     :implements: SEG-SREQ-279
     :implements: SEG-SREQ-280
+    :implements: SEG-SREQ-342
     """
     if not prefix:
         return path
     if not path.startswith(prefix):
         raise ExtractorError(f"the path {path!r} does not begin with the prefix {prefix!r}")
-    return path[len(prefix) :]
+    rest = path[len(prefix) :]
+    if not rest:
+        raise ExtractorError(f"the path {path!r} is the whole prefix {prefix!r}; nothing is left")
+    if rest.startswith("/"):
+        raise ExtractorError(
+            f"the path {path!r} has a remainder that begins with a separator "
+            f"after the prefix {prefix!r}"
+        )
+    return rest
 
 
 def _lies_within(member: _Member, prefix: str | None, directory: PurePosixPath) -> bool:
-    """Whether the member's file, inside the repository, lies within ``directory``."""
+    """Whether the member's file, inside the repository, lies within ``directory``.
+
+    A file that does not begin with the prefix lies within no directory. A file
+    whose remainder after the prefix is no relative path is an error, as it is
+    when the file is read.
+    """
     named = member.location.get("file")
-    if named is None:
+    if named is None or (prefix and not named.startswith(prefix)):
         return False
-    try:
-        inside = _inside_repository(named, prefix)
-    except ExtractorError:
-        return False
-    return PurePosixPath(inside).is_relative_to(directory)
+    return PurePosixPath(_inside_repository(named, prefix)).is_relative_to(directory)
 
 
 def _check_symbol(symbol: str, lines: Sequence[bytes], number: int, what: str) -> None:
@@ -740,12 +752,16 @@ class CSourceExtractor:
         :implements: SEG-SREQ-160
         :implements: SEG-SREQ-161
         :implements: SEG-SREQ-278
+        :implements: SEG-SREQ-343
+        :implements: SEG-SREQ-344
         """
+        module = need.get(stream.module_field) if stream.module_field else None
+        if module is not None and not isinstance(module, str):
+            raise ExtractorError(f"the test module is {module!r}, which is neither null nor text")
         found = list(stream.members.get(symbol, {}).values())
         if not found:
             raise ExtractorError("no member of the Doxygen output has this name")
-        module = need.get(stream.module_field) if stream.module_field else None
-        if len(found) > 1 and isinstance(module, str) and module:
+        if len(found) > 1 and module:
             directory = PurePosixPath(module)
             candidates = [m for m in found if _lies_within(m, stream.prefix, directory)]
             if len(candidates) != 1:

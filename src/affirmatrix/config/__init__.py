@@ -384,12 +384,18 @@ def _optional_text(block: Mapping[str, object], where: str, key: str) -> str | N
 
 
 def _optional_types(block: Mapping[str, object], where: str) -> frozenset[str] | None:
-    """The need types the block names, ``None`` when it names none."""
+    """The need types the block names, ``None`` when it names none.
+
+    A value that is not a non-empty list of text is refused, naming the block.
+    A null value means the block names none.
+
+    :implements: SEG-SREQ-341
+    """
     value = block.get("types")
     if value is None:
         return None
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
-        raise ConfigError(f"'{where}.types' must be a list of strings")
+    if not value or not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ConfigError(f"'{where}.types' must be a non-empty list of strings")
     return frozenset(value)
 
 

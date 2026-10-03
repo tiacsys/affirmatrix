@@ -95,6 +95,14 @@ Each input has one purpose:
 * the **implementation export** gives the witnesses (:need:`SEG-SREQ-189`). When
   ``implementations`` is ``None``, no Witnesses edge is supplied.
 
+Each of the two exports is filtered by the ``types`` of its input before any
+need is checked. Only a need of a configured type is a test-case need or an
+implementation need (:need:`SEG-SREQ-336`, :need:`SEG-SREQ-339`). A need of
+another type is not checked, not mapped and gives no edge, so a bad field in it
+cannot refuse a run (:need:`SEG-SREQ-338`). The extractor reads the types from
+the input classes it already holds, so it needs no argument of its own. With no
+types, every need is read (:need:`SEG-SREQ-337`, :need:`SEG-SREQ-340`).
+
 The ``doxygen`` field of the two input classes is not used. A bundle can lie
 anywhere; the extractor needs no root and no repository name for it
 (:need:`SEG-SREQ-134`). The report format built is a JSON test report; a pytest

@@ -188,6 +188,23 @@ def _named_once(bundles: Sequence[Path]) -> tuple[Path, ...]:
     return tuple(seen.values())
 
 
+def _typed(needs: Mapping[str, Any], types: frozenset[str] | None) -> Mapping[str, Any]:
+    """The needs of an export that the configured types select; every need when none is set.
+
+    The filter runs before any check of a need's shape, so a need of another
+    type is neither checked nor mapped.
+
+    :implements: SEG-SREQ-336
+    :implements: SEG-SREQ-337
+    :implements: SEG-SREQ-338
+    :implements: SEG-SREQ-339
+    :implements: SEG-SREQ-340
+    """
+    if types is None:
+        return needs
+    return {key: need for key, need in needs.items() if need.get("type") in types}
+
+
 def _read_record(path: Path, what: str) -> str:
     """The one line that the record at ``path`` holds, without its line terminator.
 
@@ -314,8 +331,10 @@ class TwisterOutcomeExtractor:
     gives the revision and the dirty flag that decide. ``specifications``
     names the test-case export that maps each result to its need.
     ``implementations`` names the implementation export; when it is ``None``,
-    no Witnesses edge is supplied. The Doxygen directory that each of the two
-    input records names is not used here.
+    no Witnesses edge is supplied. The ``types`` of each of the two inputs, when
+    set, select the needs read from its export; the other needs are ignored.
+    The Doxygen directory that each of the two input records names is not used
+    here.
 
     The bundles and the exports are read and checked once, here, and every
     result is mapped here.
@@ -353,7 +372,10 @@ class TwisterOutcomeExtractor:
     def _read_specifications(self) -> _Specifications:
         """The test-case export's needs, checked and indexed for the mapping."""
         export = self.specifications.export
-        needs = _exports.read_needs(export, _SPECIFICATION_LABEL, OutcomeError)
+        needs = _typed(
+            _exports.read_needs(export, _SPECIFICATION_LABEL, OutcomeError),
+            self.specifications.types,
+        )
         rows = []
         verifies = {}
         for key, need in needs.items():
@@ -383,7 +405,10 @@ class TwisterOutcomeExtractor:
         if self.implementations is None:
             return {}
         export = self.implementations.export
-        needs = _exports.read_needs(export, _IMPLEMENTATION_LABEL, OutcomeError)
+        needs = _typed(
+            _exports.read_needs(export, _IMPLEMENTATION_LABEL, OutcomeError),
+            self.implementations.types,
+        )
         implementers: dict[str, list[str]] = {}
         for key, need in needs.items():
             _exports.check_need(
