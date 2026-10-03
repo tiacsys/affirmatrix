@@ -49,6 +49,7 @@ from typing import Any
 
 from affirmatrix._hashing import content_hash
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord, TestResult
+from affirmatrix.sources import SourceError
 
 _NODES = "nodes"
 _EDGES = "edges"
@@ -61,7 +62,7 @@ _RESULT_KEY = "result"
 _REVISION_KEY = "revision"
 
 
-class StoreError(Exception):
+class StoreError(SourceError):
     """The would-be store cannot be read as a record stream.
 
     Raised rather than collected, and raised for a missing store rather than

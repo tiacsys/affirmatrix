@@ -5,8 +5,9 @@ The engine consumes records; the code and the tests they cover are C files in
 another repository. :class:`affirmatrix.sources.content.CSourceExtractor` sits
 between the two: from the need exports, the Doxygen output and the source files
 it supplies one Implementation or TestSpecification record per need, each with
-two content hashes, and one edge per declared link. It is a library component;
-the command line does not yet compose it with the other producers. The Python
+two content hashes, and one edge per declared link. The command
+line composes it, with the other configured readers, into the current stream
+(see :doc:`command-line-interface`). The Python
 binding of the same principle is not built (see the last section).
 
 What it reads

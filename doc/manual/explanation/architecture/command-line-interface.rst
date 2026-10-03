@@ -41,11 +41,26 @@ Noun          Verb                Library call
                                    :func:`~affirmatrix.proof.persist`
 ============  ==================  =============================================================
 
-A verb that needs the current stream (every one but ``case init``) takes
-``--current <path>`` to name the producer explicitly — the would-be store in
-iteration 0 — or reads the configured ``producer.root`` when neither is
-given. Absent both, the command exits 2: it was asked to judge something with
-no second stream to compare against.
+A verb that needs the current stream (every one but ``case init``) resolves
+it in one order. ``--current <path>`` names a would-be store explicitly and
+wins. Otherwise the producer is composed from the configuration: the
+requirements reader when ``producer.requirements`` is set, then the content
+extractor when ``producer.implementations`` or ``producer.specifications`` is
+set, chained in that order into one stream
+(:func:`affirmatrix.sources.composed.from_config`). Only when the
+configuration names no reader does ``producer.root`` (the would-be store)
+apply. Absent all of them, or when a configured input cannot be read, the
+command exits 2: it was asked to judge something with no second stream to
+compare against.
+
+The readers anchor every record to the repository ``producer.repository``
+names, by name and by repository-relative path. The configuration file's
+paths are all taken from the file's directory, so the composition re-derives
+the requirements source directory relative to the repository's path. A source
+directory that does not lie under the repository, a ``producer.repository``
+that is missing or not in ``repositories``, an unreadable export and a source
+file that cannot be read are each a request it could not judge (exit 2).
+``producer.outcomes`` is read by the loader and not yet composed.
 
 The exit-status vocabulary
 ------------------------------
@@ -140,6 +155,8 @@ Key                           Carries
 ============================  =========================================================
 ``case``                      the case root (default ``./case``)
 ``producer.root``              the current stream's producer (default: none configured)
+``producer.repository`` and    the readers' inputs; when any reader is set it supplies
+the reader blocks              the current stream and ``producer.root`` is ignored
 ``repositories.<name>``        a repository name an anchor may carry, mapped to its path
 ``implementation``             which configured repository is the implementation one
 ``roles``                      a list, the accepted affirmation roles

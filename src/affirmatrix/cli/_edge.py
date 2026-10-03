@@ -14,7 +14,7 @@ from affirmatrix.case import AffirmationStore
 from affirmatrix.cli import _judgement, _outcome, _selector
 from affirmatrix.config import Config
 from affirmatrix.records import EdgeReference, LinkState
-from affirmatrix.sources.store import StoreError
+from affirmatrix.sources import SourceError
 
 _RE_AFFIRMATION_TAGS = {
     LinkState.PENDING: "needs affirmation",
@@ -177,7 +177,7 @@ def _build(args: argparse.Namespace, config: Config, store: AffirmationStore):
     try:
         derivation = drift.derive(recorded=store, current=current)
         built = graph.build(derivation)
-    except (graph.GraphError, drift.DriftError, StoreError) as error:
+    except (graph.GraphError, drift.DriftError, SourceError) as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return None, _outcome.exit_for(_outcome.INDETERMINATE)
     return built, None

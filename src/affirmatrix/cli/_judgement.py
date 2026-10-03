@@ -15,7 +15,8 @@ from pathlib import Path
 from affirmatrix.cli import _repository
 from affirmatrix.config import Config
 from affirmatrix.records import NodeRecord, RecordSource
-from affirmatrix.sources.store import StoreError, StoreLoader
+from affirmatrix.sources import SourceError, composed
+from affirmatrix.sources.store import StoreLoader
 
 
 class JudgementError(Exception):
@@ -149,22 +150,19 @@ def resolve_current(current: str | None, config: Config) -> RecordSource:
 
     :implements: SEG-SREQ-142
 
-    A verb deriving from both record sources refuses, as a request it could
-    not judge, when it is given no current stream and none is configured.
-    ``current`` overrides the configured producer root when given; absent
-    both, or naming a root that is not a would-be store, the request cannot
-    be judged — both read as the same "could not judge" refusal to every
-    caller, so both are folded into one exception here rather than asking
-    each call site to catch two.
+    ``current`` names a would-be store explicitly and wins when given.
+    Otherwise the producer is composed from the configuration: the configured
+    readers when any is set, the would-be store at ``producer.root`` when none
+    is (see :func:`affirmatrix.sources.composed.from_config`). Absent all of
+    them, or when a configured input cannot be read, the request cannot be
+    judged — every such failure is a source error, folded into one exception
+    here rather than asking each call site to catch several.
     """
-    root = Path(current) if current is not None else config.producer_root
-    if root is None:
-        raise JudgementError(
-            "no producer is available: give --current or configure producer.root"
-        )
     try:
-        return StoreLoader(root=root)
-    except StoreError as error:
+        if current is not None:
+            return StoreLoader(root=Path(current))
+        return composed.from_config(config)
+    except SourceError as error:
         raise JudgementError(str(error)) from error
 
 

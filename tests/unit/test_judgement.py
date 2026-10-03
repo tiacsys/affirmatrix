@@ -142,6 +142,34 @@ def test_resolve_current_overrides_the_configured_producer(
     assert source.root == would_be_store_copy
 
 
+def test_resolve_current_with_a_directory_is_the_store_loader_despite_configured_readers(
+    would_be_store_copy: Path, composed_config
+) -> None:
+    from affirmatrix.sources.store import StoreLoader
+
+    loaded = config.load(composed_config())
+    source = _judgement.resolve_current(str(would_be_store_copy), loaded)
+    assert isinstance(source, StoreLoader)
+    assert source.root == would_be_store_copy
+
+
+def test_resolve_current_folds_a_missing_reader_export_into_a_judgement_error(
+    composed_config,
+) -> None:
+    path = composed_config(content=False)
+    path.write_text(path.read_text(encoding="utf-8").replace("needs.json", "absent.json"))
+    with pytest.raises(_judgement.JudgementError, match="cannot be read"):
+        _judgement.resolve_current(None, config.load(path))
+
+
+def test_resolve_current_folds_an_unconfigured_repository_into_a_judgement_error(
+    composed_config,
+) -> None:
+    loaded = config.load(composed_config(repositories={"other": "."}))
+    with pytest.raises(_judgement.JudgementError, match="not a configured repository"):
+        _judgement.resolve_current(None, loaded)
+
+
 def test_resolve_timestamp_defaults_to_now_and_is_timezone_aware() -> None:
     stamp = _judgement.resolve_timestamp(None)
     assert stamp.tzinfo is not None

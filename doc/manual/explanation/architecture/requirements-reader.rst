@@ -5,8 +5,8 @@ The requirement specification is authored in sphinx-needs; the engine consumes
 records. :class:`affirmatrix.sources.reqs.RequirementsReader` sits between the
 two: it reads the specification's built ``needs.json`` and supplies one
 Requirement record per requirement need, with a content hash, and one Refines
-edge per declared link. It is a library component; the command line does not
-yet compose it with the other producers.
+edge per declared link. The command line composes it, with the other configured
+readers, into the current stream (see :doc:`command-line-interface`).
 
 What it reads
 -------------

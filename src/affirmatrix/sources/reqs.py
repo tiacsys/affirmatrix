@@ -46,7 +46,7 @@ from typing import Any
 
 from affirmatrix._hashing import content_hash
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
-from affirmatrix.sources import _exports
+from affirmatrix.sources import SourceError, _exports
 
 _REQUIREMENT = "Requirement"
 _REFINES = "Refines"
@@ -55,7 +55,7 @@ _LABEL = "requirement export"
 _TEXT_FIELDS = ("id", "title", "content", "docname", "doctype")
 
 
-class ReaderError(Exception):
+class ReaderError(SourceError):
     """The requirement export cannot be read as a record source.
 
     Raised at construction, before any record is supplied.

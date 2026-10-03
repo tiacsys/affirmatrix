@@ -16,7 +16,7 @@ from affirmatrix import drift, graph
 from affirmatrix.case import AffirmationStore, AffirmationStoreError
 from affirmatrix.cli import _judgement, _outcome, _selector
 from affirmatrix.config import Config
-from affirmatrix.sources.store import StoreError
+from affirmatrix.sources import SourceError
 
 
 def add_check_arguments(parser: argparse.ArgumentParser) -> None:
@@ -97,7 +97,7 @@ def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStor
         return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
     try:
         derivation = drift.derive(recorded=store, current=current)
-    except (graph.GraphError, drift.DriftError, StoreError) as error:
+    except (graph.GraphError, drift.DriftError, SourceError) as error:
         return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
     store.write_nodes(derivation.nodes())
     store.write_edges(derivation.edges(), demote=())
@@ -177,7 +177,7 @@ def _producer_readable(args: argparse.Namespace, config: Config) -> bool:
     try:
         current = _judgement.resolve_current(args.current, config)
         list(current.nodes())
-    except (_judgement.JudgementError, StoreError):
+    except (_judgement.JudgementError, SourceError):
         return False
     return True
 

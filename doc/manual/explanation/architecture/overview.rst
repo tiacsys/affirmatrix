@@ -70,11 +70,12 @@ Four things stand around the tool.
   reviewer can see what a judgement bound. The adapter never writes to a
   repository.
 - **The record producers.** Whatever turns sources into node and edge
-  records. Today the only producer is the would-be store, a hand-transcribed
-  fixture under ``tests/fixtures/``; the requirements reader and the content
-  extractor are built as library components but not yet composed into the
-  command line, and the outcome extractor is named and documented but not yet
-  written.
+  records. This repository's own case is still built from the would-be store,
+  a hand-transcribed fixture under ``tests/fixtures/``. The requirements reader
+  and the content extractor are composed by the command line from the
+  configured ``producer`` block into one current stream, which is how a project
+  with a sphinx-needs export and Doxygen output builds its case; the outcome
+  extractor is named and documented but not yet written.
 
 Outside the tool: any write to git, continuous integration, and storage of
 content of any kind. A pipeline that wants to run the tool runs the command
@@ -135,7 +136,12 @@ detail.
        and the case persists.
    * - store loader
      - ``sources.store``
-     - Reads the would-be store as a record source; the only producer today.
+     - Reads the would-be store as a record source; this repository's own
+       case still reads it.
+   * - composed producer
+     - ``sources.composed``
+     - Chains the configured readers into one current stream, and builds it from
+       the configuration.
    * - requirements reader, content extractor, outcome extractor
      - ``sources.reqs``, ``sources.content``, ``sources.outcomes``
      - The requirements reader and the content extractor are built; the
@@ -324,11 +330,11 @@ three gates the design names, only the package gate exists; the commit gate's
 conditions are all extraction conditions and the release gate needs a sealed
 package and a release to check.
 
-**The would-be store is the only producer.** A case built today is built from a
-transcription of this repository taken at one commit, not from the repository
-as it stands. Its anchors name a path inside the fixture rather than a
-configured repository, and every affirmation or generation over it therefore
-takes an explicit revision.
+**This repository's own case is read from the would-be store.** A case built
+from it reflects a transcription of this repository taken at one commit, not
+the repository as it stands. Its anchors name a path inside the fixture rather
+than a configured repository, and every affirmation or generation over it
+therefore takes an explicit revision.
 
 **Limits to read carefully.**
 

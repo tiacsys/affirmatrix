@@ -15,7 +15,7 @@ from affirmatrix.case import AffirmationStore
 from affirmatrix.cli import _judgement, _outcome
 from affirmatrix.config import Config
 from affirmatrix.records import EdgeReference, LinkState, RecordSource
-from affirmatrix.sources.store import StoreError
+from affirmatrix.sources import SourceError
 
 _SUSPECT_OR_BROKEN = frozenset(
     {
@@ -49,7 +49,7 @@ def handle_check(args: argparse.Namespace, config: Config, store: AffirmationSto
     source = _current_or_case(args, config, store)
     try:
         built = graph.build(source)
-    except (graph.GraphError, StoreError) as error:
+    except (graph.GraphError, SourceError) as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return _outcome.exit_for(_outcome.NEGATIVE)
     node_counts = Counter(built.node(local_id).kind for local_id in built.node_ids())
@@ -91,7 +91,7 @@ def handle_status(args: argparse.Namespace, config: Config, store: AffirmationSt
     try:
         derivation = drift.derive(recorded=store, current=current)
         built = graph.build(derivation)
-    except (graph.GraphError, drift.DriftError, StoreError) as error:
+    except (graph.GraphError, drift.DriftError, SourceError) as error:
         _outcome.render_refusal(str(error), as_json=args.json)
         return _outcome.exit_for(_outcome.INDETERMINATE)
     rows = [_status_row(built, edge, store, verbose=args.verbose) for edge in built.edges]

@@ -333,3 +333,79 @@ def test_case_check_run_from_another_directory_finds_the_case_a_config_file_name
     report = json.loads(capsys.readouterr().out)
     assert report["configurationFound"] is True
     assert report["layout"] == ["edges", "events", "nodes", "proofs", "schema"]
+
+
+# --- the composed producer ----------------------------------------------------
+
+
+def _composed_sync(tmp_path: Path, composed_config, **overrides) -> tuple[int, Path, Path]:
+    config_path = composed_config(**overrides)
+    root = _case_root(tmp_path)
+    assert main(["--config", str(config_path), "case", "init", "--case", str(root)]) == 0
+    status = main(["--config", str(config_path), "case", "sync", "--case", str(root)])
+    return status, config_path, root
+
+
+def test_case_check_reports_a_composed_producer_readable(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    """SEG-SREQ-142."""
+    config_path = composed_config()
+    root = _case_root(tmp_path)
+    main(["--config", str(config_path), "case", "init", "--case", str(root)])
+    status = main(["--config", str(config_path), "case", "check", "--case", str(root), "--json"])
+    assert status == 0
+    assert '"producerReadable": true' in capsys.readouterr().out
+
+
+def test_case_check_reports_a_composed_producer_with_a_missing_export_unreadable(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    config_path = composed_config(content=False)
+    config_path.write_text(
+        config_path.read_text(encoding="utf-8").replace("needs.json", "absent.json"),
+        encoding="utf-8",
+    )
+    root = _case_root(tmp_path)
+    main(["--config", str(config_path), "case", "init", "--case", str(root)])
+    status = main(["--config", str(config_path), "case", "check", "--case", str(root), "--json"])
+    assert status == 1
+    assert '"producerReadable": false' in capsys.readouterr().out
+
+
+def test_case_sync_over_a_composed_producer_writes_60_nodes_and_62_edges_all_pending(
+    tmp_path: Path, composed_config
+) -> None:
+    status, _, root = _composed_sync(tmp_path, composed_config)
+    assert status == 0
+    store = case.AffirmationStore(root=root)
+    assert sum(1 for _ in store.nodes()) == 60
+    edges = list(store.edges())
+    assert len(edges) == 62
+    assert {edge.state for edge in edges} == {LinkState.PENDING}
+
+
+def test_case_sync_with_a_source_directory_outside_the_repository_exits_2_and_writes_nothing(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    status, _, root = _composed_sync(
+        tmp_path, composed_config, repositories={"toolbox": str(tmp_path / "elsewhere")},
+        content=False,
+    )
+    assert status == 2
+    assert "does not lie under repository" in capsys.readouterr().out
+    assert sum(1 for _ in case.AffirmationStore(root=root).nodes()) == 0
+
+
+def test_case_sync_with_an_absent_extractor_source_file_exits_2_without_a_traceback(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    """A stream that cannot be completed stops the sync before any write."""
+    empty = tmp_path / "empty-repository"
+    empty.mkdir()
+    status, _, root = _composed_sync(
+        tmp_path, composed_config, repositories={"toolbox": str(empty)}, requirements=False
+    )
+    assert status == 2
+    assert "cannot be read" in capsys.readouterr().out
+    assert sum(1 for _ in case.AffirmationStore(root=root).nodes()) == 0

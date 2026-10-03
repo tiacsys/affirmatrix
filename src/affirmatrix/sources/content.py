@@ -67,7 +67,7 @@ from typing import Any
 from affirmatrix import config
 from affirmatrix._hashing import content_hash
 from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
-from affirmatrix.sources import _exports
+from affirmatrix.sources import SourceError, _exports
 
 __all__ = [
     "CSourceExtractor",
@@ -90,7 +90,7 @@ _LOCATOR_SUFFIX = {"apiHash": "api", "bodyHash": "body", "specHash": "spec", "im
 _GUARD_LINE = re.compile(rb"^[ \t]*#[ \t]*if(n?def)?\b")
 
 
-class ExtractorError(Exception):
+class ExtractorError(SourceError):
     """A node, or an input, cannot be turned into content the extractor may hash.
 
     Raised at construction for what the exports and the Doxygen trees alone
