@@ -152,13 +152,8 @@ def moment(hours: int) -> datetime:
 
 # --- git ---------------------------------------------------------------------
 
-_REPOSITORY_VARIABLES = (
-    "GIT_DIR",
-    "GIT_WORK_TREE",
-    "GIT_INDEX_FILE",
-    "GIT_OBJECT_DIRECTORY",
-    "GIT_COMMON_DIR",
-    "GIT_NAMESPACE",
+#: The variables that name a repository are ``repository_reads_support.NAMES``. These are the rest.
+_OTHER_VARIABLES = (
     "GIT_COMMITTER_NAME",
     "GIT_COMMITTER_EMAIL",
     "GIT_COMMITTER_DATE",
@@ -177,7 +172,10 @@ def isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     The command runs git in this process environment, so the variables are set
     with ``monkeypatch`` and they reach it.
     """
-    for name in _REPOSITORY_VARIABLES:
+    # Imported here: repository_reads_support imports this module.
+    from .repository_reads_support import NAMES
+
+    for name in (*NAMES, *_OTHER_VARIABLES):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.resolve().parent))
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
