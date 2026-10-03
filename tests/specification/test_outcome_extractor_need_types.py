@@ -67,7 +67,6 @@ def _kinds(extractor: Any, kind: str) -> list[str]:
     return [target for _, target in support.edge_pairs(extractor, kind)]
 
 
-@support.red(336, "a result that only a need of another type forms is not refused")
 def test_only_needs_of_the_configured_types_are_test_case_needs(tmp_path: Path) -> None:
     """Only the needs of the configured types are test-case needs.
 
@@ -135,7 +134,6 @@ def test_without_configured_types_every_need_is_a_test_case_need(tmp_path: Path)
     assert "has no text field 'suite'" in str(refused.value)
 
 
-@support.red(338, "a test procedure with no suite refuses the test-case export", OutcomeError)
 def test_a_need_of_another_type_does_not_refuse_the_test_case_export(tmp_path: Path) -> None:
     """A need of another type does not refuse the test-case export.
 
@@ -213,7 +211,6 @@ def _typed_session(tmp_path: Path, capsys: pytest.CaptureFixture[str], *, typed:
     return opened
 
 
-@support.red(338, "the outcome extractor refuses a need of another type in either export")
 def test_a_bundle_read_over_exports_with_other_types_gives_a_verdict(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -272,9 +269,6 @@ def test_a_bundle_read_over_a_procedure_need_with_no_configured_types_is_refused
     assert '"edges"' not in out
 
 
-@support.red(
-    338, "an implementation need of another type with bad links refuses the export", OutcomeError
-)
 def test_a_need_of_another_type_does_not_refuse_the_implementation_export(
     tmp_path: Path,
 ) -> None:
@@ -332,7 +326,6 @@ def _witnessing_exports(tmp_path: Path) -> tuple[Path, Path]:
     return specifications, implementations
 
 
-@support.red(339, "every implementation need gives a Witnesses edge, whatever its type")
 def test_the_witnesses_come_from_the_implementation_needs_of_the_configured_types(
     tmp_path: Path,
 ) -> None:
