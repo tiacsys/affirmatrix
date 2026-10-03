@@ -20,6 +20,7 @@ module realizes.
    case-store
    requirements-reader
    content-extractor
+   outcome-extractor
    affirmation-store-write-face
    affirmation-store-read-face
    drift-derivation

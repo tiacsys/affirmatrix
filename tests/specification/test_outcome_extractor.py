@@ -246,7 +246,6 @@ def _witnessed(specification: str, tree: Path = FIXTURE) -> set[str]:
     return {need_id for need_id, need in needs.items() if verified & set(need["satisfies"])}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-178: the outcome extractor is not built yet")
 def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_path: Path) -> None:
     """A run identifier joins the run's name, platform and scenario, in that order.
 
@@ -287,7 +286,6 @@ def test_a_run_identifier_joins_the_run_name_the_platform_and_the_scenario(tmp_p
     assert f"{_run_identifier('safe_data.api.timeout', 'qemu_x86')}/{INIT_AND_VERIFY}" in after
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-179: the outcome extractor is not built yet")
 def test_a_specification_identifier_is_the_test_case_needs_identifier_verbatim(
     tmp_path: Path,
 ) -> None:
@@ -328,7 +326,6 @@ def test_a_specification_identifier_is_the_test_case_needs_identifier_verbatim(
     }
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-180: the outcome extractor is not built yet")
 def test_a_result_maps_to_the_need_with_its_scenario_suite_and_test_function(
     tmp_path: Path,
 ) -> None:
@@ -385,7 +382,6 @@ def test_a_result_maps_to_the_need_with_its_scenario_suite_and_test_function(
     assert f"{_run_identifier('zz.api')}/{INIT_AND_VERIFY}" in mapped
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-181: the outcome extractor is not built yet")
 def test_an_unmapped_or_ambiguous_result_is_an_error_for_that_result(tmp_path: Path) -> None:
     """An unmapped or ambiguous result is an error that names the result.
 
@@ -416,7 +412,6 @@ def test_an_unmapped_or_ambiguous_result_is_an_error_for_that_result(tmp_path: P
     _refused(unmapped, SELFTEST_RESULT)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-182: the outcome extractor is not built yet")
 def test_a_content_hash_covers_the_specification_the_run_and_the_result_only(
     tmp_path: Path,
 ) -> None:
@@ -464,7 +459,6 @@ def test_a_content_hash_covers_the_specification_the_run_and_the_result_only(
     assert after[identity] == _canonical(INIT_AND_VERIFY, _run_identifier(BASE), "failed")
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-183: the outcome extractor is not built yet")
 def test_a_recorded_status_maps_onto_the_closed_result_set(tmp_path: Path) -> None:
     """A recorded status maps onto the member of the closed result set it corresponds to.
 
@@ -496,7 +490,6 @@ def test_a_recorded_status_maps_onto_the_closed_result_set(tmp_path: Path) -> No
     }
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-184: the outcome extractor is not built yet")
 def test_a_status_with_no_counterpart_is_an_error_for_that_result(tmp_path: Path) -> None:
     """A status with no counterpart in the closed result set is an error for that result.
 
@@ -513,7 +506,6 @@ def test_a_status_with_no_counterpart_is_an_error_for_that_result(tmp_path: Path
         _refused(variant, INIT_RESULT)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-185: the outcome extractor is not built yet")
 def test_a_skipped_result_is_recorded_as_a_skipped_outcome() -> None:
     """A skipped result is recorded as an outcome whose result is skipped.
 
@@ -541,7 +533,6 @@ def test_a_skipped_result_is_recorded_as_a_skipped_outcome() -> None:
     assert {identity for identity, node in nodes.items() if node.result == "skipped"} == skipped
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-186: the outcome extractor is not built yet")
 def test_an_outcomes_revision_is_the_revision_recorded_beside_the_run(tmp_path: Path) -> None:
     """An outcome's revision is the full revision recorded beside the run artifact.
 
@@ -566,7 +557,6 @@ def test_an_outcomes_revision_is_the_revision_recorded_beside_the_run(tmp_path: 
     assert {node.revision for node in _nodes(changed).values()} == {other}
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-187: the outcome extractor is not built yet")
 def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
     """A run with no recorded full revision is refused, and no outcome is supplied.
 
@@ -588,7 +578,6 @@ def test_a_run_with_no_recorded_revision_is_refused(tmp_path: Path) -> None:
             _extractor(variant)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-188: the outcome extractor is not built yet")
 def test_a_confirms_edge_runs_from_each_outcome_to_its_specification() -> None:
     """A Confirms edge runs from each outcome to the specification its result maps to.
 
@@ -606,7 +595,6 @@ def test_a_confirms_edge_runs_from_each_outcome_to_its_specification() -> None:
     assert (f"{_run_identifier(BASE)}/{INIT_AND_VERIFY}", INIT_AND_VERIFY) in expected
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-189: the outcome extractor is not built yet")
 def test_a_witnesses_edge_runs_to_each_implementation_of_what_the_specification_verifies(
     tmp_path: Path,
 ) -> None:
@@ -659,7 +647,6 @@ def test_a_witnesses_edge_runs_to_each_implementation_of_what_the_specification_
     assert _pairs(_edges(implementations=False), "Witnesses") == []
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-190: the outcome extractor is not built yet")
 def test_an_outcomes_anchor_names_the_run_artifact_and_the_result(tmp_path: Path) -> None:
     """An outcome's anchor names the run artifact's path in its repository and the result.
 

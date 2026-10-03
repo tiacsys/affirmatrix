@@ -75,7 +75,8 @@ Four things stand around the tool.
   and the content extractor are composed by the command line from the
   configured ``producer`` block into one current stream, which is how a project
   with a sphinx-needs export and Doxygen output builds its case; the outcome
-  extractor is named and documented but not yet written.
+  extractor reads twister run artifacts and is built as a library component,
+  but the command line does not compose it yet.
 
 Outside the tool: any write to git, continuous integration, and storage of
 content of any kind. A pipeline that wants to run the tool runs the command
@@ -144,9 +145,9 @@ detail.
        the configuration.
    * - requirements reader, content extractor, outcome extractor
      - ``sources.reqs``, ``sources.content``, ``sources.outcomes``
-     - The requirements reader and the content extractor are built; the
-       outcome extractor is a named producer for the next iteration and
-       docstring-only today.
+     - The three readers are built. The command line composes the requirements
+       reader and the content extractor. It does not compose the outcome
+       extractor yet.
    * - commitment layer
      - ``commitment``
      - Node hash, edge hash and design root as pure primitives.
@@ -323,9 +324,8 @@ different artifact: they drive the design and are not graph participants
 After iteration 0: state and known limits
 -----------------------------------------
 
-**What carries behaviour.** Every component in the table above except one:
-the outcome extractor is a docstring-only module under ``sources/`` that states
-what it will do. Of the
+**What carries behaviour.** Every component in the table above. The outcome
+extractor is built as a library; the command line does not compose it yet. Of the
 three gates the design names, only the package gate exists; the commit gate's
 conditions are all extraction conditions and the release gate needs a sealed
 package and a release to check.
