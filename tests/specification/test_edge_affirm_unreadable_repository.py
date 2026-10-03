@@ -22,12 +22,9 @@ import pytest
 from . import extraction_support as base
 from . import repository_reads_support as reads
 from . import unreadable_support as support
-from .provenance_support import red
 
 pytestmark = base.requires_git
 
-_NOT_REFUSED = "an unreadable repository ends the command in a traceback, with exit status 1"
-_NAME_LOST = "the refusal does not name the repository that the configuration names"
 _VARIANTS = pytest.mark.parametrize("variant", support.VARIANTS)
 
 
@@ -56,7 +53,6 @@ def _broken(variant: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> ba
 
 
 @_VARIANTS
-@red(363, _NOT_REFUSED)
 def test_edge_affirm_refuses_when_the_repository_cannot_be_read(
     variant: str,
     tmp_path: Path,
@@ -87,7 +83,6 @@ def test_edge_affirm_refuses_when_the_repository_cannot_be_read(
 
 
 @_VARIANTS
-@red(364, _NOT_REFUSED)
 def test_a_refused_edge_affirm_writes_nothing(
     variant: str,
     tmp_path: Path,
@@ -115,7 +110,6 @@ def test_a_refused_edge_affirm_writes_nothing(
 
 @pytest.mark.parametrize("variant", ("objects", "stand-in"))
 @pytest.mark.parametrize("which", ("to", "from"))
-@red(364, _NOT_REFUSED)
 def test_a_refused_edge_affirm_over_two_repositories_writes_nothing(
     which: str,
     variant: str,

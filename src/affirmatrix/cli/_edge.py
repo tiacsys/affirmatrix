@@ -14,7 +14,7 @@ from collections.abc import Mapping
 
 from affirmatrix import affirmation, drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore
-from affirmatrix.cli import _extraction, _judgement, _outcome, _provenance, _selector
+from affirmatrix.cli import _extraction, _judgement, _outcome, _provenance, _repository, _selector
 from affirmatrix.config import Config
 from affirmatrix.records import EdgeReference, LinkState
 from affirmatrix.sources import SourceError
@@ -285,12 +285,21 @@ def _before_content_entry(node, revision: str, config: Config) -> dict[str, obje
     """The before-content an endpoint's anchor recovers at ``revision``, headed by it.
 
     :implements: SEG-SREQ-111
+    :implements: SEG-SREQ-365
+    :implements: SEG-SREQ-366
 
     Carries the revision alongside the recovered bytes (or ``None``, when
     nothing could be recovered) so a renderer can name what was recovered
-    at without a second lookup.
+    at without a second lookup. When the repository cannot be read, the
+    entry also carries ``error``: the repository as the configuration names
+    it, and the reason. The read does not stop the command, and the exit
+    status does not depend on it.
     """
-    content = _judgement.recover_before_content(node, revision, config)
+    try:
+        content = _judgement.recover_before_content(node, revision, config)
+    except _repository.RepositoryError as error:
+        name = _judgement.endpoint_repository_name(node)
+        return {"revision": revision, "content": None, "error": f"{name}: {error}"}
     return {
         "revision": revision,
         "content": content.decode("utf-8", errors="replace") if content is not None else None,
@@ -309,6 +318,12 @@ def _print_shown(rows: list[dict[str, object]]) -> None:
             current = item["current"] if item["current"] is not None else "—"
             print(f"  {item['endpoint']} {item['name']}: {recorded} → {current} ({item['status']})")
         for endpoint, entry in (row.get("beforeContent") or {}).items():
+            if entry.get("error"):
+                print(
+                    f"  before-content @ {endpoint} (revision {entry['revision']}): "
+                    f"not available: {entry['error']}"
+                )
+                continue
             if entry["content"] is None:
                 continue
             print(f"  before-content @ {endpoint} (revision {entry['revision']}):")

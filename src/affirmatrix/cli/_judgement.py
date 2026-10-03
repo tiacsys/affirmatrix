@@ -52,6 +52,7 @@ def resolve_revision(node: NodeRecord, *, config: Config, given: str | None, lab
     :implements: SEG-SREQ-108
     :implements: SEG-SREQ-109
     :implements: SEG-SREQ-110
+    :implements: SEG-SREQ-363
 
     ``given`` overrides discovery entirely when present, recorded exactly as
     given, neither discovered nor checked (SEG-SREQ-109). Otherwise, where
@@ -59,7 +60,9 @@ def resolve_revision(node: NodeRecord, *, config: Config, given: str | None, lab
     (SEG-SREQ-107), the working tree's revision is discovered and the
     anchored paths checked clean before it is trusted (SEG-SREQ-108);
     lacking a mapped repository, a revision must be given explicitly
-    (SEG-SREQ-110).
+    (SEG-SREQ-110). A repository that cannot be read is refused, naming the
+    repository as the configuration names it and giving the reason; the read
+    comes before anything is written, so the refusal writes nothing.
     """
     if given is not None:
         return given
@@ -70,9 +73,14 @@ def resolve_revision(node: NodeRecord, *, config: Config, given: str | None, lab
             f"{label}: no repository is configured for this endpoint's anchor; "
             "a revision must be given explicitly (--revision)"
         )
-    revision = _repository.discover_revision(repository_path)
     anchored_paths = [Path(anchor.path) for anchor in node.content_anchors.values()]
-    cleanliness = _repository.check_clean(repository_path, anchored_paths)
+    try:
+        revision = _repository.discover_revision(repository_path)
+        cleanliness = _repository.check_clean(repository_path, anchored_paths)
+    except _repository.RepositoryError as error:
+        raise JudgementError(
+            f"{label}: the repository {repository_name} cannot be read: {error}"
+        ) from error
     if not cleanliness.clean:
         raise JudgementError(
             f"{label}: the content at {', '.join(cleanliness.dirty_paths)} differs from what "
@@ -122,6 +130,7 @@ def resolve_gate_revision(config: Config, *, given: str | None) -> str:
     """The proof gate's implementation revision, under the same rule as an endpoint's.
 
     :implements: SEG-SREQ-112
+    :implements: SEG-SREQ-367
 
     ``given`` overrides discovery; otherwise the configured implementation
     repository's revision is discovered and the whole repository checked
@@ -139,7 +148,9 @@ def resolve_gate_revision(config: Config, *, given: str | None) -> str:
         revision = _repository.discover_revision(repository_path)
         cleanliness = _repository.check_clean(repository_path, [Path(".")])
     except _repository.RepositoryError as error:
-        raise JudgementError(f"the implementation repository cannot be read: {error}") from error
+        raise JudgementError(
+            f"the implementation repository {config.implementation} cannot be read: {error}"
+        ) from error
     if not cleanliness.clean:
         raise JudgementError(
             f"the implementation repository is dirty at {', '.join(cleanliness.dirty_paths)}; "

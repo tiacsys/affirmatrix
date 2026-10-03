@@ -172,7 +172,10 @@ def _run(repo_path: Path, *args: str, accept: Collection[int] = (0,)) -> bytes:
     names in ``_REPOSITORY_VARIABLES``, so git finds the repository from
     ``repo_path`` alone. The only place ``subprocess`` runs in this package.
     A git failure of any kind becomes one :class:`RepositoryError`; nothing above this function
-    ever sees a ``subprocess`` exception. An exit status in ``accept`` is an
+    ever sees a ``subprocess`` exception. A missing working directory and a
+    missing ``git`` program both raise ``FileNotFoundError``; the reason tells
+    them apart, so a path that does not exist is never reported as an absent
+    git. An exit status in ``accept`` is an
     answer and not a failure: ``git rev-parse --verify --quiet`` uses status 1
     to say that a name does not resolve.
     """
@@ -185,6 +188,8 @@ def _run(repo_path: Path, *args: str, accept: Collection[int] = (0,)) -> bytes:
             env=_git_environment(),
         )
     except FileNotFoundError as error:
+        if not repo_path.exists():
+            raise RepositoryError(f"the path {repo_path} does not exist") from error
         raise RepositoryError(
             "git is not on PATH; the adapter's repository reads need it"
         ) from error

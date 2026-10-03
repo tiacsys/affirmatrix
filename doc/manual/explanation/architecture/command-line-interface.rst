@@ -249,6 +249,24 @@ last affirmation, the row also says who recorded that affirmation and when
 and a broken edge have the block too. An edge that was never affirmed has none.
 There is no option for it.
 
+The selection ``--below <requirement>`` takes the edges inside the subtree of
+that requirement (:need:`SEG-SREQ-345`). The subtree holds the requirement and
+every requirement that refines it, directly or through others. A ``Refines``
+edge is inside when both of its ends are in the subtree (:need:`SEG-SREQ-346`).
+So the edge from the top of the subtree to its own parent is not selected, and
+nor is the edge from a member to a second parent outside the subtree. A
+``Verifies`` or ``Implements`` edge is inside when the requirement that it names
+is in the subtree (:need:`SEG-SREQ-347`), whichever subtree the test
+specification or the implementation belongs to.
+
+When the repository that holds the before-content of an endpoint cannot be read,
+``-v`` does not stop (:need:`SEG-SREQ-365`). The row of the endpoint has
+``content`` set to null and an ``error`` that names the repository, as the
+configuration names it, and gives the reason. The text form prints
+``before-content @ <endpoint> (revision <revision>): not available:
+<repository>: <reason>``. The exit status does not depend on it
+(:need:`SEG-SREQ-366`).
+
 A review event holds no person and no time. The history of the case holds them,
 because the commit that adds an event is the act of affirming (ADR-0009). The
 adapter reads that history (ADR-0015) to find the *recording commit*: the
@@ -415,7 +433,8 @@ exactly these three values:
   that is refused, an unbuildable
   current stream for ``graph status``, a selector matching nothing, an
   affirmation missing its selector, a revision that must be given
-  explicitly but was not, no producer available for a two-stream verb, a
+  explicitly but was not, a content repository that cannot be read when a
+  revision must be discovered, no producer available for a two-stream verb, a
   configuration file that exists but cannot be made sense of).
 
 ``case check`` reports five judgements rather than one verdict about
@@ -484,6 +503,24 @@ floor also applies when the system gives no limit. Every path is in exactly one 
 the parts are joined into the answer of one call. If one part fails, the whole
 read fails, and the repository counts as one that cannot be read. The adapter
 never uses the answers of the parts that did succeed on their own.
+
+A read can fail in each of these ways: git is not on the path, the path does not
+exist, the path is not a repository, objects are missing, or the repository does
+not hold the revision or the path. The adapter tells the first two apart. A path
+that does not exist says so, and an absent git says that git is not on the
+path. A caller that must refuse does not use the text of
+git alone to name the repository. It names the repository as the configuration
+names it, and then gives the reason.
+
+``edge affirm`` reads before it writes anything. When it discovers or checks a
+revision and the repository cannot be read, it refuses the whole request, names
+the repository and gives the reason, and exits with status 2
+(:need:`SEG-SREQ-363`). It writes no review event, no edge record and no node
+record (:need:`SEG-SREQ-364`). A revision that the operator gives is not
+discovered and not checked, so a repository that cannot be read does not stop
+that request. The proof gate does the same for the implementation repository
+(:need:`SEG-SREQ-367`), and ``proof generate`` then writes no package
+(:need:`SEG-SREQ-368`).
 
 ``node show`` uses the revision read and the cleanliness read too. It reports
 their results and never refuses on them. Discovery and the cleanliness check together are how

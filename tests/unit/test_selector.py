@@ -64,10 +64,26 @@ def test_a_selector_matching_nothing_returns_empty() -> None:
 
 
 def test_below_narrows_to_the_subtree() -> None:
-    """C refines B refines A: --below A reaches every edge touching A, B, or C."""
+    """C refines B refines A: --below A reaches the edges inside the subtree of A.
+
+    The refinement edges are B to A and C to B. D verifies A, and A is the
+    requirement it names, so that edge is inside too.
+    """
     built = _built_graph()
     matched = _selector.select(built.edges, _selector.Selector(below="A"), built)
     assert {(e.from_id, e.to_id) for e in matched} == {("B", "A"), ("C", "B"), ("D", "A")}
+
+
+def test_below_leaves_out_an_edge_that_crosses_the_subtree_border() -> None:
+    """--below B leaves out the refinement edge from B to its parent A.
+
+    B refines A, and C refines B. The subtree of B is B and C. The edge from C
+    to B has both ends inside. The edge from B to A has one end outside, so it
+    is not selected, and nor is the Verifies edge from D, which names A.
+    """
+    built = _built_graph()
+    matched = _selector.select(built.edges, _selector.Selector(below="B"), built)
+    assert {(e.from_id, e.to_id) for e in matched} == {("C", "B")}
 
 
 def test_an_empty_selector_matches_everything() -> None:

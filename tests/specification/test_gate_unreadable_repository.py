@@ -26,19 +26,15 @@ from . import extraction_support as base
 from . import repository_reads_support as reads
 from . import unreadable_support as support
 from .proof_verify_support import seal, verify_cli
-from .provenance_support import red
 
 pytestmark = base.requires_git
 
-_NAME = (
-    "the report names the repository by the text of git or not at all, not by the configured name"
-)
 _VARIANTS = [
     "objects",
     "stand-in",
-    pytest.param("not-a-repository", marks=red(367, _NAME)),
-    pytest.param("missing-path", marks=red(367, _NAME)),
-    pytest.param("git-absent", marks=red(367, _NAME)),
+    "not-a-repository",
+    "missing-path",
+    "git-absent",
 ]
 
 
