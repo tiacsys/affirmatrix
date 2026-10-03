@@ -12,11 +12,17 @@
 # here. Nothing else changes. The `python -m doc` driver builds the set in two
 # passes so the derived cross-references resolve (stage 1 publishes
 # objects.inv + needs.json for every document; stage 2 rebuilds against them).
+# Stage 1 builds in layers, so that a document finds the indices it links
+# into (see `indexed_after`); documents may still link into each other in
+# both directions, because stage 2 reads all the indices.
 #
 # Fields per document:
 #   title    Human-readable name (navigation).
 #   group    Id of a declared group (navigation section).
 #   prefix   intersphinx namespace + needs id prefix. Unique across registry.
+#   indexed_after   Ids of the documents whose indices this document needs
+#            already in stage 1 (default: none). It builds after them. These
+#            links go one way only: the documents may not form a cycle.
 #   needs    true -> the document exports needs.json and is importable as
 #            sphinx-needs external needs by every other document.
 #   version_scope   Scoped git-tag namespace for the document's own version
@@ -38,6 +44,7 @@ documents:
     group: manual
     prefix: man
     needs: false
+    indexed_after: [requirement-specification]
 
   - id: requirement-specification
     title: "Requirement Specification"
@@ -51,6 +58,7 @@ documents:
     group: specifications
     prefix: sts
     needs: true
+    indexed_after: [requirement-specification]
     version_scope: docs/sts
 
   - id: test-report
