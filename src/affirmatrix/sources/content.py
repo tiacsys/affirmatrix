@@ -31,9 +31,10 @@ export a TestSpecification. The symbol a need names is its ``title`` on an
 implementation need and its ``test_function`` on a test-case need.
 
 Each stream names its own repository and, optionally, the prefix that every
-path of its Doxygen output begins with. The prefix is removed to give the path
-inside the repository; that path is what is read, what an anchor names, and
-what a test's module is compared with.
+path of its Doxygen output begins with, and a path root. The prefix is removed,
+and then the root is put in front, to give the path inside the repository; that
+path is what is read, what an anchor names, and what a test's module is
+compared with.
 
 **When an error is raised.** What the exports and the Doxygen trees alone can
 show is checked when the extractor is constructed, before any record is
@@ -384,6 +385,7 @@ class _Stream:
     edge_kind: str
     placement: Placement
     prefix: str | None
+    path_root: str | None
     module_field: str | None
 
 
@@ -430,8 +432,14 @@ def _resolve(root: Path, relative: str) -> Path:
     return target
 
 
-def _inside_repository(path: str, prefix: str | None) -> str:
-    """The path inside the repository: the Doxygen path with the prefix removed.
+def _inside_repository(path: str, prefix: str | None, root: str | None = None) -> str:
+    """The path inside the repository: the Doxygen path, prefix removed, root in front.
+
+    The prefix is removed first, and then ``root`` is put in front of what is
+    left, with one separator between them whether or not ``root`` ends with
+    one. An empty or absent root puts nothing in front. The joined path is not
+    normalised: a root that is absolute or leads out of the repository gives a
+    path that the later resolution refuses, naming the node.
 
     The prefix is text and is removed as written. A path that does not begin
     with it is an error, so a path is never read as it stands when a prefix says
@@ -442,7 +450,14 @@ def _inside_repository(path: str, prefix: str | None) -> str:
     :implements: SEG-SREQ-279
     :implements: SEG-SREQ-280
     :implements: SEG-SREQ-342
+    :implements: SEG-SREQ-349
     """
+    rest = _after_prefix(path, prefix)
+    return f"{root.rstrip('/')}/{rest}" if root else rest
+
+
+def _after_prefix(path: str, prefix: str | None) -> str:
+    """The Doxygen path with the prefix removed, or an error for a path it does not fit."""
     if not prefix:
         return path
     if not path.startswith(prefix):
@@ -458,7 +473,9 @@ def _inside_repository(path: str, prefix: str | None) -> str:
     return rest
 
 
-def _lies_within(member: _Member, prefix: str | None, directory: PurePosixPath) -> bool:
+def _lies_within(
+    member: _Member, prefix: str | None, directory: PurePosixPath, root: str | None = None
+) -> bool:
     """Whether the member's file, inside the repository, lies within ``directory``.
 
     A file that does not begin with the prefix lies within no directory. A file
@@ -468,7 +485,7 @@ def _lies_within(member: _Member, prefix: str | None, directory: PurePosixPath) 
     named = member.location.get("file")
     if named is None or (prefix and not named.startswith(prefix)):
         return False
-    return PurePosixPath(_inside_repository(named, prefix)).is_relative_to(directory)
+    return PurePosixPath(_inside_repository(named, prefix, root)).is_relative_to(directory)
 
 
 def _check_symbol(symbol: str, lines: Sequence[bytes], number: int, what: str) -> None:
@@ -671,6 +688,7 @@ class CSourceExtractor:
             edge_kind=edge_kind,
             placement=placement,
             prefix=inputs.doxygen_prefix,
+            path_root=inputs.path_root,
             module_field=module_field,
         )
 
@@ -763,7 +781,9 @@ class CSourceExtractor:
             raise ExtractorError("no member of the Doxygen output has this name")
         if len(found) > 1 and module:
             directory = PurePosixPath(module)
-            candidates = [m for m in found if _lies_within(m, stream.prefix, directory)]
+            candidates = [
+                m for m in found if _lies_within(m, stream.prefix, directory, stream.path_root)
+            ]
             if len(candidates) != 1:
                 raise ExtractorError(
                     f"the Doxygen output defines {len(found)} members with this name, "
@@ -853,7 +873,10 @@ class CSourceExtractor:
         for name in paths:
             if name not in location:
                 raise ExtractorError(f"the location has no {name!r}")
-        inside = {name: _inside_repository(location[name], stream.prefix) for name in paths}
+        inside = {
+            name: _inside_repository(location[name], stream.prefix, stream.path_root)
+            for name in paths
+        }
         resolved = {name: _resolve(stream.placement.root, inside[name]) for name in paths}
         body_first, body_last = _body_span(location)
         body_lines = self._lines(files, resolved["bodyfile"])

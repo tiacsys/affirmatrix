@@ -32,8 +32,6 @@ from affirmatrix.sources import SourceError
 from . import capture_support as support
 from . import path_root_support as roots
 
-NO_ROOT_YET = "SEG-SREQ-349: the extractor ignores the path root and reads the path as named"
-
 
 def _repository(tmp_path: Path) -> Path:
     """A repository whose one header is at include/zephyr/queue.h."""
@@ -74,7 +72,6 @@ def _opened(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return opened
 
 
-@pytest.mark.xfail(strict=True, reason=NO_ROOT_YET)
 def test_a_path_root_is_put_in_front_of_the_path_the_doxygen_output_names(tmp_path: Path) -> None:
     """A path root is put in front of the path the Doxygen output names, and the file is read there.
 
@@ -100,7 +97,6 @@ def test_a_path_root_is_put_in_front_of_the_path_the_doxygen_output_names(tmp_pa
     assert anchors["bodyHash"].digest == expected.body
 
 
-@pytest.mark.xfail(strict=True, reason=NO_ROOT_YET)
 def test_the_prefix_is_removed_first_and_then_the_path_root_is_put_in_front(
     tmp_path: Path,
 ) -> None:
@@ -135,7 +131,6 @@ def test_the_prefix_is_removed_first_and_then_the_path_root_is_put_in_front(
     assert anchors["bodyHash"].digest == expected.body
 
 
-@pytest.mark.xfail(strict=True, reason=NO_ROOT_YET)
 def test_a_trailing_separator_of_the_path_root_is_optional(tmp_path: Path) -> None:
     """A path root with a trailing separator and one without it give the same record.
 
@@ -187,9 +182,6 @@ def test_an_empty_path_root_is_the_same_as_none(empty: str | None, tmp_path: Pat
     assert {a.path for a in given.content_anchors.values()} == {roots.JOINED}
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-162: the extractor ignores the path root, so none is refused"
-)
 @pytest.mark.parametrize("shape", ["parent", "climbing", "absolute"])
 def test_a_path_root_that_leads_outside_the_repository_is_an_error_for_the_node(
     shape: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -241,9 +233,6 @@ def _test_files(tmp_path: Path) -> tuple[Path, dict[str, str]]:
     return repository, files
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-278: the module is compared with the path as named"
-)
 def test_the_test_module_is_compared_with_the_path_after_the_root_is_put_in_front(
     tmp_path: Path,
 ) -> None:
@@ -279,7 +268,6 @@ def test_the_test_module_is_compared_with_the_path_after_the_root_is_put_in_fron
     assert "T-SHARED" in _refusal(unrooted)
 
 
-@pytest.mark.xfail(strict=True, reason=NO_ROOT_YET)
 def test_a_path_root_on_the_specifications_block_locates_a_test(tmp_path: Path) -> None:
     """A path root on the specifications block locates a test by the joined path.
 
@@ -313,9 +301,6 @@ def test_a_path_root_on_the_specifications_block_locates_a_test(tmp_path: Path) 
     assert anchors["implHash"].digest == expected.body
 
 
-@pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-281: the extractor cannot read the path without the root"
-)
 def test_an_anchor_names_the_path_inside_the_repository_after_the_root_is_put_in_front(
     tmp_path: Path,
 ) -> None:
@@ -387,7 +372,6 @@ def test_the_prefix_rules_still_hold_when_a_path_root_is_configured(tmp_path: Pa
         assert re.search(re.escape(text), line), (name, line)
 
 
-@pytest.mark.xfail(strict=True, reason=NO_ROOT_YET)
 def test_the_bytes_behind_a_hash_are_read_from_the_joined_path(tmp_path: Path) -> None:
     """The bytes behind a hash are the lines of the joined path.
 
