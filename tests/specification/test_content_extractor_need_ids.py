@@ -16,32 +16,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from affirmatrix.sources import SourceError
 
 from . import capture_support as support
 from . import every_need_support as errors
 from . import need_ids_support as ids
 
-_STRICT = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-358: the list of need identifiers is dropped, so every need is read",
-)
-_STRICT_REFUSAL = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-360: a listed identifier that names no admitted need is not refused",
-)
-_STRICT_OUTSIDE = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-374: a need outside the list is read and refused, because the list is dropped",
-)
-
 NEED_IDS = support.KEY_NEED_IDS
 TYPES = support.KEY_TYPES
 
 
-@_STRICT
 def test_a_list_of_need_identifiers_alone_selects_the_needs_it_names(tmp_path: Path) -> None:
     """With a list of need identifiers and no need types, a need is read when it is listed.
 
@@ -80,7 +64,6 @@ def test_need_types_alone_select_the_needs_of_those_types(tmp_path: Path) -> Non
     assert library.supplied(**{TYPES: ["impl", "other"]}) == set(ids.ALL)
 
 
-@_STRICT
 def test_a_need_must_be_listed_and_of_a_configured_type_to_be_read(tmp_path: Path) -> None:
     """With need types and a list of need identifiers, a need is read when it is listed and typed.
 
@@ -130,7 +113,6 @@ def _refusal(library: ids.Library, **keys: object) -> SourceError:
     return errors.raises_once(lambda: support.records(path), SourceError)  # type: ignore[return-value]
 
 
-@_STRICT_REFUSAL
 def test_a_listed_identifier_that_names_no_need_is_refused(tmp_path: Path) -> None:
     """A listed need identifier that names no need of the export is refused, naming it.
 
@@ -151,7 +133,6 @@ def test_a_listed_identifier_that_names_no_need_is_refused(tmp_path: Path) -> No
     assert "I-ONE" not in str(refused)
 
 
-@_STRICT_REFUSAL
 def test_a_listed_identifier_of_a_need_of_another_type_is_refused(tmp_path: Path) -> None:
     """A listed need identifier whose need the configured types do not admit is refused.
 
@@ -175,7 +156,6 @@ def test_a_listed_identifier_of_a_need_of_another_type_is_refused(tmp_path: Path
     assert "I-ONE" not in str(refused)
 
 
-@_STRICT_REFUSAL
 def test_every_listed_identifier_that_names_no_need_is_named_in_one_error(tmp_path: Path) -> None:
     """Every listed need identifier that names no admitted need is named in one error.
 
@@ -209,7 +189,6 @@ MISSHAPEN = (
 NO_MACRO = (support.implementation_need("I-NO-MACRO", "M_NOT_IN_THE_TREE"),)
 
 
-@_STRICT_OUTSIDE
 def test_a_need_outside_the_list_is_not_refused(tmp_path: Path) -> None:
     """A need that is not in the list of need identifiers is not refused, whatever its fault.
 

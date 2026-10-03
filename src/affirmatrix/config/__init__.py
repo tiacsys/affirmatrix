@@ -146,7 +146,10 @@ class ImplementationInputs:
     """Where the content extractor finds an implementation's inputs.
 
     The optional fields mean what they mean for :class:`SpecificationInputs`,
-    for the implementation export.
+    for the implementation export. ``need_ids`` is the list of need identifiers
+    that narrows the needs read to those the list names, or ``None`` when the
+    file gives no list. It is a set, so an identifier given twice counts once.
+    Where ``types`` is set too, a need is read when both settings admit it.
     """
 
     export: Path
@@ -155,6 +158,7 @@ class ImplementationInputs:
     doxygen_prefix: str | None = None
     path_root: str | None = None
     repository: str | None = None
+    need_ids: frozenset[str] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -227,6 +231,13 @@ class Config:
         return None if self.implementation is None else self.repository(self.implementation)
 
 
+_TOP_KEYS = ("case", "implementation", "repositories", "roles", "producer")
+_PRODUCER_KEYS = ("root", "repository", "requirements", "specifications", "implementations")
+_REQUIREMENTS_KEYS = ("export", "types", "source", "source-map", "parent-field", "repository")
+_SPECIFICATIONS_KEYS = ("export", "doxygen", "types", "doxygen-prefix", "path-root", "repository")
+_IMPLEMENTATIONS_KEYS = (*_SPECIFICATIONS_KEYS, "need-ids")
+
+
 def load(path: Path | None = None, *, case: Path | None = None) -> Config:
     """Read a configuration file, or default every parameter it carries.
 
@@ -237,6 +248,7 @@ def load(path: Path | None = None, *, case: Path | None = None) -> Config:
     :implements: SEG-SREQ-124
     :implements: SEG-SREQ-125
     :implements: SEG-SREQ-135
+    :implements: SEG-SREQ-376
 
     ``path`` is the file to read, defaulting to :data:`DEFAULT_CONFIG_PATH`
     when not given; while that file does not exist, every parameter this
@@ -247,6 +259,9 @@ def load(path: Path | None = None, *, case: Path | None = None) -> Config:
     override enters; a future flag overriding another field is the same
     shape, not a new mechanism. Raises :class:`ConfigError` for a file that
     exists but cannot be made sense of — never for one that is merely absent.
+    A key that the loader does not know, at the top of the file, in
+    ``producer`` or in a reader block, is refused, naming the key and where it
+    stands, so a mistyped key stops the run and is not dropped.
 
     A relative path the file gives (``case``, ``producer.root``, every
     ``repositories`` value and every location under ``producer``) is taken from
@@ -256,6 +271,7 @@ def load(path: Path | None = None, *, case: Path | None = None) -> Config:
     """
     file = path if path is not None else DEFAULT_CONFIG_PATH
     values = _read_file(file)
+    _refuse_unknown(values, "the top of the file", _TOP_KEYS)
     base = file.parent
     if case is not None:
         case_root = case
@@ -358,6 +374,7 @@ def _producer(values: Mapping[str, object], base: Path) -> ProducerConfig | None
             "'producer.outcomes' is not read: run bundles are named at invocation, "
             "with --bundle, and the file names none"
         )
+    _refuse_unknown(producer, "producer", _PRODUCER_KEYS)
     reader_keys = ("repository", "requirements", "specifications", "implementations")
     if not any(producer.get(key) is not None for key in reader_keys):
         return None
@@ -426,6 +443,7 @@ def _requirements_inputs(producer: Mapping[str, object], base: Path) -> Requirem
     if block is None:
         return None
     where = "producer.requirements"
+    _refuse_unknown(block, where, _REQUIREMENTS_KEYS)
     types = _optional_types(block, where)
     if types is None:
         raise ConfigError(f"'{where}.types' is required")
@@ -481,6 +499,7 @@ def _specification_inputs(producer: Mapping[str, object], base: Path) -> Specifi
     if block is None:
         return None
     where = "producer.specifications"
+    _refuse_unknown(block, where, _SPECIFICATIONS_KEYS)
     return SpecificationInputs(
         export=_path(block, where, "export", base),
         doxygen=_path(block, where, "doxygen", base),
@@ -505,6 +524,7 @@ def _implementation_inputs(
     if block is None:
         return None
     where = "producer.implementations"
+    _refuse_unknown(block, where, _IMPLEMENTATIONS_KEYS)
     return ImplementationInputs(
         export=_path(block, where, "export", base),
         doxygen=_path(block, where, "doxygen", base),
@@ -512,7 +532,43 @@ def _implementation_inputs(
         doxygen_prefix=_optional_text(block, where, "doxygen-prefix"),
         path_root=_optional_text(block, where, "path-root"),
         repository=_optional_text(block, where, "repository"),
+        need_ids=_need_ids(block, where),
     )
+
+
+def _need_ids(block: Mapping[str, object], where: str) -> frozenset[str] | None:
+    """The need identifiers the block lists, ``None`` when it lists none.
+
+    A value that is not a non-empty list of non-empty text is refused, naming
+    the block. A null value means the block lists none.
+
+    :implements: SEG-SREQ-357
+    :implements: SEG-SREQ-362
+    :implements: SEG-SREQ-370
+    """
+    value = block.get("need-ids")
+    if value is None:
+        return None
+    if not isinstance(value, list) or not value or not all(isinstance(i, str) and i for i in value):
+        raise ConfigError(f"'{where}.need-ids' must be a non-empty list of non-empty strings")
+    return frozenset(value)
+
+
+def _refuse_unknown(block: Mapping[str, object], where: str, known: tuple[str, ...]) -> None:
+    """Refuse every key of ``block`` that is not in ``known``, naming each one.
+
+    :implements: SEG-SREQ-376
+
+    ``where`` says where the block stands: ``the top of the file`` or the dotted
+    name of a block. The keys are named in the order of the file, and the known
+    keys of the block are named too, so the reader sees what the loader accepts.
+    """
+    unknown = [repr(key) for key in block if key not in known]
+    if unknown:
+        raise ConfigError(
+            f"{where} holds the key {', '.join(unknown)}, which the loader does not know "
+            f"(known: {', '.join(known)})"
+        )
 
 
 def _block(producer: Mapping[str, object], key: str) -> Mapping[str, object] | None:

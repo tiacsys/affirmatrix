@@ -266,6 +266,8 @@ map follow the same rule as every other relative path in the file
    content extractor puts in front of each path of that output, after
    any path prefix is removed.
 
+.. _the-names-of-the-keys:
+
 The names of the keys
 ---------------------
 
@@ -286,7 +288,8 @@ the file: ``case``, ``implementation``, ``repositories``, ``roles`` and
 In ``specifications`` and ``implementations``: ``export``, ``doxygen``,
 ``types``, ``doxygen-prefix``, ``path-root`` and ``repository``; and
 ``need-ids`` in ``implementations`` only. A mistyped key then stops the run
-instead of being dropped.
+instead of being dropped. A key at the top of the file is refused naming the
+key, because the top of the file is no block.
 
 .. sreq:: A key the configuration loader does not know is refused
    :id: SEG-SREQ-376

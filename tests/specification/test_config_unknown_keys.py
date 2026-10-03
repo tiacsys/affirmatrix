@@ -23,11 +23,6 @@ from affirmatrix.cli import main
 
 from . import capture_support as support
 
-_STRICT = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-376: the loader drops a key it does not know, so the file loads",
-)
-
 #: The reader blocks, with the keys each block needs to load.
 BLOCKS: dict[str, dict[str, Any]] = {
     "requirements": {"export": "needs/requirements.json", "types": ["req"], "source": "reqs"},
@@ -86,7 +81,6 @@ def _refused_for(path: Path, key: str, block: str | None = None) -> None:
         assert block in message, (block, message)
 
 
-@_STRICT
 @pytest.mark.parametrize("key", ["cases", "implementations", "Case", "repository"])
 def test_a_key_at_the_top_of_the_file_that_is_not_known_is_refused(
     key: str, tmp_path: Path
@@ -110,7 +104,6 @@ def test_a_key_at_the_top_of_the_file_that_is_not_known_is_refused(
     _refused_for(bad, key)
 
 
-@_STRICT
 @pytest.mark.parametrize("key", ["roots", "outputs", "implementation", "Repository", "types"])
 def test_a_key_of_the_producer_block_that_is_not_known_is_refused(key: str, tmp_path: Path) -> None:
     """A key of the producer block that the loader does not know is refused.
@@ -141,7 +134,6 @@ MISTYPED = {
     ("block", "key"),
     [(block, key) for block, keys in MISTYPED.items() for key in keys],
 )
-@_STRICT
 def test_a_key_of_a_reader_block_that_is_not_known_is_refused(
     block: str, key: str, tmp_path: Path
 ) -> None:
@@ -220,7 +212,6 @@ def test_a_producer_that_names_a_run_keeps_its_own_refusal(run: Any, tmp_path: P
     assert not re.search(r"\bunknown\b|not known", message)
 
 
-@_STRICT
 def test_a_mistyped_key_stops_the_command_line_with_exit_status_2(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

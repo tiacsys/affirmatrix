@@ -15,27 +15,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from affirmatrix.sources.outcomes import OutcomeError
 
 from . import capture_support as support
 from . import every_need_support as errors
 from . import need_ids_support as ids
 from . import need_types_support as nt
-
-_STRICT = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-359: the list of need identifiers is dropped, so every need is read",
-)
-_STRICT_REFUSAL = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-361: a listed identifier that names no admitted need is not refused",
-)
-_STRICT_OUTSIDE = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-375: a need outside the list is read and refused, because the list is dropped",
-)
 
 NEED_IDS = support.KEY_NEED_IDS
 TYPES = support.KEY_TYPES
@@ -48,7 +33,6 @@ def _everywhere(*targets: str) -> dict[str, list[str]]:
     return {outcome: sorted(targets) for outcome in OUTCOMES}
 
 
-@_STRICT
 def test_witnesses_run_only_to_the_listed_implementation_needs(tmp_path: Path) -> None:
     """With a list and no need types, an outcome witnesses the listed needs only.
 
@@ -89,7 +73,6 @@ def test_witnesses_run_only_to_the_implementation_needs_of_the_configured_types(
     assert world.witnessed(**{TYPES: ["design"]}) == _everywhere("IMPL-C")
 
 
-@_STRICT
 def test_an_outcome_witnesses_a_need_that_is_listed_and_of_a_configured_type(
     tmp_path: Path,
 ) -> None:
@@ -137,7 +120,6 @@ def _refusal(world: ids.Witnessing, **keys: object) -> OutcomeError:
     return errors.raises_once(lambda: world.extractor(**keys), OutcomeError)  # type: ignore[return-value]
 
 
-@_STRICT_REFUSAL
 def test_a_listed_identifier_that_names_no_need_is_refused_by_the_outcome_extractor(
     tmp_path: Path,
 ) -> None:
@@ -160,7 +142,6 @@ def test_a_listed_identifier_that_names_no_need_is_refused_by_the_outcome_extrac
     assert "IMPL-A" not in str(refused)
 
 
-@_STRICT_REFUSAL
 def test_a_listed_identifier_of_a_need_of_another_type_is_refused_by_the_outcome_extractor(
     tmp_path: Path,
 ) -> None:
@@ -184,7 +165,6 @@ def test_a_listed_identifier_of_a_need_of_another_type_is_refused_by_the_outcome
     assert "IMPL-A" not in str(refused)
 
 
-@_STRICT_REFUSAL
 def test_every_listed_identifier_that_names_no_need_is_named_in_one_outcome_error(
     tmp_path: Path,
 ) -> None:
@@ -219,7 +199,6 @@ MISSHAPEN = {
 }
 
 
-@_STRICT_OUTSIDE
 def test_a_need_outside_the_list_is_not_refused_by_the_outcome_extractor(tmp_path: Path) -> None:
     """A need that is not in the list of need identifiers is not refused, whatever its fault.
 

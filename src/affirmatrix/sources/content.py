@@ -701,11 +701,8 @@ class CSourceExtractor:
         """
         export = inputs.export
         every = _exports.read_needs(export, f"{label} export", ExtractorError)
-        needs = {
-            key: need
-            for key, need in every.items()
-            if inputs.types is None or need.get("type") in inputs.types
-        }
+        need_ids = inputs.need_ids if isinstance(inputs, config.ImplementationInputs) else None
+        needs = _exports.admitted(every, inputs.types, need_ids, f"{label} export", ExtractorError)
         _exports.check_needs(
             export,
             f"{label} export",
