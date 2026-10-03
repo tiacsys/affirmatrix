@@ -457,7 +457,35 @@ the whole package. Four reads, no writes. Three are in source repositories:
 The fourth is in the repository of the case. It finds the commit that recorded
 a review event, for ``edge show`` (see "Showing an edge" above, and ADR-0015).
 Every git call runs with ``--no-optional-locks``. Without it, ``git status`` refreshes the index of
-the repository, and a read must not write. ``node show`` uses the revision read and the cleanliness read too. It reports
+the repository, and a read must not write.
+
+Every git call also runs with a cleaned environment (:need:`SEG-SREQ-332` and
+:need:`SEG-SREQ-333`). The one function that starts git removes seven names from
+the environment of the process: ``GIT_DIR``, ``GIT_WORK_TREE``,
+``GIT_INDEX_FILE``, ``GIT_OBJECT_DIRECTORY``,
+``GIT_ALTERNATE_OBJECT_DIRECTORIES``, ``GIT_COMMON_DIR`` and
+``GIT_NAMESPACE``. With one of them set, git answers from another repository
+than the one at the path, and the adapter would record the revision of the wrong
+repository. The rest of the environment stays, among it ``PATH``,
+``GIT_CEILING_DIRECTORIES`` and the ``GIT_CONFIG_*`` settings.
+
+The reads that take a list of paths, the cleanliness read and the read of the
+committed paths, split the list into parts (:need:`SEG-SREQ-334` and
+:need:`SEG-SREQ-335`). A part holds at most a number of bytes of path arguments, and at most 100000
+paths. The byte bound decides on a real machine. The count is a safety cap, and a
+test lowers it to force parts. A count alone is not enough, because long paths
+make a long call and can exceed the limit of the system for the arguments of one
+program. The byte bound comes from the machine: half of what ``SC_ARG_MAX``
+leaves after the environment that git gets, with each argument counted as its
+bytes, one end byte and one pointer. The bound is worked out at each read,
+because the environment can change. It is never below 64 KiB, which is half of
+the 128 KiB that Linux promises for arguments and environment together. That
+floor also applies when the system gives no limit. Every path is in exactly one part, and the answers of
+the parts are joined into the answer of one call. If one part fails, the whole
+read fails, and the repository counts as one that cannot be read. The adapter
+never uses the answers of the parts that did succeed on their own.
+
+``node show`` uses the revision read and the cleanliness read too. It reports
 their results and never refuses on them. Discovery and the cleanliness check together are how
 ``edge affirm`` and the proof gate's own revision fill a review event's
 source-revision fields without an operator typing a commit hash; the

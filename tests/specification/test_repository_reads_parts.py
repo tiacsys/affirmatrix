@@ -49,7 +49,6 @@ def _expected(fixture: base.Fixture) -> dict[str, dict[str, str]]:
     }
 
 
-@support.red(334, "a read of more paths than one call takes is made in one call")
 def test_a_read_of_more_paths_than_one_call_takes_gives_the_answer_of_one_call(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -83,7 +82,6 @@ def test_a_read_of_more_paths_than_one_call_takes_gives_the_answer_of_one_call(
     assert base.reported_counts(text, fixture.name) == [3]
 
 
-@support.red(334, "a read of more paths than one call takes is made in one call")
 def test_a_read_in_parts_gives_every_path_to_exactly_one_call_and_no_call_too_many(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -117,7 +115,6 @@ def test_a_read_in_parts_gives_every_path_to_exactly_one_call_and_no_call_too_ma
         assert named == wanted, subcommand
 
 
-@support.red(334, "a read of more paths than one call takes is made in one call")
 def test_node_show_reads_the_paths_of_one_node_in_parts_and_reports_the_same_dirty_path(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -150,7 +147,6 @@ def test_node_show_reads_the_paths_of_one_node_in_parts_and_reports_the_same_dir
     assert max(stand_in.path_counts("status")) <= 1
 
 
-@support.red(334, "the system refuses the one long call, and the repository counts as unreadable")
 def test_a_read_of_so_many_paths_that_the_system_refuses_the_call_still_gives_revisions(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -238,7 +234,6 @@ def test_a_failing_call_fails_the_read_of_a_repository_that_one_call_reads(
         assert base.reported_counts(text, fixture.name) == [6], subcommand
 
 
-@support.red(335, "no read is made in parts, so no later part exists to fail")
 @pytest.mark.parametrize("subcommand", ("status", "ls-tree"))
 def test_case_sync_counts_the_repository_as_unreadable_when_a_later_part_fails(
     subcommand: str,
@@ -268,7 +263,6 @@ def test_case_sync_counts_the_repository_as_unreadable_when_a_later_part_fails(
     assert len(stand_in.calls_of(subcommand)) >= 2
 
 
-@support.red(335, "no read is made in parts, so no later part exists to fail")
 def test_node_show_reports_the_repository_as_unreadable_when_a_later_part_fails(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

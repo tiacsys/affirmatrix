@@ -29,7 +29,6 @@ pytestmark = support.requires_git
 VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_OBJECT_DIRECTORY", "GIT_COMMON_DIR")
 
 
-@support.red(332, "the history of the case is read from the repository the variable names")
 @pytest.mark.parametrize("variable", VARIABLES)
 def test_edge_show_names_the_recording_commit_of_the_case_whatever_the_environment_names(
     variable: str,
@@ -70,7 +69,6 @@ def test_edge_show_names_the_recording_commit_of_the_case_whatever_the_environme
     assert prov.hex_prefix(decoy_commit) not in shown.text + shown.raw
 
 
-@support.red(301, "GIT_DIR makes the enclosing repository pass as the repository of the case")
 def test_edge_show_does_not_take_an_enclosing_repository_for_the_case(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
