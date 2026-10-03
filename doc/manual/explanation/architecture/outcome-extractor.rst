@@ -103,6 +103,17 @@ cannot refuse a run (:need:`SEG-SREQ-338`). The extractor reads the types from
 the input classes it already holds, so it needs no argument of its own. With no
 types, every need is read (:need:`SEG-SREQ-337`, :need:`SEG-SREQ-340`).
 
+The input of the implementation export may also carry a list of need
+identifiers. When it does, a need gives a Witnesses edge only when its key is in
+the list (:need:`SEG-SREQ-359`). A need that the list names and the types do
+not admit counts as unknown. Both filters apply before any need is checked, so a
+need outside them is never refused for its shape (:need:`SEG-SREQ-375`). Every
+listed identifier that no admitted need carries is named in one error, one line
+for each, when the extractor is built (:need:`SEG-SREQ-361`). An outcome with no
+listed implementation among those that satisfy the requirement it verifies is
+set aside like any outcome that no implementation confirms
+(:need:`SEG-SREQ-355`, :need:`SEG-SREQ-356`).
+
 The ``doxygen`` field of the two input classes is not used. A bundle can lie
 anywhere; the extractor needs no root and no repository name for it
 (:need:`SEG-SREQ-134`). The report format built is a JSON test report; a pytest

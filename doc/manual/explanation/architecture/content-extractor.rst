@@ -232,6 +232,16 @@ holds no or several versions or no ``needs``, or that carries a build timestamp
 Doxygen directory that is missing or a file of it that does not parse. The
 export checks are the requirements reader's, shared through one private helper.
 
+The input of a stream of implementations may carry a list of need identifiers
+(:need:`SEG-SREQ-357`). When it does, a need is read when its key is in the list
+and, where types are configured, when its type is one of them
+(:need:`SEG-SREQ-358`). Both filters apply before any need is checked, so a need
+outside them is never refused for its shape (:need:`SEG-SREQ-374`); a need that
+the list names keeps every check. Every listed identifier that no admitted need
+carries is named in one error, one line for each, when the extractor is built
+(:need:`SEG-SREQ-360`). A list that is null means no list. The same filters are
+one function that the outcome extractor shares.
+
 The need checks do not stop at the first fault. For each export, the extractor
 gives one error that names every misshapen need (:need:`SEG-SREQ-351`). The
 first line of the error gives the count, and each next line holds one need and

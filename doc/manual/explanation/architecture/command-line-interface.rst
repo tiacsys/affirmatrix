@@ -635,7 +635,8 @@ a requirement rather than a special case anywhere a revision is resolved
 value this loader carries ever reaches a content hash, a node hash, an edge
 hash, or a design root. A file whose top level is not a mapping, or whose
 keys carry the wrong shape (a ``repositories`` entry that is not a string,
-say), is a refusal the loader raises and the command line renders as exit 2,
+say), or that holds a key the loader does not know, at the top of the file, in
+``producer`` or in a reader block (:need:`SEG-SREQ-376`), is a refusal the loader raises and the command line renders as exit 2,
 a request it could not judge — never a guess at what was meant.
 
 See also

@@ -7,6 +7,7 @@ Task-oriented recipes. (Diátaxis: how-to.)
    :maxdepth: 1
 
    upgrade-an-existing-case
+   narrow-an-implementation-export
 
 .. contents::
    :local:

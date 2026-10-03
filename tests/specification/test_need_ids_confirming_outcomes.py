@@ -32,11 +32,6 @@ from .evidence_support import (
     session,
 )
 
-_STRICT = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-359: the list of need identifiers is dropped, so no outcome is set aside",
-)
-
 DISCARDED = gates.Condition.DISCARDED_OUTCOME
 #: The need that the list leaves out. It alone implements three requirements of the scope.
 LEFT_OUT = "IMPL-safe_data_verify_repair"
@@ -101,7 +96,6 @@ def _checked(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> dict:
     return json.loads(out)
 
 
-@_STRICT
 def test_an_outcome_whose_only_witnessed_implementation_is_not_listed_is_set_aside(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

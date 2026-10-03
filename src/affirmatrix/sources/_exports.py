@@ -133,3 +133,43 @@ def check_needs(
             faults.append(fault)
     if faults:
         raise error(itemized(f"{label} {export}: {len(faults)} need(s) are misshapen", faults))
+
+
+def admitted(
+    needs: Mapping[str, Mapping[str, Any]],
+    types: frozenset[str] | None,
+    need_ids: frozenset[str] | None,
+    label: str,
+    error: type[Exception],
+) -> dict[str, Mapping[str, Any]]:
+    """The needs that both settings admit, in the order of the export.
+
+    A need is admitted when its type is one of ``types`` (where types are set)
+    and its key is one of ``need_ids`` (where a list is set). Both filters apply
+    before any need is checked, so a need outside them is never refused for its
+    shape. Every identifier of the list that no admitted need carries is named,
+    once, in one error: a listed identifier that names no need of the export, or
+    a need that the types do not admit.
+
+    :implements: SEG-SREQ-358
+    :implements: SEG-SREQ-359
+    :implements: SEG-SREQ-360
+    :implements: SEG-SREQ-361
+    :implements: SEG-SREQ-374
+    :implements: SEG-SREQ-375
+    """
+    typed = {key: need for key, need in needs.items() if types is None or need.get("type") in types}
+    if need_ids is None:
+        return typed
+    missing = sorted(name for name in need_ids if name not in typed)
+    if missing:
+        raise error(
+            itemized(
+                f"{label}: {len(missing)} listed need identifier(s) name no need to read",
+                [
+                    f"need {name!r} is not in the export or is not of a configured type"
+                    for name in missing
+                ],
+            )
+        )
+    return {key: need for key, need in typed.items() if key in need_ids}

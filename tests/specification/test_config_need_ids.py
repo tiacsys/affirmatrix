@@ -29,22 +29,6 @@ BLOCKS: dict[str, dict[str, str]] = {
     "implementations": {"export": "needs/implementations.json", "doxygen": "xml/impl"},
 }
 
-_STRICT = pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-357: the loader drops the list of need identifiers"
-)
-_STRICT_SHAPE = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-362: the loader does not look at the list of need identifiers",
-)
-_STRICT_NULL = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-357 and 370: the loaded inputs have no place for the list, null or not",
-)
-_STRICT_UNKNOWN = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-376: the loader drops a key it does not know, so the file loads",
-)
-
 
 def _load(tmp_path: Path, block: str = "implementations", **keys: Any) -> config.Config:
     """Write a configuration whose one reader block holds ``keys``, and load it."""
@@ -61,7 +45,6 @@ def _need_ids(loaded: config.Config) -> Any:
     return getattr(loaded.producer.implementations, support.ATTR_NEED_IDS)
 
 
-@_STRICT
 def test_the_loader_carries_the_list_of_need_identifiers(tmp_path: Path) -> None:
     """The loader carries the list of need identifiers of the implementations block.
 
@@ -89,7 +72,6 @@ def test_the_loader_carries_the_list_of_need_identifiers(tmp_path: Path) -> None
         assert set(_need_ids(other)) == {"IMPL-ONE", "IMPL-TWO"}, name
 
 
-@_STRICT_SHAPE
 @pytest.mark.parametrize(
     "value",
     [[], [1], [""], ["IMPL-ONE", ""], ["IMPL-ONE", 2], "IMPL-ONE", {"IMPL-ONE": 1}, 7, True],
@@ -127,7 +109,6 @@ def test_need_identifiers_that_are_empty_or_not_text_are_refused_naming_the_bloc
         _load(tmp_path / "bad", **{support.KEY_NEED_IDS: value})
 
 
-@_STRICT_NULL
 def test_a_null_list_of_need_identifiers_is_a_list_that_is_not_given(tmp_path: Path) -> None:
     """A null list of need identifiers is the same as a list that is not given.
 
@@ -149,7 +130,6 @@ def test_a_null_list_of_need_identifiers_is_a_list_that_is_not_given(tmp_path: P
     assert _need_ids(control) is not None
 
 
-@_STRICT_UNKNOWN
 @pytest.mark.parametrize("block", ["requirements", "specifications"])
 def test_the_list_of_need_identifiers_is_refused_outside_the_implementations_block(
     block: str, tmp_path: Path

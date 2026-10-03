@@ -419,9 +419,12 @@ class TwisterOutcomeExtractor:
         if self.implementations is None:
             return {}
         export = self.implementations.export
-        needs = _typed(
+        needs = _exports.admitted(
             _exports.read_needs(export, _IMPLEMENTATION_LABEL, OutcomeError),
             self.implementations.types,
+            self.implementations.need_ids,
+            _IMPLEMENTATION_LABEL,
+            OutcomeError,
         )
         implementers: dict[str, list[str]] = {}
         _exports.check_needs(
