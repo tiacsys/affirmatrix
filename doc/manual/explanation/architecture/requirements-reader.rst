@@ -46,6 +46,14 @@ Each Requirement is identified by its need identifier, verbatim
 parent link becomes an edge of kind Refines from the child to the parent,
 in the pending state (:need:`SEG-SREQ-149`), because nothing here has been affirmed.
 
+A need that the reader cannot use is refused when the reader is built
+(:need:`SEG-SREQ-352`): it lacks a text field the reader reads, declares an
+identifier other than its key, or has a parent link that is not a list. The
+reader does not stop at the first one. It gives one error that names every such
+need. The first line of the error gives the count, and each next line holds one
+need and its reason, in the order of the export, so the same export always gives
+the same text.
+
 A link whose target the export does not hold, or holds as a need of a type that
 is not configured, is still emitted. The graph reports it as a broken edge,
 which is where an operator looks; a reader that refused would hide the whole

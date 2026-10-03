@@ -19,18 +19,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import pytest
-
 from . import every_need_support as support
 from . import need_types_support as nt
-
-_STRICT = pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-354: the error names only the first bad result"
-)
-_STRICT_STATUS = pytest.mark.xfail(
-    strict=True,
-    reason="SEG-SREQ-184: the first bad result in artifact order decides, not every status",
-)
 
 PUT_GET = support.result_of("test_put_get")
 TWIN = support.result_of("test_twin")
@@ -44,7 +34,6 @@ def _lines_naming_result(lines: list[str], identifier: str) -> list[str]:
     return [line for line in lines if f"'{identifier}'" in line]
 
 
-@_STRICT
 def test_every_unmapped_and_ambiguous_result_is_named_in_one_error(tmp_path: Path) -> None:
     """Every unmapped or ambiguous result of a run artifact is named in one error.
 
@@ -107,7 +96,6 @@ def _big_artifact() -> tuple[list, int]:
     return suites, 60
 
 
-@_STRICT
 def test_the_error_for_unmapped_results_starts_with_a_count(tmp_path: Path) -> None:
     """The error for unmapped or ambiguous results of a run starts with a count line.
 
@@ -140,7 +128,6 @@ def test_the_error_for_unmapped_results_starts_with_a_count(tmp_path: Path) -> N
     assert len(lines) == 2
 
 
-@_STRICT
 def test_unmapped_results_are_listed_in_the_order_of_the_artifact_every_time(
     tmp_path: Path,
 ) -> None:
@@ -206,7 +193,6 @@ def test_a_result_with_the_status_not_run_is_refused_for_its_status(tmp_path: Pa
     assert f"'{PUT_GET}'" in str(alone) and "'not run'" in str(alone)
 
 
-@_STRICT_STATUS
 def test_every_not_run_result_is_named_in_one_status_refusal(tmp_path: Path) -> None:
     """Every result with the status not run is named in one refusal for its status.
 
@@ -255,7 +241,6 @@ def test_every_not_run_result_is_named_in_one_status_refusal(tmp_path: Path) -> 
     assert all(f"'{name}'" not in str(late) for name in quiet[:2])
 
 
-@_STRICT
 def test_each_unmapped_result_line_names_its_board_and_scenario(tmp_path: Path) -> None:
     """Each line of the error for unmapped results holds the board and the scenario.
 

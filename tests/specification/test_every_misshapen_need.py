@@ -20,13 +20,8 @@ import pytest
 
 from . import every_need_support as support
 
-_STRICT = pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-351 to 353: the error names only the first misshapen need"
-)
-
 
 @pytest.mark.parametrize("name", support.CONTENT_FAMILIES)
-@_STRICT
 def test_the_content_extractor_names_every_misshapen_need_of_an_export(
     tmp_path: Path, name: str
 ) -> None:
@@ -55,7 +50,6 @@ def test_the_content_extractor_names_every_misshapen_need_of_an_export(
     assert support.lines_naming(support.lines_of(control), "G-ONE") == []
 
 
-@_STRICT
 def test_the_requirements_reader_names_every_misshapen_need_of_an_export(tmp_path: Path) -> None:
     """The requirements reader names every misshapen need of the requirement export in one error.
 
@@ -82,7 +76,6 @@ def test_the_requirements_reader_names_every_misshapen_need_of_an_export(tmp_pat
 
 
 @pytest.mark.parametrize("name", support.OUTCOME_FAMILIES)
-@_STRICT
 def test_the_outcome_extractor_names_every_misshapen_need_of_an_export(
     tmp_path: Path, name: str
 ) -> None:
@@ -134,7 +127,6 @@ def _check_order(tmp_path: Path, name: str) -> None:
 
 
 @pytest.mark.parametrize("name", support.CONTENT_FAMILIES)
-@_STRICT
 def test_the_error_for_misshapen_needs_of_the_content_extractor_starts_with_a_count(
     tmp_path: Path, name: str
 ) -> None:
@@ -153,7 +145,6 @@ def test_the_error_for_misshapen_needs_of_the_content_extractor_starts_with_a_co
     _check_count(tmp_path, name)
 
 
-@_STRICT
 def test_the_error_for_misshapen_needs_of_the_requirements_reader_starts_with_a_count(
     tmp_path: Path,
 ) -> None:
@@ -172,7 +163,6 @@ def test_the_error_for_misshapen_needs_of_the_requirements_reader_starts_with_a_
 
 
 @pytest.mark.parametrize("name", support.OUTCOME_FAMILIES)
-@_STRICT
 def test_the_error_for_misshapen_needs_of_the_outcome_extractor_starts_with_a_count(
     tmp_path: Path, name: str
 ) -> None:
@@ -192,7 +182,6 @@ def test_the_error_for_misshapen_needs_of_the_outcome_extractor_starts_with_a_co
 
 
 @pytest.mark.parametrize("name", support.CONTENT_FAMILIES)
-@_STRICT
 def test_misshapen_needs_of_the_content_extractor_are_listed_in_export_order(
     tmp_path: Path, name: str
 ) -> None:
@@ -211,7 +200,6 @@ def test_misshapen_needs_of_the_content_extractor_are_listed_in_export_order(
     _check_order(tmp_path, name)
 
 
-@_STRICT
 def test_misshapen_needs_of_the_requirements_reader_are_listed_in_export_order(
     tmp_path: Path,
 ) -> None:
@@ -229,7 +217,6 @@ def test_misshapen_needs_of_the_requirements_reader_are_listed_in_export_order(
 
 
 @pytest.mark.parametrize("name", support.OUTCOME_FAMILIES)
-@_STRICT
 def test_misshapen_needs_of_the_outcome_extractor_are_listed_in_export_order(
     tmp_path: Path, name: str
 ) -> None:
@@ -247,7 +234,6 @@ def test_misshapen_needs_of_the_outcome_extractor_are_listed_in_export_order(
     _check_order(tmp_path, name)
 
 
-@_STRICT
 def test_case_sync_reports_every_misshapen_need_and_writes_nothing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

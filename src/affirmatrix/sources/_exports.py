@@ -22,7 +22,7 @@ anything but the export itself.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -84,30 +84,52 @@ def read_needs(export: Path, label: str, error: type[Exception]) -> Mapping[str,
     return needs
 
 
-def check_need(
-    export: Path,
-    label: str,
-    error: type[Exception],
-    key: str,
-    need: Mapping[str, Any],
-    text_fields: Sequence[str],
-    list_field: str,
-) -> None:
-    """Refuse a need missing a text field, declaring another id, or with a bad link list.
+def need_fault(
+    key: str, need: Mapping[str, Any], text_fields: Sequence[str], list_field: str
+) -> str | None:
+    """The reason a need is misshapen, or ``None`` for a need that is well formed.
 
     ``text_fields`` must all be strings and ``id`` must equal the need's key;
     ``list_field`` may be absent or null and otherwise must be a list of
-    identifiers.
+    identifiers. The first fault of the need is the one given.
     """
     for name in text_fields:
         if not isinstance(need.get(name), str):
-            raise error(f"{label} {export}: need {key!r} has no text field {name!r}")
+            return f"need {key!r} has no text field {name!r}"
     if need["id"] != key:
-        raise error(f"{label} {export}: need {key!r} declares the id {need['id']!r}")
+        return f"need {key!r} declares the id {need['id']!r}"
     links = need.get(list_field)
     if links is not None and not (
         isinstance(links, list) and all(isinstance(target, str) for target in links)
     ):
-        raise error(
-            f"{label} {export}: need {key!r} has a {list_field!r} that is not a list of identifiers"
-        )
+        return f"need {key!r} has a {list_field!r} that is not a list of identifiers"
+    return None
+
+
+def check_needs(
+    export: Path,
+    label: str,
+    error: type[Exception],
+    needs: Mapping[str, Mapping[str, Any]],
+    text_fields: Sequence[str],
+    list_field: str,
+    extra: Callable[[str, Mapping[str, Any]], str | None] = lambda key, need: None,
+) -> None:
+    """Refuse an export that holds misshapen needs, naming every one in one error.
+
+    The error starts with a line that counts the misshapen needs, and one line
+    for each follows, in the order of the export, so the same export always gives
+    the same text. ``extra`` gives a reason that only one reader knows, for a need
+    that has the shape the fields ask for but cannot be used.
+
+    :implements: SEG-SREQ-351
+    :implements: SEG-SREQ-352
+    :implements: SEG-SREQ-353
+    """
+    faults = []
+    for key, need in needs.items():
+        fault = need_fault(key, need, text_fields, list_field) or extra(key, need)
+        if fault is not None:
+            faults.append(fault)
+    if faults:
+        raise error(itemized(f"{label} {export}: {len(faults)} need(s) are misshapen", faults))

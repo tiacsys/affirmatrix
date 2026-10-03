@@ -593,7 +593,9 @@ class CSourceExtractor:
         """Read and check every configured stream, refusing an export that carries a timestamp.
 
         :implements: SEG-SREQ-158
+        :implements: SEG-SREQ-373
         """
+        self._check_repositories()
         streams = []
         if self.implementations is not None:
             streams.append(
@@ -624,6 +626,46 @@ class CSourceExtractor:
                 )
             )
         object.__setattr__(self, "_streams", tuple(streams))
+
+    def _check_repositories(self) -> None:
+        """Refuse each repository path of a configured stream that is not a directory.
+
+        A repository is named once, whatever number of streams read through it.
+        The error starts with a line that counts the repositories, and one line
+        for each follows, sorted by the configured name, so the same
+        configuration always gives the same text. The line holds the configured
+        name and the path, and says whether the path does not exist or is not a
+        directory. A plain directory with the files is valid. The requirements
+        reader opens no file here, so its repository is not checked. The refusal
+        comes before any stream is read, so no need is named for this cause.
+
+        :implements: SEG-SREQ-373
+        """
+        placed = []
+        if self.implementations is not None:
+            placed.append(self._placement(self.implementation_placement, "implementations"))
+        if self.specifications is not None:
+            placed.append(self._placement(self.specification_placement, "specifications"))
+        faults: dict[str, str] = {}
+        for placement in placed:
+            if placement.repository in faults:
+                continue
+            if not placement.root.exists():
+                reason = "the path does not exist"
+            elif not placement.root.is_dir():
+                reason = "the path is not a directory"
+            else:
+                continue
+            faults[placement.repository] = (
+                f"repository {placement.repository!r} at {placement.root}: {reason}"
+            )
+        if faults:
+            raise ExtractorError(
+                _exports.itemized(
+                    f"{len(faults)} repository path(s) cannot be used",
+                    [faults[name] for name in sorted(faults)],
+                )
+            )
 
     def _placement(self, own: Placement | None, block: str) -> Placement:
         """The stream's own place, else the default place, else a refusal."""
@@ -664,18 +706,17 @@ class CSourceExtractor:
             for key, need in every.items()
             if inputs.types is None or need.get("type") in inputs.types
         }
-        for key, need in needs.items():
-            _exports.check_need(
-                export,
-                f"{label} export",
-                ExtractorError,
-                key,
-                need,
-                ("id", symbol_field),
-                link_field,
-            )
-            if not need[symbol_field]:
-                raise ExtractorError(f"{label} export {export}: need {key!r} has an empty symbol")
+        _exports.check_needs(
+            export,
+            f"{label} export",
+            ExtractorError,
+            needs,
+            ("id", symbol_field),
+            link_field,
+            lambda key, need: (
+                f"need {key!r} has an empty symbol" if not need[symbol_field] else None
+            ),
+        )
         return _Stream(
             kind=kind,
             label=label,

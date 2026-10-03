@@ -143,11 +143,14 @@ class RequirementsReader:
         if (self.source_directory is None) == (self.source_map is None):
             raise ReaderError("a reader needs exactly one of a source directory and a source map")
         needs = _exports.read_needs(self.export, _LABEL, ReaderError)
-        for key, need in needs.items():
-            if need.get("type") in self.types:
-                _exports.check_need(
-                    self.export, _LABEL, ReaderError, key, need, _TEXT_FIELDS, self.parent_field
-                )
+        _exports.check_needs(
+            self.export,
+            _LABEL,
+            ReaderError,
+            {key: need for key, need in needs.items() if need.get("type") in self.types},
+            _TEXT_FIELDS,
+            self.parent_field,
+        )
         if self.source_map is not None:
             uncovered = sorted(
                 {
