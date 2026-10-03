@@ -53,3 +53,11 @@ that every run skipped has no evidence, so its leaf is not satisfied.
 
    The satisfaction evaluator shall leave the graph unchanged when evaluating
    it.
+
+.. sreq:: An outcome without a witnessed implementation is not a confirming outcome
+   :id: SEG-SREQ-355
+   :refines: SEG-SYS-002
+
+   The satisfaction evaluator shall count a test outcome as a confirming
+   outcome of a test specification only when the outcome has a Confirms
+   edge to that specification and a Witnesses edge to an implementation.

@@ -754,6 +754,35 @@ Edge selection
    combination of kind, either endpoint, and subtree, each restricting the
    set the others admit.
 
+A selection by subtree takes only the edges inside the subtree. The subtree
+of a requirement is that requirement and every requirement that refines it.
+The edge from the named requirement to its own parent is not selected. An
+edge that leaves the subtree is reached with ``--from`` and ``--to``.
+
+.. sreq:: The subtree of a requirement
+   :id: SEG-SREQ-345
+   :refines: SEG-SREQ-100
+
+   The command-line interface shall take the subtree of a requirement as
+   that requirement and every requirement that refines it, directly or
+   through other requirements, and no other node.
+
+.. sreq:: A Refines edge is in a subtree when both ends are
+   :id: SEG-SREQ-346
+   :refines: SEG-SREQ-100
+
+   When an edge selection narrows by subtree, the command-line interface
+   shall admit a Refines edge when, and only when, both of its endpoints
+   lie in the subtree.
+
+.. sreq:: A Verifies or Implements edge is in a subtree by its requirement
+   :id: SEG-SREQ-347
+   :refines: SEG-SREQ-100
+
+   When an edge selection narrows by subtree, the command-line interface
+   shall admit a Verifies edge or an Implements edge when, and only
+   when, the requirement that edge names lies in the subtree.
+
 .. sreq:: Kind and both endpoints together address at most one edge
    :id: SEG-SREQ-101
    :refines: SEG-SREQ-099

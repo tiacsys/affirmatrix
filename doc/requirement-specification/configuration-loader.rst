@@ -218,6 +218,13 @@ map follow the same rule as every other relative path in the file
    the requirements reader, or neither, then the configuration loader
    shall refuse the configuration.
 
+.. sreq:: The implementation need identifiers are carried
+   :id: SEG-SREQ-357
+   :refines: SEG-SREQ-191
+
+   Where the configuration lists need identifiers for the implementation
+   export, the configuration loader shall carry that list.
+
 .. sreq:: Need types that are empty or not text are refused
    :id: SEG-SREQ-341
    :refines: SEG-SREQ-191

@@ -281,6 +281,24 @@ remainder, after it removes the prefix.
    shall not refuse the export because of a need whose type is not one of
    those types.
 
+.. sreq:: A listed identifier narrows the implementation records
+   :id: SEG-SREQ-358
+   :refines: SEG-SREQ-153
+
+   Where a list of need identifiers is configured for the implementation
+   export, the content extractor shall supply a record for a need of
+   that export when, and only when, the need's identifier is in the
+   list.
+
+.. sreq:: A listed identifier that names no need is refused by the content extractor
+   :id: SEG-SREQ-360
+   :refines: SEG-SREQ-153
+
+   If a need identifier in the list configured for the implementation
+   export names no need of that export, then the content extractor shall
+   refuse the configuration when it reads the export, naming the
+   identifier.
+
 .. sreq:: A symbol that several members share is narrowed by the test module
    :id: SEG-SREQ-278
    :refines: SEG-SREQ-159
