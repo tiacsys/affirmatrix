@@ -5,7 +5,10 @@ incrementality). The dependency structure is fixed and two layers deep, so it
 is encoded literally:
 
   stage 1  build EVERY document once, publishing objects.inv + needs.json
-           into the shared deploy tree;
+           into the shared deploy tree. The documents build in layers: a
+           document builds after the documents it names in ``indexed_after``
+           (documents.yaml), so it finds their indices and the stage has no
+           link warnings, also on a fresh clone;
   stage 2  build the SELECTED documents again — now every cross-document
            reference (intersphinx, needs_external_needs) resolves against the
            stage-1 indices. Doctrees are reused between stages.
@@ -88,6 +91,24 @@ def snapshot_indices(docs: list[str]) -> None:
                 shutil.copyfile(source, target)
 
 
+def layers(reg: dict) -> list[list[str]]:
+    """The documents in stage-1 order: each layer follows the documents it names."""
+    after = {d["id"]: set(d.get("indexed_after", [])) for d in reg["documents"]}
+    unknown = {name for names in after.values() for name in names} - set(after)
+    if unknown:
+        sys.exit(f"documents.yaml: unknown indexed_after document(s): {', '.join(sorted(unknown))}")
+    done: set[str] = set()
+    ordered: list[list[str]] = []
+    while len(done) < len(after):
+        layer = [d for d in after if d not in done and after[d] <= done]
+        if not layer:
+            left = ", ".join(sorted(set(after) - done))
+            sys.exit(f"documents.yaml: indexed_after has a cycle among: {left}")
+        ordered.append(layer)
+        done.update(layer)
+    return ordered
+
+
 def sphinx(doc: str, builder: str, *, out: Path, extra_env: dict | None = None) -> int:
     src = DOC_ROOT / doc
     doctrees = BUILD_ROOT / doc / "doctrees"
@@ -132,7 +153,8 @@ def cmd_build(args: argparse.Namespace) -> None:
         sys.exit(f"unknown document(s): {', '.join(sorted(unknown))} (see doc/documents.yaml)")
     if not args.no_index:
         print(f"== stage 1: indices for {len(everything)} documents")
-        build_stage(everything, "html", args.jobs, "stage 1")
+        for layer in layers(reg):
+            build_stage(layer, "html", args.jobs, "stage 1")
     print(f"== stage 2: {args.builder} for {', '.join(selected)}")
     build_stage(selected, args.builder, args.jobs, "stage 2")
     print(f"done — output under {DEPLOY}")

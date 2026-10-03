@@ -61,14 +61,17 @@ jobs:
         run: python -m doc test-run
 
       - name: Build the documents
-        run: python -m doc build
+        run: |
+          set -o pipefail
+          python -m doc build 2>&1 | tee build-output.log
 
-      # Stage two writes these logs over the stage-one logs, so they hold
-      # only the final build. Stage one warns about cross-document links by
-      # design: the indexes it publishes do not exist yet.
+      # Stage two writes the html.log files over the stage-one logs, so they
+      # hold only the final build. Stage one builds in layers, so on this
+      # fresh clone it has no link warnings either; the build output holds
+      # its lines, and a missing layer edge fails here.
       - name: Check for warnings
         run: |
-          if grep -nE 'WARNING|ERROR' build/doc/*/html.log; then
+          if grep -nE 'WARNING|ERROR' build-output.log build/doc/*/html.log; then
             echo "::error::the documentation build has warnings"
             exit 1
           fi
