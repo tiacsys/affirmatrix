@@ -209,8 +209,12 @@ The status
    * - ``skipped``
      - skipped
 
-The table is fixed (:need:`SEG-SREQ-183`). Any other status, such as ``blocked``, is an
-error that names the result (:need:`SEG-SREQ-184`). A skipped result is recorded as an
+The table is fixed (:need:`SEG-SREQ-183`). Any other status, such as ``blocked``
+or ``not run``, is an error that names the result (:need:`SEG-SREQ-184`). The
+extractor checks the status of every result of an artifact first, before any
+result is mapped to a need. If any status has no counterpart, one error names
+every such result, each with its status, its board and its scenario, and no
+result is reported as unmapped in that error. A skipped result is recorded as an
 outcome with the result skipped; it is not dropped (:need:`SEG-SREQ-185`). The
 revision of each outcome is the text of the revision record, as it is
 (:need:`SEG-SREQ-186`). The extractor does not check its length.
@@ -290,13 +294,22 @@ refuses:
   (:need:`SEG-SREQ-224`);
 * an export that cannot be read, holds no or several versions or carries a
   build timestamp (:need:`SEG-SREQ-225`);
-* a result with a status outside the table, a result that maps to no need and
-  a result that maps to more than one need;
+* a result with a status outside the table, named all at once with the count
+  first (see "The status");
+* a result that maps to no need or to more than one need. One error names every
+  such result of an artifact (:need:`SEG-SREQ-354`). The first line gives the
+  count. Each next line holds one result, its board and its scenario, in the
+  order of the artifact, so the same artifact always gives the same text. The
+  same unmapped test on two boards gives two lines;
+* a misshapen need in the test-case export or in the implementation export, named
+  all at once for each export in the order of the export
+  (:need:`SEG-SREQ-353`);
 * two results, in one run or in two, that give the same outcome identity. The
   message names both bundles.
 
 A failure in one run stops the whole extractor. The operator corrects the
-input and builds it again.
+input and builds it again. A bundle that fails gives its errors at once, and the
+extractor does not read the next bundle.
 
 How the command line composes it
 --------------------------------

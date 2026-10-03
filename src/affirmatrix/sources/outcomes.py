@@ -261,6 +261,21 @@ def _check_clean(path: Path, checkout: str) -> None:
         )
 
 
+def _unmapped_line(identifier: str, candidates: Sequence[str], platform: str, scenario: str) -> str:
+    """One line for a result that maps to no test-case need or to more than one.
+
+    :implements: SEG-SREQ-181
+    :implements: SEG-SREQ-354
+    """
+    where = f"(board {platform}, scenario {scenario})"
+    if not candidates:
+        return f"the result {identifier!r} maps to no test-case need {where}"
+    return (
+        f"the result {identifier!r} maps to {len(candidates)} test-case needs "
+        f"({', '.join(map(repr, candidates))}) {where}"
+    )
+
+
 def _run_identifier(name: str, platform: str, scenario: str) -> str:
     """The run's name, the platform and the scenario, in that order, joined by hyphens.
 
@@ -378,21 +393,20 @@ class TwisterOutcomeExtractor:
         )
         rows = []
         verifies = {}
+        _exports.check_needs(
+            export,
+            _SPECIFICATION_LABEL,
+            OutcomeError,
+            needs,
+            ("id", "suite", "test_function"),
+            "verifies",
+            lambda key, need: (
+                f"need {key!r} has an empty suite or an empty test function"
+                if not need["suite"] or not need["test_function"]
+                else None
+            ),
+        )
         for key, need in needs.items():
-            _exports.check_need(
-                export,
-                _SPECIFICATION_LABEL,
-                OutcomeError,
-                key,
-                need,
-                ("id", "suite", "test_function"),
-                "verifies",
-            )
-            if not need["suite"] or not need["test_function"]:
-                raise OutcomeError(
-                    f"{_SPECIFICATION_LABEL} {export}: need {key!r} has an empty suite "
-                    "or an empty test function"
-                )
             rows.append((need["suite"], need["test_function"].removeprefix(_TEST_PREFIX), key))
             verifies[key] = tuple(need.get("verifies") or [])
         return _Specifications(rows=tuple(rows), verifies=verifies)
@@ -410,10 +424,10 @@ class TwisterOutcomeExtractor:
             self.implementations.types,
         )
         implementers: dict[str, list[str]] = {}
+        _exports.check_needs(
+            export, _IMPLEMENTATION_LABEL, OutcomeError, needs, ("id",), "satisfies"
+        )
         for key, need in needs.items():
-            _exports.check_need(
-                export, _IMPLEMENTATION_LABEL, OutcomeError, key, need, ("id",), "satisfies"
-            )
             for requirement in need.get("satisfies") or []:
                 implementers.setdefault(requirement, []).append(key)
         return {requirement: tuple(keys) for requirement, keys in implementers.items()}
@@ -439,25 +453,44 @@ class TwisterOutcomeExtractor:
                 f"name record {bundle / _NAME_FILE}: the name {name!r} holds a slash"
             )
         artifact = bundle / _ARTIFACT_FILE
-        for suite in self._read_suites(artifact):
+        suites = self._read_suites(artifact)
+        self._check_statuses(artifact, suites)
+        outcomes: list[_Outcome] = []
+        unmapped: list[str] = []
+        for suite in suites:
             scenario, platform = suite["name"], suite["platform"]
             identifiers = specifications.formed(scenario)
             run_identifier = _run_identifier(name, platform, scenario)
             for case in suite["testcases"]:
-                identifier, status = case["identifier"], case["status"]
-                result = self._result(artifact, identifier, status)
-                specification = self._specification(
-                    artifact, identifier, identifiers.get(identifier, [])
+                identifier = case["identifier"]
+                candidates = identifiers.get(identifier, [])
+                if len(candidates) != 1:
+                    unmapped.append(_unmapped_line(identifier, candidates, platform, scenario))
+                    continue
+                specification = candidates[0]
+                result = _STATUSES[case["status"]]
+                outcomes.append(
+                    _Outcome(
+                        local_id=_identity(run_identifier, specification),
+                        specification=specification,
+                        result=result,
+                        revision=revision,
+                        anchor=self._anchor(
+                            actual, identifier, specification, run_identifier, result
+                        ),
+                        witnesses=self._witnesses(specifications, implementers, specification),
+                        digest=actual,
+                    )
                 )
-                yield _Outcome(
-                    local_id=_identity(run_identifier, specification),
-                    specification=specification,
-                    result=result,
-                    revision=revision,
-                    anchor=self._anchor(actual, identifier, specification, run_identifier, result),
-                    witnesses=self._witnesses(specifications, implementers, specification),
-                    digest=actual,
+        if unmapped:
+            raise OutcomeError(
+                _exports.itemized(
+                    f"run artifact {artifact}: {len(unmapped)} result(s) map to no test-case "
+                    "need or to more than one",
+                    unmapped,
                 )
+            )
+        yield from outcomes
 
     def _checkout_name(self) -> str:
         """The name of the implementation checkout, which must be one file-name stem."""
@@ -498,35 +531,33 @@ class TwisterOutcomeExtractor:
         return suites
 
     @staticmethod
-    def _result(artifact: Path, identifier: str, status: object) -> TestResult:
-        """The member of the closed result set that ``status`` corresponds to.
+    def _check_statuses(artifact: Path, suites: Sequence[Mapping[str, Any]]) -> None:
+        """Refuse a run artifact with a result whose status has no counterpart, naming every one.
+
+        Every status of the artifact is checked before any result is mapped to a
+        need, so a result that cannot be recorded for its status is never
+        reported as unmapped. The error starts with a line that counts the
+        results, and one line for each follows, in the order of the artifact,
+        with the status, the board and the scenario.
 
         :implements: SEG-SREQ-183
         :implements: SEG-SREQ-184
         """
-        if not isinstance(status, str) or status not in _STATUSES:
+        refused = [
+            f"the result {case['identifier']!r} has the status {case.get('status')!r} "
+            f"(board {suite['platform']}, scenario {suite['name']})"
+            for suite in suites
+            for case in suite["testcases"]
+            if not isinstance(case.get("status"), str) or case["status"] not in _STATUSES
+        ]
+        if refused:
             raise OutcomeError(
-                f"run artifact {artifact}: the result {identifier!r} has the status {status!r}; "
-                f"no result of the closed set corresponds to it (known: {', '.join(_STATUSES)})"
+                _exports.itemized(
+                    f"run artifact {artifact}: {len(refused)} result(s) have a status that no "
+                    f"result of the closed set corresponds to (known: {', '.join(_STATUSES)})",
+                    refused,
+                )
             )
-        return _STATUSES[status]
-
-    @staticmethod
-    def _specification(artifact: Path, identifier: str, candidates: list[str]) -> str:
-        """The one need that forms ``identifier``; no need and several needs are refused.
-
-        :implements: SEG-SREQ-181
-        """
-        if not candidates:
-            raise OutcomeError(
-                f"run artifact {artifact}: the result {identifier!r} maps to no test-case need"
-            )
-        if len(candidates) > 1:
-            raise OutcomeError(
-                f"run artifact {artifact}: the result {identifier!r} maps to "
-                f"{len(candidates)} test-case needs ({', '.join(map(repr, candidates))})"
-            )
-        return candidates[0]
 
     @staticmethod
     def _witnesses(

@@ -31,10 +31,6 @@ from affirmatrix.cli import main
 
 from . import every_need_support as support
 
-_STRICT = pytest.mark.xfail(
-    strict=True, reason="SEG-SREQ-373: a bad repository path is reported per need, not once by name"
-)
-
 #: The configured names of the repositories, none of them part of any path.
 DOCS, LIB, SUITE = "docs-config-name", "lib-config-name", "suite-config-name"
 NAMES = {"requirements": DOCS, "library": LIB, "suite": SUITE}
@@ -112,7 +108,6 @@ def test_a_world_with_three_plain_directories_is_the_control(tmp_path: Path) -> 
     assert len(list(support.producer_of(cfg).nodes())) == 9
 
 
-@_STRICT
 def test_a_repository_path_that_does_not_exist_is_reported_once(tmp_path: Path) -> None:
     """A repository path that does not exist is reported once, by its name and with its path.
 
@@ -134,7 +129,6 @@ def test_a_repository_path_that_does_not_exist_is_reported_once(tmp_path: Path) 
     assert _naming(error, LIB) == [] and _naming(error, DOCS) == []
 
 
-@_STRICT
 def test_a_repository_path_that_is_a_file_is_reported_once(tmp_path: Path) -> None:
     """A repository path that is a file is reported once, by its name and with its path.
 
@@ -156,7 +150,6 @@ def test_a_repository_path_that_is_a_file_is_reported_once(tmp_path: Path) -> No
     assert _about_needs(error) == []
 
 
-@_STRICT
 def test_one_repository_that_both_streams_read_through_is_reported_once(tmp_path: Path) -> None:
     """A repository that both streams read through is reported once.
 
@@ -181,7 +174,6 @@ def test_one_repository_that_both_streams_read_through_is_reported_once(tmp_path
     assert _about_needs(error) == []
 
 
-@_STRICT
 def test_two_repositories_that_cannot_be_used_are_both_reported_in_one_error(
     tmp_path: Path,
 ) -> None:
@@ -262,7 +254,6 @@ def test_a_repository_that_only_the_requirements_reader_names_is_not_checked(
     assert "does not exist" not in text and "not a directory" not in text
 
 
-@_STRICT
 def test_case_sync_over_a_missing_repository_exits_2_names_it_once_and_writes_nothing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -295,7 +286,6 @@ def test_case_sync_over_a_missing_repository_exits_2_names_it_once_and_writes_no
     assert _files(root) == before
 
 
-@_STRICT
 def test_the_repository_line_comes_before_any_line_about_a_need(tmp_path: Path) -> None:
     """The line about a repository path comes before any line about a need.
 
@@ -320,7 +310,6 @@ def test_the_repository_line_comes_before_any_line_about_a_need(tmp_path: Path) 
     assert all(n > first for n in needs)
 
 
-@_STRICT
 def test_several_bad_repositories_are_listed_sorted_by_configured_name(tmp_path: Path) -> None:
     """Several repositories whose paths cannot be used are listed sorted by configured name.
 

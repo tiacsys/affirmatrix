@@ -232,6 +232,23 @@ holds no or several versions or no ``needs``, or that carries a build timestamp
 Doxygen directory that is missing or a file of it that does not parse. The
 export checks are the requirements reader's, shared through one private helper.
 
+The need checks do not stop at the first fault. For each export, the extractor
+gives one error that names every misshapen need (:need:`SEG-SREQ-351`). The
+first line of the error gives the count, and each next line holds one need and
+its reason, in the order of the export, so the same export always gives the same
+text. A need with an empty symbol is named in the same list.
+
+The repository paths are checked first, before any export is read
+(:need:`SEG-SREQ-373`). Each repository that a stream reads through must be a
+directory. A path that does not exist or is a file is refused, once for each
+configured name, whatever number of streams read through it. The error starts
+with a line that counts the repositories. Each next line holds the configured
+name, the path and the cause, sorted by the configured name. No need is named
+for this cause, because a repository that cannot be used would give the same
+fault to every need that reads through it. A plain directory that holds the
+files is valid. The repository of the requirements reader is not checked,
+because that reader opens no file.
+
 Everything that needs a location or a source is checked when
 :meth:`~affirmatrix.sources.content.CSourceExtractor.nodes` reaches the node.
 A node that fails does not stop the pass and is never skipped. The records of

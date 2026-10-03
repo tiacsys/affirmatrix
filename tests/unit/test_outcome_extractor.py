@@ -280,7 +280,7 @@ def test_a_status_outside_the_closed_set_is_refused_naming_the_result(
             ]
         },
     )
-    with pytest.raises(OutcomeError, match=r"twister\.json.*'sc\.s\.a'.*status"):
+    with pytest.raises(OutcomeError, match=r"(?s)twister\.json.*'sc\.s\.a'.*status"):
         _extractor(root)
 
 
