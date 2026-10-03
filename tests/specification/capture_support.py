@@ -33,6 +33,7 @@ KEY_PATH_ROOT = "path-root"
 KEY_PARENT = "parent-field"
 KEY_MAP = "source-map"
 KEY_TYPES = "types"
+KEY_NEED_IDS = "need-ids"
 
 ATTR_REPOSITORY = "repository"
 ATTR_PREFIX = "doxygen_prefix"
@@ -40,6 +41,7 @@ ATTR_PATH_ROOT = "path_root"
 ATTR_PARENT = "parent_field"
 ATTR_MAP = "source_map"
 ATTR_TYPES = "types"
+ATTR_NEED_IDS = "need_ids"
 
 # --- the fixture ------------------------------------------------------------
 
