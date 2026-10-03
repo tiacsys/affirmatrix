@@ -12,7 +12,7 @@ Two record sources in, one record source out
 --------------------------------------------
 
 The suspect detector takes exactly two inputs and its output is itself a
-record source (SEG-SREQ-015):
+record source (:need:`SEG-SREQ-015`):
 
 .. code-block:: python
 
@@ -36,7 +36,7 @@ downstream — satisfaction, the gates — handles derived states as a special
 case, and the builder never learns whether a state was read from disk or
 derived a moment ago. States are derived on every run and stored nowhere,
 which is why suspicion needs no act to clear (see below) and why derivation
-leaves the case untouched (SEG-SREQ-034): the function only reads.
+leaves the case untouched (:need:`SEG-SREQ-034`): the function only reads.
 
 The roles are named, not policed. ``recorded=`` and ``current=`` are
 keyword-only because swapping them inverts every verdict; what a current edge
@@ -62,12 +62,12 @@ Matching content with dependencies active is ``active``; content differing
 alone is ``directlyOutdated``; a non-active dependency alone is
 ``transitivelySuspect``; both at once is ``doublyOutdated`` — outdated on
 both counts, the edge's own content *and* its dependencies, never a count of
-endpoints (SEG-SREQ-011 through SEG-SREQ-014).
+endpoints (:need:`SEG-SREQ-011` through :need:`SEG-SREQ-014`).
 
 Pending and broken sit outside the table. An edge with no stored hash was
 never affirmed, and the absence of a stored hash is a state, not a mismatch —
 this covers a brand-new current edge the case has never seen. An edge
-touching a node absent from the current records is broken (SEG-SREQ-017),
+touching a node absent from the current records is broken (:need:`SEG-SREQ-017`),
 whatever its kind and whether or not it was affirmed: with an endpoint gone
 there is no content to compare, so broken takes precedence over everything.
 

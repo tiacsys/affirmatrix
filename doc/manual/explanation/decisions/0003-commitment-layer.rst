@@ -15,7 +15,7 @@ of two minds about its boundary: the engine breakdown assigns node hash,
 edge hash and the flat-sealed design root to that component, while the
 proof-generation pipeline computes the design root as a step of generation,
 folding in snapshot metadata there. The first requirement slice
-(SEG-SREQ-002/003/005) needed a settled subject.
+(:need:`SEG-SREQ-002`/003/005) needed a settled subject.
 
 Decision
 --------
@@ -31,8 +31,8 @@ builder, the requirements reader.
 Consequences
 ------------
 
-- SEG-SREQ-002, -003, and -005 use "the commitment layer" as subject;
-  SEG-SREQ-003 treats the metadata term as a caller-supplied opaque
+- :need:`SEG-SREQ-002`, -003, and -005 use "the commitment layer" as subject;
+  :need:`SEG-SREQ-003` treats the metadata term as a caller-supplied opaque
   input, deferring its semantics to the proof slice.
 - The proof generator holds no hashing logic of its own.
 - The engine's module decomposition must reflect this boundary (design

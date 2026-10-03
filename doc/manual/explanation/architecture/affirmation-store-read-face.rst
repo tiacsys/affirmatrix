@@ -5,7 +5,7 @@ The write face's page describes how records land in a case; this one describes
 how they come back. The same component serves both directions — the affirmation
 store is the only writer under a case root and the only reader of what it wrote
 — and the read face is where the guarantee that a record reads back as written
-(SEG-SREQ-020) lives.
+(:need:`SEG-SREQ-020`) lives.
 
 A case presented as a record source
 -----------------------------------

@@ -8,16 +8,16 @@ Accepted, 2026-09-29. Amended 2026-09-29: the search for a documentation
 comment no longer steps over blank lines, so only guard lines may lie between
 the comment's closer and the located line; the paragraph *Finding the
 documentation comment* is rewritten and no worked digest changes. Binds, for
-C source, the principle of SEG-SREQ-001: the
+C source, the principle of :need:`SEG-SREQ-001`: the
 parser only locates a span, and the hash is over the verbatim bytes of the
-source file. SEG-SREQ-163 to SEG-SREQ-170 state *what* each hash covers; this
+source file. :need:`SEG-SREQ-163` to :need:`SEG-SREQ-170` state *what* each hash covers; this
 record fixes *where each span starts and ends*. The Python binding of the same
 principle, located by ``ast``, is unchanged.
 
 Context
 -------
 
-SEG-SREQ-001 fixes the canonical content form of source-located nodes as the
+:need:`SEG-SREQ-001` fixes the canonical content form of source-located nodes as the
 verbatim byte span, and ADR-0005 adds the property that makes it auditable: a
 content hash is the bare SHA-256 of that form, so anyone can reproduce it with
 ``sha256sum``. Until now the principle has had one binding, Python located by
@@ -35,7 +35,7 @@ the span into a function of our parser and no longer of the file. A span of
 whole lines is a function of two line numbers and nothing else.
 
 The other half of a node comes from elsewhere. Its identity and its edges are
-taken from the need exports, never from the source (SEG-SREQ-153), so the
+taken from the need exports, never from the source (:need:`SEG-SREQ-153`), so the
 source contributes content and only content. What remained open, and what the
 content-extractor requirements leave to the architecture documentation, is the
 cut: exactly which lines each of the four C hashes covers, for which kinds of
@@ -58,7 +58,7 @@ trailing whitespace. Every C content hash is therefore reproducible with
 and with no tool of ours. Line numbers are found at extraction time and never
 enter a record: the locator a record carries names the symbol
 (``symbol:<name>#api``, ``#body``, ``#spec`` or ``#impl``), and the anchor
-names the file the span was read from (SEG-SREQ-171 to SEG-SREQ-174).
+names the file the span was read from (:need:`SEG-SREQ-171` to :need:`SEG-SREQ-174`).
 
 **Finding the documentation comment.** Each construct below names a *located
 line* ``L``, the line its declaration starts on. Start at line ``L - 1`` and
@@ -70,7 +70,7 @@ that contains a comment opener, and that opener must be ``/**`` or ``/*!``
 (``/**/`` and ``/***`` are plain comments). Anything else -- a blank line, a
 plain ``/*``, code, any other preprocessor line, the top of the file -- means
 the node has no documentation comment, which is an error for that node and
-never an empty hash (SEG-SREQ-169). The span runs contiguously from the opener
+never an empty hash (:need:`SEG-SREQ-169`). The span runs contiguously from the opener
 downward, so guard lines lying between the closer and ``L`` are inside it. A
 guard line *above* the opener is outside it. The forms ``///`` and ``//!``,
 whether a run of lines or trailing as ``///<``, are not recognised as
@@ -222,8 +222,8 @@ The per-need canonical form of a requirement export
 The same principle, applied to a Requirement supplied from a reproducible need
 export, has no source bytes to cut, so its canonical content form is derived
 from the export. This section gives that form a home in the architecture
-record, and the requirements reader's own requirements (SEG-SREQ-147,
-SEG-SREQ-148 and SEG-SREQ-151) state what it covers.
+record, and the requirements reader's own requirements (:need:`SEG-SREQ-147`,
+:need:`SEG-SREQ-148` and :need:`SEG-SREQ-151`) state what it covers.
 
 A Requirement's content hash is the SHA-256 of the RFC 8785 canonical JSON, in
 UTF-8, of the object ``{"content": <the need's content>, "refines": <the
@@ -238,10 +238,10 @@ content, so adding a second parent to a requirement makes its existing edges
 directly outdated, exactly as adding a second ``@verifies`` to a C comment
 does. The worked example, with the hash, is on
 :doc:`../architecture/requirements-reader`. An export that carries a build
-timestamp is refused (SEG-SREQ-150); the version key that embeds the commit is
+timestamp is refused (:need:`SEG-SREQ-150`); the version key that embeds the commit is
 metadata and never a ground for refusal. The anchor of a Requirement names the
 source file its need was written in, with the locator ``need:<id>``
-(SEG-SREQ-151), and recomputing the hash needs the documentation build, not
+(:need:`SEG-SREQ-151`), and recomputing the hash needs the documentation build, not
 the file alone.
 
 Consequences
@@ -267,8 +267,8 @@ Consequences
   file contains such a definition.
 - The comment forms ``///``, ``//!`` and trailing ``///<`` are not recognised.
   A project that documents that way gets an error for every node
-  (SEG-SREQ-169), not a silent empty hash.
-- The Doxygen output can be stale against the source. SEG-SREQ-175 guards the
+  (:need:`SEG-SREQ-169`), not a silent empty hash.
+- The Doxygen output can be stale against the source. :need:`SEG-SREQ-175` guards the
   case where an edit moved a symbol off its recorded line, by requiring that
   line to contain the symbol; an edit that leaves the symbol on its line is
   not detectable from the output and is not guarded.

@@ -33,24 +33,24 @@ Id   Work item                                                  Component       
 ===  =========================================================  ======================  ======================
 B0   Package skeleton, pytest wiring, import-direction lint     — (infrastructure)      —
 B1   Canonical byte encoding and the SHA-256 primitive          — (shared internal)     ADR-0005
-B2   Node-hash derivation                                       commitment layer        SEG-SREQ-005
-B3   Two-sided edge hash                                        commitment layer        SEG-SREQ-002
-B4   Flat-sealed design root, caller-supplied metadata          commitment layer        SEG-SREQ-003
-B5   Persisted vocabulary and the record-source protocol        record source           SEG-SYS-001/007
-B6   The built-in safety-evidence graph type                    taxonomy provider       SEG-SYS-009
-B7   Records to the in-memory graph                             graph builder           SEG-SYS-001
-B8   Refines cycles and self-loops as graph-level errors        graph builder           SEG-SREQ-004
+B2   Node-hash derivation                                       commitment layer        :need:`SEG-SREQ-005`
+B3   Two-sided edge hash                                        commitment layer        :need:`SEG-SREQ-002`
+B4   Flat-sealed design root, caller-supplied metadata          commitment layer        :need:`SEG-SREQ-003`
+B5   Persisted vocabulary and the record-source protocol        record source           :need:`SEG-SYS-001`/007
+B6   The built-in safety-evidence graph type                    taxonomy provider       :need:`SEG-SYS-009`
+B7   Records to the in-memory graph                             graph builder           :need:`SEG-SYS-001`
+B8   Refines cycles and self-loops as graph-level errors        graph builder           :need:`SEG-SREQ-004`
 B9   The would-be store dataset and its loader                  store loader            — (scaffolding)
-B10  Persist nodes, edges, events, proofs; validate on write    affirmation store       SEG-SYS-007
-B11  Read-back as a record source                               affirmation store       SEG-SYS-007
-B12  Satisfaction by transitive closure                         satisfaction evaluator  SEG-SYS-002 (batch A)
-B13  Link state derived from current content                    suspect detector        SEG-SYS-003 (batch A)
-B14  ReviewEvent with the affirmation anchor                    affirmation recorder    SEG-SYS-004
-B15  Gate 2, the proof gate, and its CoverageReport             gate evaluator          SEG-SYS-006
-B16  Scope collection and the partial-vs-total signal           proof generator         SEG-SYS-005
-B17  The four proof documents                                   proof generator         SEG-SYS-005
-B18  Refuse to generate for a blocked scope                     proof generator         SEG-SYS-008
-B19  Minimal CLI over the three workflows                       command-line interface  SEG-SYS-010
+B10  Persist nodes, edges, events, proofs; validate on write    affirmation store       :need:`SEG-SYS-007`
+B11  Read-back as a record source                               affirmation store       :need:`SEG-SYS-007`
+B12  Satisfaction by transitive closure                         satisfaction evaluator  :need:`SEG-SYS-002` (batch A)
+B13  Link state derived from current content                    suspect detector        :need:`SEG-SYS-003` (batch A)
+B14  ReviewEvent with the affirmation anchor                    affirmation recorder    :need:`SEG-SYS-004`
+B15  Gate 2, the proof gate, and its CoverageReport             gate evaluator          :need:`SEG-SYS-006`
+B16  Scope collection and the partial-vs-total signal           proof generator         :need:`SEG-SYS-005`
+B17  The four proof documents                                   proof generator         :need:`SEG-SYS-005`
+B18  Refuse to generate for a blocked scope                     proof generator         :need:`SEG-SYS-008`
+B19  Minimal CLI over the three workflows                       command-line interface  :need:`SEG-SYS-010`
 B20  Iteration architecture note; requirement gaps raised       —                       —
 ===  =========================================================  ======================  ======================
 

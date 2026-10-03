@@ -72,7 +72,7 @@ Consequences
 - **Risk, named:** writing proofs in place means a failed or aborted
   generation can leave partial artifacts in a tracked directory. Two
   mitigations are load-bearing rather than optional — per-file atomicity
-  above, and the SEG-SYS-008 refusal path must run the gate to completion
+  above, and the :need:`SEG-SYS-008` refusal path must run the gate to completion
   and refuse **before any proof file is opened**, so a blocked scope
   produces no partial package at all. That couples this ADR to the refusal
   work item directly.

@@ -84,7 +84,7 @@ The design consistency proof: self-contained by construction
 ------------------------------------------------------------------
 
 A design consistency proof carries exactly what an auditor needs to
-recompute its own root without the graph that produced it (SEG-SYS-005):
+recompute its own root without the graph that produced it (:need:`SEG-SYS-005`):
 the two metadata fields above, a node manifest of every in-scope design
 node's own identifier, kind and hash, the in-scope design edges as
 ⟨from, to, kind⟩ triples, and the root itself. "Design" is Requirement,
@@ -128,8 +128,8 @@ The evidence manifest: scope, totality, and the siblings it binds
 
 The evidence manifest is the package's own binder: the requested scope and
 the member scope the expansion actually collected, whether that scope is
-total (SEG-SREQ-039), the current revision, and a relative filename
-reference to each of the other three documents. Scope (SEG-SREQ-038) and
+total (:need:`SEG-SREQ-039`), the current revision, and a relative filename
+reference to each of the other three documents. Scope (:need:`SEG-SREQ-038`) and
 totality live here, on the package as a whole, rather than on the coverage
 report — the coverage report's eight typed findings are exactly, and only, the
 gate's own findings, and growing them to carry scope too would blur that.
@@ -155,7 +155,7 @@ The read face
 
 :meth:`~affirmatrix.case.AffirmationStore.read_proof_document` reads one
 document back, validated against the case's own schemas and refusing
-rather than skipping — the same SEG-SREQ-053 discipline every other read
+rather than skipping — the same :need:`SEG-SREQ-053` discipline every other read
 here keeps. :meth:`~affirmatrix.case.AffirmationStore.read_package` reads
 all four of one snapshot at once, refusing the whole package if any one is
 missing or invalid: a package short one document is not a smaller package,
@@ -177,10 +177,10 @@ requested and member identifiers it was collected for) and
 ``coverage_report`` (the gate's own report, unchanged), so a caller can
 render every diagnostic instead of parsing a string. Named without the
 ``Error`` suffix every other refusal in this codebase carries: this is the
-gate's own verdict acted on (SEG-SYS-008), not an input the generator
+gate's own verdict acted on (:need:`SEG-SYS-008`), not an input the generator
 failed to make sense of.
 
-Both halves of SEG-SREQ-046 hold by construction. Nothing is built in
+Both halves of :need:`SEG-SREQ-046` hold by construction. Nothing is built in
 memory: the raise happens before any document body exists, so a blocked
 scope never has a ``DesignConsistencyProof`` or an ``EvidenceManifest`` to
 discard. Nothing is written to disk: ``persist`` is the only function that
@@ -189,7 +189,7 @@ touches the store, and it is never reached for a blocked scope — a
 and never creates even the snapshot directory a first write would
 otherwise seed.
 
-SEG-SREQ-048's boundary — only a blocked scope is ever refused — is a
+:need:`SEG-SREQ-048`'s boundary — only a blocked scope is ever refused — is a
 statement about *kind*, not only about when: an absent or non-Requirement
 requested identifier raises :class:`~affirmatrix.proof.ScopeError` from
 scope collection, and an outcome confirming more than one in-scope

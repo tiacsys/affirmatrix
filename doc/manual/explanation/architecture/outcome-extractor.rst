@@ -37,17 +37,17 @@ Each input has one purpose:
 * the **run artifact** is the authority on what a test did. Its ``testsuites``
   list holds one suite for each scenario. A suite names its scenario and its
   platform and lists its results, each with a test identifier and a status
-  (SEG-SREQ-176);
+  (:need:`SEG-SREQ-176`);
 * the **revision record** and the **name record** are one-line files beside the
   artifact. The artifact holds neither the full revision nor the name of the
   run;
 * the **test-case export** is the authority on which specification a result
-  belongs to (SEG-SREQ-180);
-* the **implementation export** gives the witnesses (SEG-SREQ-189). When
+  belongs to (:need:`SEG-SREQ-180`);
+* the **implementation export** gives the witnesses (:need:`SEG-SREQ-189`). When
   ``implementations`` is ``None``, no Witnesses edge is supplied.
 
 ``repository`` is the configured name of the repository ``root`` belongs to,
-never a path (SEG-SREQ-134). The ``doxygen`` field of the two input classes
+never a path (:need:`SEG-SREQ-134`). The ``doxygen`` field of the two input classes
 is not used. ``root`` must hold every artifact.
 
 Twister is the format of the artifact. A pytest run would be a second format of
@@ -57,11 +57,11 @@ Identity
 --------
 
 An outcome is identified by its run identifier and its specification
-identifier, joined by a slash (SEG-SREQ-177). The run identifier joins the
-name of the run, the platform and the scenario by hyphens (SEG-SREQ-178). Each
+identifier, joined by a slash (:need:`SEG-SREQ-177`). The run identifier joins the
+name of the run, the platform and the scenario by hyphens (:need:`SEG-SREQ-178`). Each
 slash of the platform becomes a hyphen, so ``native_sim/native/64`` is
 ``native_sim-native-64`` and the identity holds one slash. The specification
-identifier is the identifier of the test-case need, verbatim (SEG-SREQ-179).
+identifier is the identifier of the test-case need, verbatim (:need:`SEG-SREQ-179`).
 For the first result of the scenario ``safe_data.api`` the identity is::
 
    twister-run-2026-09-29-native_sim-native-64-safe_data.api/TC_SAFE_DATA_INIT_AND_VERIFY
@@ -83,8 +83,8 @@ the artifact it forms, from every need, the identifier
    ``<scenario>.<suite of the need>.<test function without test_>``
 
 and compares the result's test identifier with each formed identifier as a
-whole (SEG-SREQ-180). Exactly one need must form it. No need and more than one
-need are both an error that names the result (SEG-SREQ-181). The extractor
+whole (:need:`SEG-SREQ-180`). Exactly one need must form it. No need and more than one
+need are both an error that names the result (:need:`SEG-SREQ-181`). The extractor
 never cuts a test identifier into parts.
 
 The reason is that one string can have two readings. Take the scenarios ``s``
@@ -113,17 +113,17 @@ The status
    * - ``skipped``
      - skipped
 
-The table is fixed (SEG-SREQ-183). Any other status, such as ``blocked``, is an
-error that names the result (SEG-SREQ-184). A skipped result is recorded as an
-outcome with the result skipped; it is not dropped (SEG-SREQ-185). The
+The table is fixed (:need:`SEG-SREQ-183`). Any other status, such as ``blocked``, is an
+error that names the result (:need:`SEG-SREQ-184`). A skipped result is recorded as an
+outcome with the result skipped; it is not dropped (:need:`SEG-SREQ-185`). The
 revision of each outcome is the text of the revision record, as it is
-(SEG-SREQ-186). The extractor does not check its length.
+(:need:`SEG-SREQ-186`). The extractor does not check its length.
 
 The canonical record
 --------------------
 
 The content hash of an outcome covers three values and nothing else
-(SEG-SREQ-182): the specification identifier, the run identifier and the
+(:need:`SEG-SREQ-182`): the specification identifier, the run identifier and the
 result. The execution time and the reason of a result are not hashed. The hash
 is the SHA-256 of the canonical record, a JSON object in UTF-8 with sorted keys,
 no blanks and no escaping of non-ASCII text (RFC 8785). For the result
@@ -151,7 +151,7 @@ The anchor
 ----------
 
 Each outcome has one content hash, ``contentHash``, with an anchor of three
-parts (SEG-SREQ-190): the configured repository name; the path of the artifact
+parts (:need:`SEG-SREQ-190`): the configured repository name; the path of the artifact
 relative to ``root``, in posix form; and the locator ``nodeid:`` followed by
 the result's test identifier, for example
 ``nodeid:safe_data.api.safe_data.init_and_verify``. An artifact that lies
@@ -162,8 +162,8 @@ The edges
 ---------
 
 Each outcome has one Confirms edge to the test-case need its result maps to
-(SEG-SREQ-188). It has a Witnesses edge to every implementation need that
-satisfies a requirement that the test-case need verifies (SEG-SREQ-189). A
+(:need:`SEG-SREQ-188`). It has a Witnesses edge to every implementation need that
+satisfies a requirement that the test-case need verifies (:need:`SEG-SREQ-189`). A
 skipped outcome has the same edges as a passed one. All edges are pending. A
 target that an export does not hold is emitted all the same, and the graph
 reports it as a broken edge. On the evidence fixture the four scenarios give 76
@@ -179,7 +179,7 @@ message names the run artifact and, for one result, the result. The extractor
 refuses:
 
 * a revision record that is missing, empty or holds only a line feed
-  (SEG-SREQ-187), or that holds two lines or has blanks around its text;
+  (:need:`SEG-SREQ-187`), or that holds two lines or has blanks around its text;
 * a name record that is missing, empty, has two lines or holds a slash;
 * an artifact that cannot be read, is not a JSON object, has no
   ``testsuites`` list or holds a suite or a result without the fields it needs;

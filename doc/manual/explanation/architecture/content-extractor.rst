@@ -31,28 +31,28 @@ What it reads
 Three kinds of input, each for one purpose:
 
 * the **need exports** give the structure: which nodes exist, their identity
-  and their links (SEG-SREQ-153). Every need in the implementation export is an
+  and their links (:need:`SEG-SREQ-153`). Every need in the implementation export is an
   Implementation and every need in the test-case export a TestSpecification;
   no need type is configured for them. The symbol a need names is its ``title``
   on an implementation need and its ``test_function`` on a test-case need;
 * the **Doxygen output** gives the location: the file and the lines of a
   symbol's declaration and body. Only names, kinds and ``<location>``
-  attributes are read from it; none of its text reaches a hash (SEG-SREQ-170);
+  attributes are read from it; none of its text reaches a hash (:need:`SEG-SREQ-170`);
 * the **source files** under ``root`` give the bytes that are hashed.
 
 ``repository`` is the configured name of the repository the files belong to,
-never a path (SEG-SREQ-134). A stream set to ``None`` supplies nothing, and
+never a path (:need:`SEG-SREQ-134`). A stream set to ``None`` supplies nothing, and
 with both ``None`` the extractor supplies nothing at all.
 
 What it supplies
 ----------------
 
-Each node is identified by its need identifier, verbatim (SEG-SREQ-154,
-SEG-SREQ-155; ADR-0007): a renamed symbol does not rename the node. Each link in
+Each node is identified by its need identifier, verbatim (:need:`SEG-SREQ-154`,
+:need:`SEG-SREQ-155`; ADR-0007): a renamed symbol does not rename the node. Each link in
 ``satisfies`` becomes an Implements edge from the implementation to the
 requirement, each link in ``verifies`` a Verifies edge from the test
-specification to the requirement, in the pending state (SEG-SREQ-156,
-SEG-SREQ-157). Edges need neither the Doxygen output nor a source file. On
+specification to the requirement, in the pending state (:need:`SEG-SREQ-156`,
+:need:`SEG-SREQ-157`). Edges need neither the Doxygen output nor a source file. On
 the toolbox evidence fixture that is 12 Implementations, 19 TestSpecifications
 and 16 + 24 edges.
 
@@ -62,10 +62,10 @@ Finding the lines
 Each Doxygen tree is read once, when the extractor is built. Its members are
 indexed by name, each tree separately, so an implementation's symbol is never
 looked up in the test tree. A node is located through the one member whose name
-is its symbol (SEG-SREQ-160). "One" means one distinct definition: a member
+is its symbol (:need:`SEG-SREQ-160`). "One" means one distinct definition: a member
 listed in two compounds with the same ``id`` and location counts once, but two
 ``id`` values, or one ``id`` at two locations, are two, and a symbol with none
-or with several is an error for its node (SEG-SREQ-161). Members no need names
+or with several is an error for its node (:need:`SEG-SREQ-161`). Members no need names
 are never consulted, which is why the test tree's duplicate
 ``SAFE_CONTAINER_DEFINE`` costs nothing. The index of Doxygen's own listing is
 not followed: it lists members repeatedly and gives no location.
@@ -73,9 +73,9 @@ not followed: it lists members repeatedly and gives no location.
 Before a file is opened, every path the node's location names is resolved under
 ``root`` (links included) and must stay inside it; ``..``, an absolute path and
 a link that leads out are errors, and the file outside is not read
-(SEG-SREQ-162). Then the line each location names must contain the symbol as a
+(:need:`SEG-SREQ-162`). Then the line each location names must contain the symbol as a
 whole identifier: ``line`` and ``declline`` in the declaration file, and
-``bodystart`` in the body file, never ``bodyend`` (SEG-SREQ-175). A location
+``bodystart`` in the body file, never ``bodyend`` (:need:`SEG-SREQ-175`). A location
 that Doxygen left stale, pointing at another function's lines, is refused
 instead of hashed.
 
@@ -83,7 +83,7 @@ The four hashes
 ---------------
 
 A hash is the SHA-256 of a run of whole lines of one source file, each with its
-terminator (SEG-SREQ-168); nothing is trimmed, so a CR before the line feed is
+terminator (:need:`SEG-SREQ-168`); nothing is trimmed, so a CR before the line feed is
 content. ADR-0011 fixes where each run starts and ends:
 
 .. list-table::
@@ -116,7 +116,7 @@ The documentation comment is found from the line above the declaration,
 stepping over ``#if``, ``#ifdef`` and ``#ifndef`` lines only. The next line
 must end the comment with ``*/``, and its opener must be ``/**`` or ``/*!``. A
 blank line, a plain comment or code there means the node has no documentation
-comment, an error and never an empty hash (SEG-SREQ-169). A guard line between
+comment, an error and never an empty hash (:need:`SEG-SREQ-169`). A guard line between
 the comment and the declaration lies inside the span; one above the comment lies
 outside. When the end of a declaration is sought, text in comments is skipped,
 and a ``{`` at parenthesis depth zero before the ``;``, an unbalanced ``)`` or
@@ -141,7 +141,7 @@ Each hash is supplied with an anchor of three parts, naming where its bytes
 came from: the configured repository name; the file as Doxygen names it, which
 for an ``apiHash`` is the declaration file and for a ``bodyHash`` or
 ``implHash`` the body file; and the locator ``symbol:<name>#api``, ``#body``,
-``#spec`` or ``#impl`` (SEG-SREQ-171 to SEG-SREQ-174). No line number is
+``#spec`` or ``#impl`` (:need:`SEG-SREQ-171` to :need:`SEG-SREQ-174`). No line number is
 recorded, so moving a function within its file changes no anchor.
 
 Errors
@@ -151,7 +151,7 @@ Errors
 When the extractor is built it refuses what the exports and the Doxygen trees
 alone show, before any record is supplied: an export that cannot be read, that
 holds no or several versions or no ``needs``, or that carries a build timestamp
-(SEG-SREQ-158); a need with no symbol, or an identifier other than its key; a
+(:need:`SEG-SREQ-158`); a need with no symbol, or an identifier other than its key; a
 Doxygen directory that is missing or a file of it that does not parse. The
 export checks are the requirements reader's, shared through one private helper.
 

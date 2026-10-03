@@ -88,7 +88,7 @@ produced, keeps every other entry exactly as it was, sorts by identifier and
 renames the result into place. Three properties follow, and each is load
 bearing:
 
-*Nothing disappears by omission* (SEG-SREQ-023). A producer that yields a short
+*Nothing disappears by omission* (:need:`SEG-SREQ-023`). A producer that yields a short
 stream — because a source was unreadable, or a filter was too narrow — rewrites
 a smaller set of records, not a smaller case. Removal is a separate operation
 that names what it removes, and refuses a record the case does not hold, because
@@ -98,7 +98,7 @@ that names what it removes, and refuses a record the case does not hold, because
 streamed it in. Two runs over an unchanged graph leave byte-identical files, so
 a diff shows real change only.
 
-*A record appears when its document does* (SEG-SREQ-022). The new contents are
+*A record appears when its document does* (:need:`SEG-SREQ-022`). The new contents are
 written to a temporary file in the target's own directory, flushed to the
 device, and renamed over the target. The directory matters: a rename is atomic
 only within one filesystem, and a temporary file elsewhere would degrade it into
@@ -110,7 +110,7 @@ Affirmations are appended, never rewritten
 ------------------------------------------
 
 Review events are added after the ones already recorded and are never
-re-numbered (SEG-SREQ-033). A review event carries nothing that identifies it —
+re-numbered (:need:`SEG-SREQ-033`). A review event carries nothing that identifies it —
 the same edge may be affirmed more than once — so its identity is its position
 in the case's sequence of events, which is available precisely because events
 are only ever appended.
@@ -119,7 +119,7 @@ An edge's state and the hash it was affirmed against change only when that edge
 is named in a write. Writing a different edge, or any node document, leaves an
 affirmed edge exactly as it was.
 
-Affirmed standing is never lost by omission (SEG-SREQ-051). A record that would
+Affirmed standing is never lost by omission (:need:`SEG-SREQ-051`). A record that would
 replace an incumbent carrying its affirmed hash with one carrying none is a
 demotion, and the write is refused unless a demotion request names that edge:
 
@@ -143,7 +143,7 @@ watches the loss of affirmed standing, not its movement.
 Validation, and what it is against
 ----------------------------------
 
-Every entry is validated before any document is opened (SEG-SREQ-019) — the
+Every entry is validated before any document is opened (:need:`SEG-SREQ-019`) — the
 whole batch, not record by record, so a batch containing one invalid record
 writes nothing at all. A refusal names the record, the schema and the field,
 because a batch is the usual size of a write and "something was invalid" is no
@@ -152,7 +152,7 @@ help.
 The schemas are draft 2020-12, one per record kind. The node schemas pin the
 content-hash field names each kind carries, and beside every digest they require
 its source location — repository, path and span locator, per hash
-(SEG-SREQ-050) — with the locator's format pinned per kind: a requirement is
+(:need:`SEG-SREQ-050`) — with the locator's format pinned per kind: a requirement is
 located by its need identifier, an implementation or test specification by
 symbol and span role, a test outcome by its identity within the run artifact,
 and any of them by ``file`` where the digest covers a whole file. A location is
@@ -165,7 +165,7 @@ the producer, the schema guards the document somebody reads without our code.
 
 Every schema forbids the properties it does not declare, and every digest field
 is pinned to sixty-four lowercase hexadecimal characters. That is the structural
-half of "covered content is never persisted" (SEG-SREQ-018): there is no field
+half of "covered content is never persisted" (:need:`SEG-SREQ-018`): there is no field
 for content to travel in, and no digest field it could be smuggled through. The
 other half is the API, which takes record types and never text.
 
@@ -178,7 +178,7 @@ Every path stays under the root
 -------------------------------
 
 Each path the store opens is assembled in one place and passes one check
-(SEG-SREQ-021): segment rules that refuse an empty name, a parent reference, an
+(:need:`SEG-SREQ-021`): segment rules that refuse an empty name, a parent reference, an
 embedded separator, a leading dot, and any character that is not valid in a
 file name on both POSIX and Windows filesystems — control characters included;
 then resolution of both the candidate and the root, requiring the first to lie
@@ -186,7 +186,7 @@ under the second. The resolution is what catches the case no lexical rule can
 see, where a directory along the path is a symbolic link out of the case. The
 character rule is defense in depth for a published case being checkable out on
 either platform; the primary guard is the proof generator's own minting rule
-(SEG-SREQ-052).
+(:need:`SEG-SREQ-052`).
 
 The only caller-supplied path segment the store ever takes is the snapshot
 identifier of an evidence package, which is why the rule is written for it.

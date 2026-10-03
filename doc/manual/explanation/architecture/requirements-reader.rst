@@ -21,12 +21,12 @@ What it reads
    )
 
 ``export`` is the ``needs.json`` of a clean build. ``types`` names the need
-types that are requirements (SEG-SREQ-145): a need of any other type supplies
+types that are requirements (:need:`SEG-SREQ-145`): a need of any other type supplies
 no record. ``repository`` is the configured name of the repository holding the
-requirement document, never a path (SEG-SREQ-134). ``source_directory`` is the
+requirement document, never a path (:need:`SEG-SREQ-134`). ``source_directory`` is the
 directory of the document's sources relative to that repository.
 
-Only forward links are read (SEG-SREQ-149). The ``*_back`` fields are derived
+Only forward links are read (:need:`SEG-SREQ-149`). The ``*_back`` fields are derived
 by sphinx-needs and can be stale after an incremental build, so no field of
 that kind is consulted; a stale back link changes nothing.
 
@@ -34,9 +34,9 @@ What it supplies
 ----------------
 
 Each Requirement is identified by its need identifier, verbatim
-(SEG-SREQ-146): not prefixed, re-cased or normalised. Each declared
+(:need:`SEG-SREQ-146`): not prefixed, re-cased or normalised. Each declared
 ``refines`` link becomes an edge of kind Refines from the child to the parent,
-in the pending state (SEG-SREQ-149), because nothing here has been affirmed.
+in the pending state (:need:`SEG-SREQ-149`), because nothing here has been affirmed.
 
 A link whose target the export does not hold, or holds as a need of a type that
 is not configured, is still emitted. The graph reports it as a broken edge,
@@ -49,13 +49,13 @@ The canonical form
 ------------------
 
 A Requirement's content hash is the SHA-256 of the UTF-8 canonical JSON of an
-object holding exactly three fields of the need (SEG-SREQ-147): its
+object holding exactly three fields of the need (:need:`SEG-SREQ-147`): its
 ``content``, its ``refines`` links sorted, and its ``title``, with keys in
 sorted order and no insignificant whitespace. The identifier, the status, the
 tags and every derived field are not in it, so changing one of those changes
 no hash. A need with no ``refines`` serializes an empty array. Sorting the
 links is what makes the order the export lists them in irrelevant
-(SEG-SREQ-148).
+(:need:`SEG-SREQ-148`).
 
 The form is RFC 8785 canonical JSON. The standard library's encoder,
 called with sorted keys, compact separators and ``ensure_ascii=False``,
@@ -82,7 +82,7 @@ Anyone can reproduce it with ``sha256sum`` over those bytes. The function
 The anchor
 ----------
 
-Every content hash is supplied with an anchor of three parts (SEG-SREQ-151).
+Every content hash is supplied with an anchor of three parts (:need:`SEG-SREQ-151`).
 The repository is the configured name. The path is the need's docname and
 doctype joined to the source directory: with the repository ``toolbox`` and the
 source directory ``doc``, ``SD-REQ-002`` is anchored at ``doc/detailed.rst``.
@@ -101,7 +101,7 @@ A reader that cannot serve the export raises
 any record is supplied, so a stream is never silently short. It refuses:
 
 * an export carrying a build timestamp, ``created``, at the top level or in
-  the version entry (SEG-SREQ-150): a stamp means the export is not
+  the version entry (:need:`SEG-SREQ-150`): a stamp means the export is not
   reproducible. The null timestamp fields inside needs are not this;
 * an export with zero or more than one version. The reader serves one build,
   and choosing between two builds' hashes would be a silent decision;

@@ -22,7 +22,7 @@ state is not a convenience but the only honest source of a value the
 records require:
 
 - **A review event records the source revision each endpoint stood at**
-  when the judgement was made (SEG-SREQ-025). No record supplies it. A
+  when the judgement was made (:need:`SEG-SREQ-025`). No record supplies it. A
   node record carries content anchors — repository, path, locator, digest
   — and no revision; only a test outcome carries one, and that comes from
   the run's own artifacts. Producers hash bytes from a checkout without

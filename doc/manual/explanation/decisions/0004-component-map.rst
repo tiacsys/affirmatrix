@@ -54,7 +54,7 @@ structure.
 Persistence is a first-class part of this map, not an output detail: the
 engine's graph data — node and edge hash records, review events, sealed
 proofs — is where the graph itself lives, and its blackbox claim is
-SEG-SYS-007.
+:need:`SEG-SYS-007`.
 
 Decision
 --------
@@ -124,7 +124,7 @@ component that calls them.
   the sealed proof documents that constitute the case. It is the only
   component that touches persisted graph artifacts, and the single point at
   which schema validation is applied — on write and on read-back. It stores
-  hashes and references only; content never reaches it (SEG-SREQ-018).
+  hashes and references only; content never reaches it (:need:`SEG-SREQ-018`).
 - **The affirmation store presents its read face AS a record source.**
   Persisted edge records carrying stored ``edgeHash`` and ``linkState``
   enter the engine through the record-source protocol, not through a private
@@ -136,8 +136,8 @@ component that calls them.
   tests. Its write face is exclusive: no other component has one.
 - **Content hashing is not the commitment layer's.** Producers emit content
   hashes; the commitment layer folds content hashes into node hashes, edge
-  hashes and the design root. SEG-SREQ-001's subject (the content
-  extractor) and SEG-SREQ-005's subject (the commitment layer) therefore
+  hashes and the design root. :need:`SEG-SREQ-001`'s subject (the content
+  extractor) and :need:`SEG-SREQ-005`'s subject (the commitment layer) therefore
   sit on opposite sides of the record-source boundary, as the ratified
   slice already reads.
 - **The commitment layer is a leaf.** It imports only ``_hashing`` and
@@ -146,7 +146,7 @@ component that calls them.
   checkable (an import rule), not merely a convention.
 - **The graph builder assembles; the suspect detector derives.** The graph
   builder turns records into the in-memory graph and enforces ``refines``
-  acyclicity (SEG-SREQ-004), carrying each edge's recorded link state. The
+  acyclicity (:need:`SEG-SREQ-004`), carrying each edge's recorded link state. The
   suspect detector recomputes edge hashes, compares against the recorded
   stream, and derives the current state including transitive suspicion,
   which clears by recomputation rather than by a second affirmation. No

@@ -9,7 +9,7 @@ Accepted, 2026-07-25.
 Context
 -------
 
-SEG-SREQ-001, -002, -003 and -005 state *what* each hash is computed from;
+:need:`SEG-SREQ-001`, -002, -003 and -005 state *what* each hash is computed from;
 none states how the inputs are laid out in the byte string that is hashed.
 The prototype concatenated fields as UTF-8 text with no framing, which is
 ambiguous — the endpoint pair ``("a", "bc")`` and the pair ``("ab", "c")``
@@ -56,9 +56,9 @@ is arbitrary but fixed: no hashed field approaches four gigabytes.
 ============================  ============================================
 Tag (ASCII)                   Applies to
 ============================  ============================================
-``affirmatrix/v1/node``       node-hash derivation (SEG-SREQ-005)
-``affirmatrix/v1/edge``       the two-sided edge hash (SEG-SREQ-002)
-``affirmatrix/v1/root``       the flat-sealed design root (SEG-SREQ-003)
+``affirmatrix/v1/node``       node-hash derivation (:need:`SEG-SREQ-005`)
+``affirmatrix/v1/edge``       the two-sided edge hash (:need:`SEG-SREQ-002`)
+``affirmatrix/v1/root``       the flat-sealed design root (:need:`SEG-SREQ-003`)
 ============================  ============================================
 
 The tag is length-prefixed and leads the preimage, so the hash state
@@ -103,7 +103,7 @@ declaration order. This is the same instinct as the untagged content hash:
 a verifier should need as little of our machinery as possible.
 
 The **taxonomy provider owns the type token and the field-name set**
-(SEG-SREQ-029, SEG-SREQ-032); it no longer needs to own an ordering.
+(:need:`SEG-SREQ-029`, :need:`SEG-SREQ-032`); it no longer needs to own an ordering.
 Because both are now hashed, the vocabulary's *spelling* is
 integrity-relevant: renaming a node kind or a content-hash field changes
 every affected node hash. The hashes are parameterized by the declared
@@ -176,7 +176,7 @@ Consequences
   reference to affirmatrix's source. That is what a package's design root
   must satisfy: an auditor recomputes it from the package's own contents,
   using this document and nothing of ours.
-- SEG-SREQ-005's "solely from the content hashes" was amended to admit the
+- :need:`SEG-SREQ-005`'s "solely from the content hashes" was amended to admit the
   node type and the field names. The
   domain tag and the framing remain constants of the derivation function
   rather than inputs to it.

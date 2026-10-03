@@ -16,7 +16,7 @@ did not say what a commit *means*. That question has now been answered at the
 design level, and it changes the status of an act the project already performs
 every day.
 
-An affirmation is a content-bound human judgement (SEG-SYS-004). Its record —
+An affirmation is a content-bound human judgement (:need:`SEG-SYS-004`). Its record —
 the ReviewEvent — is a file the affirmation store persists. But a file on disk
 cannot say who wrote it, when, or whether they were entitled to. Today those
 three things are supplied by the maintainer's commit, and by the authorised
@@ -35,7 +35,7 @@ Two repositories must be kept apart throughout, because both are git and only
 one is new here:
 
 * the **source repositories**, which hold the content the graph measures. Git
-  was always assumed for these — SEG-SREQ-025 requires a *source* commit per
+  was always assumed for these — :need:`SEG-SREQ-025` requires a *source* commit per
   endpoint, and that anchor cannot be backfilled;
 * the **store lineage**, which holds the graph itself. That it is a git commit
   history is what this ADR ratifies.
@@ -64,9 +64,9 @@ and an affirmation is the kind of store act that introduces review events.**
 The act and its record are two halves that mean nothing apart:
 
 * the **ReviewEvent record** states *what* was affirmed — the edge, the content
-  hashes of both endpoints (SEG-SREQ-024), the source anchor per endpoint
-  (SEG-SREQ-025), the role and the reasoning. This is affirmatrix's semantics
-  and must be schema-valid and byte-stable on read-back (SEG-SREQ-019, -020);
+  hashes of both endpoints (:need:`SEG-SREQ-024`), the source anchor per endpoint
+  (:need:`SEG-SREQ-025`), the role and the reasoning. This is affirmatrix's semantics
+  and must be schema-valid and byte-stable on read-back (:need:`SEG-SREQ-019`, -020);
 * the **commit** supplies *who*, *when*, and *that this was deliberate* — the
   committer identity checkable against the authorised committer list, the
   timestamp, and the act of election itself.
@@ -74,7 +74,7 @@ The act and its record are two halves that mean nothing apart:
 Before the commit, the same bytes are a proposal. After it, they are an
 affirmation. Nothing about the record changes; its standing does.
 
-**SEG-SREQ-024 and -025 are satisfied by the serialized record, not by commit
+:need:`SEG-SREQ-024` **and -025 are satisfied by the serialized record, not by commit
 metadata.** Endpoint hashes and source anchors are hash-covered data that
 proof generation consumes; they must validate against a schema, survive
 read-back unchanged, and remain addressable as data. A commit message
@@ -150,7 +150,7 @@ human-in-the-loop, git-committed review, never headless.
 **What "on behalf" preserves**, precisely:
 
 * the **judgement** is the human's; the recorder originates no affirmation of
-  its own (SEG-SREQ-026), and preparing a commit is not originating one;
+  its own (:need:`SEG-SREQ-026`), and preparing a commit is not originating one;
 * the **authorization** is explicit and per-operation — never a standing
   grant, never inferred from configuration, never exercised in CI;
 * the **identity** recorded is the human's. affirmatrix must never appear as
@@ -196,7 +196,7 @@ Consequences
   is a genuine strengthening of the mechanism the whole project rests on.
 - **Software requirements may now name git** — commit, repository, committer,
   lineage — where they concern the affirmation store or the recorder. System
-  requirements stay technology-free: SEG-SYS-004 and SEG-SYS-007 are unchanged
+  requirements stay technology-free: :need:`SEG-SYS-004` and :need:`SEG-SYS-007` are unchanged
   and must remain so.
 - **The affirmation concept is untouched.** A content-bound human judgement is
   what it always was. This ADR chooses a substrate; it makes no claim about

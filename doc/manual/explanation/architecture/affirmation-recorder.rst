@@ -55,7 +55,7 @@ forbids it the suspect detector for exactly that reason.
 
 Of the six states, three are affirmable — pending, directly outdated, doubly
 outdated — because there a judgement about the edge's own content is what is
-missing (SEG-SREQ-027). The refusals each point at the act that would
+missing (:need:`SEG-SREQ-027`). The refusals each point at the act that would
 actually resolve the edge: an active edge has nothing to affirm; a
 transitively suspect edge clears by recomputation once the change sites below
 it are re-affirmed (see :doc:`drift-derivation`); a broken edge needs its
@@ -73,7 +73,7 @@ Only a strong edge can be affirmed
 
 The state gate above is a companion, not the whole test: ``affirmable`` and
 ``compose`` also gate on the edge's *kind*, via
-:func:`~affirmatrix.taxonomy.propagating_edge_kinds` (SEG-SREQ-056).
+:func:`~affirmatrix.taxonomy.propagating_edge_kinds` (:need:`SEG-SREQ-056`).
 ``Confirms``, ``Witnesses``, ``Excuses`` and ``Calls`` are refused whatever
 their state, because they are machine-derived evidence, not something a
 human judgement is about. A ``Confirms`` or ``Witnesses`` edge is resolved by
@@ -92,7 +92,7 @@ re-execution, not judgement, is what would resolve it.
 and ``compose`` checks the kind before it ever asks about state, so the
 message an operator sees for an evidence edge names the actual reason
 (machine-derived, re-execution resolves it) rather than borrowing the
-state gate's language. This is a companion to SEG-SREQ-027, not an amendment
+state gate's language. This is a companion to :need:`SEG-SREQ-027`, not an amendment
 of it: every strong kind — ``Refines``, ``Verifies``, ``Implements`` — is
 governed by state exactly as before.
 

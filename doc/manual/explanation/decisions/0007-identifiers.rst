@@ -13,7 +13,7 @@ identities, the local type tokens, the IRI rule and the uniqueness rule stand.
 Context
 -------
 
-SEG-SREQ-002 puts an edge's endpoint identifiers into its hash, so whatever
+:need:`SEG-SREQ-002` puts an edge's endpoint identifiers into its hash, so whatever
 string identifies a node becomes irreversible the moment an edge is
 affirmed. The design of record identifies nodes by absolute IRI over a
 project namespace, and the design record's own open questions note
@@ -50,7 +50,7 @@ token is the serialized token minus the ``seg:`` prefix — local
 ``Requirement``, ``Implementation``, ``TestSpecification``, ``TestOutcome``,
 ``Waiver``; edge kinds are ``Refines``, ``Verifies``, ``Implements``,
 ``Confirms``, ``Witnesses``, ``Excuses``, ``Calls``. The taxonomy provider
-owns both spellings (SEG-SREQ-029), and per ADR-0005 those spellings are
+owns both spellings (:need:`SEG-SREQ-029`), and per ADR-0005 those spellings are
 integrity-relevant.
 
 **Absolute IRIs are serialization, minted by ``affirmatrix.identity``.**
@@ -104,19 +104,19 @@ Amendment, 2026-09-29: identity of Implementations and TestSpecifications
 --------------------------------------------------------------------------
 
 When the structure of an Implementation or a TestSpecification is supplied by
-a need export (SEG-SREQ-153), its identity is not derived from the source:
+a need export (:need:`SEG-SREQ-153`), its identity is not derived from the source:
 
 - An **Implementation's** identity is the identifier of its implementation
   need, verbatim. The toolbox evidence fixture under ``tests/fixtures`` mints
   ``IMPL-<symbol>`` for it, which is that producer's spelling and not a rule of
   this tool. A renamed symbol is a new need and so a new
-  node. (SEG-SREQ-154.)
+  node. (:need:`SEG-SREQ-154`.)
 - A **TestSpecification's** identity is the identifier of its test-case need,
   verbatim: in that fixture the value of the test's ``@testid`` tag. The
   ``SEG-TS-nnn`` form stated above is this repository's own spelling of the same
   rule, where the test states it with the ``:test-id:`` marker. A renamed or
   moved test function is not a new TestSpecification, because the function's
-  name is not its identity. (SEG-SREQ-155.)
+  name is not its identity. (:need:`SEG-SREQ-155`.)
 
 Neither identity is recomputed from the source; both are taken from the export.
 Both enter the ``edgeTuple`` of ADR-0005 as recorded. The

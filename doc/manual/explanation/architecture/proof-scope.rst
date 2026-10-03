@@ -164,5 +164,5 @@ unfiltered subgraph: hop 3 above still collects every outcome confirming an
 in-scope specification, fresh or stale alike, because the comparison needs a
 current revision this module is never given, and because a scope's
 membership and a gate's judgement over that scope are different questions. A
-*package's* exclusion of what the gate reports stale (SEG-SREQ-040) is the
+*package's* exclusion of what the gate reports stale (:need:`SEG-SREQ-040`) is the
 next slice's, once a package exists to exclude anything from.
