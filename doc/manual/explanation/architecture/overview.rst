@@ -74,8 +74,10 @@ Four things stand around the tool.
   exactly three purposes: discovering the revision a working tree is at,
   checking that the paths an endpoint's anchors name match their committed
   content, and recovering the bytes an anchor named at a past revision so a
-  reviewer can see what a judgement bound. The adapter never writes to a
-  repository.
+  reviewer can see what a judgement bound. The first two also give the
+  extraction revision that ``case sync`` and ``edge affirm`` record with each
+  node record. The adapter never writes to a repository. It runs every git
+  call with optional locks off, so a read does not refresh the index either.
 - **The record producers.** Whatever turns sources into node and edge
   records. This repository's own case is still built from the would-be store,
   a hand-transcribed fixture under ``tests/fixtures/``. The requirements reader,

@@ -79,3 +79,12 @@ act is needed, and none is offered.
    current digest matches the digest the affirming review event recorded
    for that endpoint, together with both digests' anchors and the source
    revision the review event recorded for that endpoint.
+
+.. sreq:: Per-hash node comparison against the case's node record
+   :id: SEG-SREQ-312
+   :refines: SEG-SYS-015
+
+   The suspect detector shall report, for each named content hash that the
+   node record the case holds or the node record of the current stream
+   carries, whether the current digest matches the recorded digest, differs
+   from it, or exists on one side only.

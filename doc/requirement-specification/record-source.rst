@@ -64,3 +64,17 @@ Anchors
 
    The record source shall supply, with every content hash it supplies, an
    anchor from which the content the hash covers can be found again.
+
+Content behind a hash
+---------------------
+
+A record source that reads content can also hand that content back, so an
+operator can compare it with what the case recorded.
+
+.. sreq:: A record source supplies the bytes it hashed
+   :id: SEG-SREQ-311
+   :refines: SEG-SYS-015
+
+   Where a record source reads the content that a content hash it supplies
+   covers, the record source shall supply, for a node and the name of one of
+   its content hashes, the bytes from which it computed that hash.

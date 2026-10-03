@@ -79,6 +79,14 @@
           "description": "How the hashed span is found within the file. 'symbol:<path>#body' names the symbol whose body span the digest covers; the span boundary itself is the extractor's parser-independent rule, deliberately not recorded here. 'file' says the digest covers the whole file."
         }
       }
+    },
+    "seg:extractedFrom": {
+      "type": "object",
+      "description": "The revision of each repository at which the content behind the digests was read (ADR-0016). Each key is a repository name that the content anchors name. Each value is a revision: 40 or 64 lowercase hexadecimal characters. A producer-recorded claim, never a hash preimage member. The field is optional, and a record that has no extraction revision carries no field.",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+      }
     }
   },
   "$defs": {

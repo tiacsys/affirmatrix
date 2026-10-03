@@ -9,12 +9,19 @@ one module where that happens. Three reads, no more:
 * **Cleanliness of the anchored paths** — whether the paths an endpoint's
   anchors name match their committed content (:func:`check_clean`,
   ``git status --porcelain=v1 -z`` over exactly those paths, not the whole
-  tree).
+  tree). A path that was never committed is not clean either, but ``git
+  status`` is silent about a path it has never seen. :func:`committed_paths`
+  (``git ls-tree``) names the paths a revision holds, so the verbs that
+  record an extraction revision can tell the two cases apart.
 * **Before-content recovery** — the bytes a path held at a given revision,
   for display only (:func:`read_before_content`, ``git show <rev>:<path>``).
 
 The adapter never writes: no add, no commit, no branch, no checkout, no
-stash, no edit to any tracked file. Every git failure — the binary absent,
+stash, no edit to any tracked file. Every git call runs with optional locks
+off (``--no-optional-locks``). Without it, ``git status`` refreshes the stat
+data in the index of the repository, and that is a write. With it, git
+compares the content of a file whose stat data is out of date, and gives the
+same answer more slowly. Every git failure — the binary absent,
 the path not a repository, a bad revision — becomes one
 :class:`RepositoryError`, so a handler never has to see a
 ``subprocess.CalledProcessError`` or import ``subprocess`` itself; this is
@@ -100,13 +107,19 @@ class Cleanliness:
 def _run(repo_path: Path, *args: str) -> bytes:
     """Run one read-only git subcommand under ``repo_path`` and return its raw stdout.
 
+    :implements: SEG-SREQ-115
+
+    Optional locks are off for every call, so no read refreshes the index.
     The only place ``subprocess`` runs in this package. A git failure of any
     kind becomes one :class:`RepositoryError`; nothing above this function
     ever sees a ``subprocess`` exception.
     """
     try:
         completed = subprocess.run(
-            ["git", *args], cwd=repo_path, check=True, capture_output=True
+            ["git", "--no-optional-locks", *args],
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
         )
     except FileNotFoundError as error:
         raise RepositoryError(
@@ -146,6 +159,29 @@ def check_clean(repo_path: Path, paths: Sequence[Path]) -> Cleanliness:
     )
     dirty = tuple(sorted(_dirty_paths(output)))
     return Cleanliness(clean=not dirty, dirty_paths=dirty)
+
+
+def committed_paths(repo_path: Path, revision: str, paths: Sequence[Path]) -> frozenset[str]:
+    """The subset of ``paths`` that ``revision`` holds, as repository-relative POSIX names.
+
+    ``git ls-tree -r --name-only -z <revision> -- <paths>``: one call for all
+    the paths. Used with :func:`check_clean` to decide that a repository holds
+    the committed content at every path an anchor names. A path the
+    revision never held is missing from the answer.
+    """
+    if not paths:
+        return frozenset()
+    output = _run(
+        repo_path,
+        "ls-tree",
+        "-r",
+        "--name-only",
+        "-z",
+        revision,
+        "--",
+        *(path.as_posix() for path in paths),
+    )
+    return frozenset(name for name in output.decode("utf-8").split("\0") if name)
 
 
 def _dirty_paths(output: bytes) -> list[str]:
@@ -193,6 +229,7 @@ __all__ = [
     "RepositoryError",
     "Revision",
     "check_clean",
+    "committed_paths",
     "discover_revision",
     "read_before_content",
 ]

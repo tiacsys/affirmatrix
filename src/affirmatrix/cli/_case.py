@@ -14,7 +14,7 @@ import argparse
 
 from affirmatrix import drift, graph, taxonomy
 from affirmatrix.case import AffirmationStore, AffirmationStoreError
-from affirmatrix.cli import _judgement, _outcome, _selector
+from affirmatrix.cli import _extraction, _judgement, _outcome, _selector
 from affirmatrix.config import Config
 from affirmatrix.records import EdgeRecord, NodeRecord
 from affirmatrix.sources import SourceError
@@ -105,6 +105,11 @@ def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStor
     what is written. After the write, every test outcome node and evidence
     edge the case still holds is removed, and each removal is named. A
     vanished evidence edge is not reported: the removal covers it.
+
+    Each node record is written with its extraction revisions, by the rule of
+    :mod:`affirmatrix.cli._extraction`, compared with the node records the
+    case holds before this write. After the sync line, one line names each
+    repository that has node records written without a revision.
     """
     try:
         current = _judgement.resolve_current(args.current, config)
@@ -116,14 +121,19 @@ def handle_sync(args: argparse.Namespace, config: Config, store: AffirmationStor
         return _outcome.exit_for(_report_refusal(str(error), _outcome.INDETERMINATE))
     evidence_nodes = taxonomy.evidence_node_kinds()
     evidence_edges = taxonomy.evidence_edge_kinds()
-    held_nodes = [node for node in store.nodes() if node.kind in evidence_nodes]
+    held = {node.local_id: node for node in store.nodes()}
+    held_nodes = [node for node in held.values() if node.kind in evidence_nodes]
     held_edges = [edge for edge in store.edges() if edge.kind in evidence_edges]
+    stamped = _extraction.stamp(
+        (node for node in derivation.nodes() if node.kind not in evidence_nodes), held, config
+    )
     store.write_records(
-        (node for node in derivation.nodes() if node.kind not in evidence_nodes),
+        stamped.nodes,
         (edge for edge in derivation.edges() if edge.kind not in evidence_edges),
         demote=(),
     )
     print(f"synced {store.root}")
+    _extraction.report(stamped.missing)
     for edge in derivation.vanished:
         if edge.kind not in evidence_edges:
             print(f"vanished: {edge.from_id} -> {edge.to_id} ({edge.kind})")

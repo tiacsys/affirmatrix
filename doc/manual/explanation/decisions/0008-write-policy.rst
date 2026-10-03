@@ -5,7 +5,7 @@ Status
 ------
 
 Accepted, 2026-07-25. Clarified by ADR-0010 (2026-09-16; reworded
-2026-09-29): the "never runs git" clause was always about writes and about
+2026-09-29) and ADR-0015: the "never runs git" clause was always about writes and about
 keeping the library free of repository state. The command-line adapter's
 three read-only repository operations, which that record names, are within
 the clause, not an exception to it. Every other clause stands.

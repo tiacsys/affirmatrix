@@ -4,7 +4,7 @@
 Status
 ------
 
-Accepted, 2026-09-16. Reads one clause of ADR-0008 — "the tool never runs
+Accepted, 2026-09-16. Extended by ADR-0015. Reads one clause of ADR-0008 — "the tool never runs
 git" — as binding the library and the affirmation store; the write policy of
 ADR-0008 and both stages of ADR-0009 stand unchanged. The review after
 iteration 0 (2026-09-29) confirmed the narrow reading: this record clarifies
@@ -87,7 +87,7 @@ anchor — the would-be store, a fixture, a producer over an export — the
 value must be given explicitly, and the adapter says so rather than
 inventing one.
 
-**The affirmation lineage is not read.** Reading the case's own commit
+**The affirmation lineage is not read, except as ADR-0015 says.** Reading the case's own commit
 history — to check who committed an affirmation, or when — is a different
 question with a different trust model, and this record does not admit it.
 

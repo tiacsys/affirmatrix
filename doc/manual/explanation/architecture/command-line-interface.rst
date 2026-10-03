@@ -25,7 +25,8 @@ Noun          Verb                Library call
 ``case``      ``check``           :meth:`~affirmatrix.case.AffirmationStore.layout`,
                                    :meth:`~affirmatrix.case.AffirmationStore.missing_schemas`,
                                    record counts
-``case``      ``sync``            :func:`~affirmatrix.drift.derive`, then
+``case``      ``sync``            :func:`~affirmatrix.drift.derive`, then the extraction
+                                   revisions (``cli/_extraction.py``), then
                                    :meth:`~affirmatrix.case.AffirmationStore.write_records`,
                                    then the removal of held test evidence
 ``case``      ``refresh``         :meth:`~affirmatrix.case.AffirmationStore.refresh_schemas`
@@ -246,15 +247,18 @@ The adapter, and only the adapter, may read a source repository —
 the whole package. Three reads, no writes: discovering the working tree's
 current revision, checking that the paths an endpoint's anchors name match
 their committed content, and recovering the bytes a path held at a past
-revision for display. Discovery and the cleanliness check together are how
+revision for display. Every git call runs with ``--no-optional-locks``. Without
+it, ``git status`` refreshes the index of the repository, and a read must not
+write. Discovery and the cleanliness check together are how
 ``edge affirm`` and the proof gate's own revision fill a review event's
 source-revision fields without an operator typing a commit hash; the
 cleanliness check is what keeps a discovered revision honest — a dirty
 anchored path refuses rather than silently misdescribing what was hashed.
 
 A revision the operator gives with ``--revision`` bypasses all of this: it
-is recorded exactly as given, never discovered, never checked by the
-adapter. It is still a real fact about the record, though — the case's own
+is recorded exactly as given in the review event, never discovered, never
+checked by the adapter. It is never recorded as an extraction revision (see
+below). It is still a real fact about the record, though — the case's own
 schema pins every recorded revision to the shape of a git commit hash, 40 or
 64 lowercase hex characters, and refuses anything else on write. Passing
 ``--revision`` a value that is not shaped like a commit (a label such as
@@ -263,6 +267,46 @@ useful to know since the would-be store's own anchors carry a literal
 filesystem path as their "repository", which never resolves through the
 configured map, so every affirmation and generation over it needs an
 explicit, commit-shaped ``--revision`` today.
+
+Extraction revisions
+--------------------
+
+``case sync`` and ``edge affirm`` write node records, and each writes them with
+the extraction revisions of ADR-0016: for each repository that a node's anchors
+name, the revision at which the content behind the node's hashes was read. One
+function decides the map, :mod:`affirmatrix.cli._extraction`
+(:need:`SEG-SREQ-306` to :need:`SEG-SREQ-310`). It compares each node with the
+record the case holds, read before the write:
+
+* The hashes differ, or the case holds no record: the discovered revision is
+  recorded, and a held revision is dropped.
+* The hashes are equal: a held revision for a repository that the anchors name
+  is kept, even when the repository has moved on. If none is held, the
+  discovered revision is recorded. A held revision for another repository is
+  dropped.
+
+A revision *can be discovered* for a node when the repository is configured and
+can be read, and holds the committed content at every path the node's anchors
+name in it. The adapter makes three git calls for each repository: the revision,
+``git status`` over the anchored paths, and ``git ls-tree`` for the paths the
+revision holds. ``git status`` says nothing about a path that git never saw, so
+the ``ls-tree`` read is what keeps a path that no commit holds from passing as
+clean. Each repository is read once for each run, for the paths of all the nodes
+that the run writes. A repository that is not configured, or is not a git
+repository, is the same as a revision that cannot be discovered.
+
+When a revision cannot be discovered, the node is written with no revision for
+that repository and the verb does not fail. It prints one line for each such
+repository, ``no extraction revision: <repository>: <count> node records``,
+after the ``synced`` line of ``case sync`` and after the ``affirmed`` lines of
+``edge affirm``. A revision given with ``--revision`` goes into the review event
+only (:need:`SEG-SREQ-327`).
+
+The store refuses a revision that is not 40 or 64 lowercase hexadecimal
+characters, at the write, through the schema of the case
+(:need:`SEG-SREQ-325`). A case with a schema copy from before this field refuses
+every write that records a revision, and writes nothing, so the maintainer runs
+``case refresh`` and commits it first (:need:`SEG-SREQ-212`).
 
 The cleanliness check's scope differs by which revision it is guarding.
 An affirmation endpoint's cleanliness covers only the paths that endpoint's

@@ -83,6 +83,7 @@ def validate_entry(
     """Refuse ``entry`` unless it validates against the named schema.
 
     :implements: SEG-SREQ-019
+    :implements: SEG-SREQ-325
 
     Reports the first violation in document order, naming the record and the
     field. A refusal that named only the schema would leave the operator to
