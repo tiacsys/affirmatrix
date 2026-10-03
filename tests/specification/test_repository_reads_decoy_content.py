@@ -39,9 +39,6 @@ VARIABLES = (
 SHOW_VARIABLES = ("GIT_DIR", "GIT_OBJECT_DIRECTORY", "GIT_COMMON_DIR")
 
 
-@support.red(
-    332, "case sync answers from the repository the variable names, not the one at the path"
-)
 @pytest.mark.parametrize("variable", VARIABLES)
 def test_case_sync_records_the_revision_of_the_repository_at_the_path(
     variable: str,
@@ -80,7 +77,6 @@ def test_case_sync_records_the_revision_of_the_repository_at_the_path(
         assert base.held_map(fixture.case, local_id) == expected
 
 
-@support.red(332, "git reads objects from the store that GIT_ALTERNATE_OBJECT_DIRECTORIES names")
 def test_case_sync_does_not_borrow_objects_from_a_repository_the_environment_names(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -118,7 +114,6 @@ def test_case_sync_does_not_borrow_objects_from_a_repository_the_environment_nam
         assert base.held_map(fixture.case, local_id) == {}
 
 
-@support.red(332, "edge affirm answers from the repository the variable names, or refuses or fails")
 @pytest.mark.parametrize("variable", VARIABLES)
 def test_edge_affirm_records_the_revision_of_the_repository_at_the_path(
     variable: str,
@@ -157,7 +152,6 @@ def test_edge_affirm_records_the_revision_of_the_repository_at_the_path(
         assert base.held_map(fixture.case, local_id) == {fixture.name: revision}
 
 
-@support.red(332, "node show reports the repository the variable names, or an error")
 @pytest.mark.parametrize("variable", VARIABLES)
 def test_node_show_reports_the_state_of_the_repository_at_the_path(
     variable: str,
@@ -193,9 +187,6 @@ def test_node_show_reports_the_state_of_the_repository_at_the_path(
     assert not checkout.get(nodes.KEY_CHECKOUT_ERROR)
 
 
-@support.red(
-    332, "edge show reads the before-content from the repository the variable names, or fails"
-)
 @pytest.mark.parametrize("variable", SHOW_VARIABLES)
 def test_edge_show_reads_the_before_content_from_the_repository_at_the_path(
     variable: str,
@@ -235,14 +226,11 @@ def test_edge_show_reads_the_before_content_from_the_repository_at_the_path(
     assert (support.before_text(row, "from"), support.before_text(row, "to")) == expected
 
 
-_HIDES = "a dirty repository looks clean, and edge affirm records a revision"
-
-
 @pytest.mark.parametrize(
     "variable",
     (
-        pytest.param("GIT_DIR", marks=support.red(332, _HIDES)),
-        pytest.param("GIT_WORK_TREE", marks=support.red(332, _HIDES)),
+        "GIT_DIR",
+        "GIT_WORK_TREE",
         "GIT_INDEX_FILE",
     ),
 )

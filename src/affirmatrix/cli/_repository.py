@@ -28,7 +28,29 @@ stash, no edit to any tracked file. Every git call runs with optional locks
 off (``--no-optional-locks``). Without it, ``git status`` refreshes the stat
 data in the index of the repository, and that is a write. With it, git
 compares the content of a file whose stat data is out of date, and gives the
-same answer more slowly. Every git failure — the binary absent,
+same answer more slowly.
+
+Every git call also runs without the seven variables that name a repository
+or a part of one: ``GIT_DIR``, ``GIT_WORK_TREE``, ``GIT_INDEX_FILE``,
+``GIT_OBJECT_DIRECTORY``, ``GIT_ALTERNATE_OBJECT_DIRECTORIES``,
+``GIT_COMMON_DIR`` and ``GIT_NAMESPACE``. With one of them set, git would
+answer from another repository than the one at the path (SEG-SREQ-332). The
+rest of the environment stays: ``PATH``, ``GIT_CEILING_DIRECTORIES`` and the
+``GIT_CONFIG_*`` settings are the operator's.
+
+A read over many paths is made in parts. One call of git takes at most a
+number of bytes of path arguments, and at most :data:`PATHS_PER_CALL` paths.
+The byte bound decides on a real machine. The count is a large safety cap that
+a test can lower. The byte bound comes from the machine: half
+of ``SC_ARG_MAX`` minus the size of the environment that git gets, with each
+argument counted as its bytes, one end byte and one pointer. It never falls
+below :data:`PATH_BYTES_FLOOR` (64 KiB), which is half of the 128 KiB that Linux
+promises, and that value is used when the system gives no limit. A system
+refuses a call whose arguments are too long, and a count alone does not keep a
+call short, because long paths make a long call. The answers of the parts are joined, and
+they equal the answer of one call. A part that fails fails the whole read, so
+the repository counts as one that cannot be read; the answer of the parts that
+did succeed is never used alone. Every git failure — the binary absent,
 the path not a repository, a bad revision — becomes one
 :class:`RepositoryError`, so a handler never has to see a
 ``subprocess.CalledProcessError`` or import ``subprocess`` itself; this is
@@ -53,13 +75,41 @@ the case's own schema (SEG-SREQ-109).
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 _REVISION_PATTERN = re.compile(r"[0-9a-f]{40}([0-9a-f]{24})?")
+
+#: The most path arguments in one call of git. This is a safety cap and a seam
+#: for tests: the byte bound (:func:`_byte_bound`) decides on a real machine,
+#: and a test lowers this value to force parts. Read when a read starts.
+PATHS_PER_CALL = 100000
+
+#: The least number of bytes of path arguments in one call of git. Linux
+#: promises at least 128 KiB for the arguments and the environment of a
+#: program together. Half of that leaves room for the environment and for the
+#: fixed arguments. The real bound is larger on most machines
+#: (see :func:`_byte_bound`).
+PATH_BYTES_FLOOR = 64 * 1024
+
+#: The bytes that the system counts for a pointer to one argument.
+_POINTER_BYTES = 8
+
+#: The names that point git at a repository, or at a part of one. They are
+#: removed from the environment of every call (SEG-SREQ-333).
+_REPOSITORY_VARIABLES = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_COMMON_DIR",
+    "GIT_NAMESPACE",
+)
 
 
 class RepositoryError(Exception):
@@ -118,8 +168,10 @@ def _run(repo_path: Path, *args: str, accept: Collection[int] = (0,)) -> bytes:
     :implements: SEG-SREQ-116
 
     Optional locks are off for every call, so no read refreshes the index.
-    The only place ``subprocess`` runs in this package. A git failure of any
-    kind becomes one :class:`RepositoryError`; nothing above this function
+    The environment of the call is the one of the process without the seven
+    names in ``_REPOSITORY_VARIABLES``, so git finds the repository from
+    ``repo_path`` alone. The only place ``subprocess`` runs in this package.
+    A git failure of any kind becomes one :class:`RepositoryError`; nothing above this function
     ever sees a ``subprocess`` exception. An exit status in ``accept`` is an
     answer and not a failure: ``git rev-parse --verify --quiet`` uses status 1
     to say that a name does not resolve.
@@ -130,6 +182,7 @@ def _run(repo_path: Path, *args: str, accept: Collection[int] = (0,)) -> bytes:
             cwd=repo_path,
             check=False,
             capture_output=True,
+            env=_git_environment(),
         )
     except FileNotFoundError as error:
         raise RepositoryError(
@@ -141,6 +194,57 @@ def _run(repo_path: Path, *args: str, accept: Collection[int] = (0,)) -> bytes:
         stderr = completed.stderr.decode("utf-8", errors="replace").strip()
         raise RepositoryError(f"git {' '.join(args)} failed in {repo_path}: {stderr}")
     return completed.stdout
+
+
+def _git_environment() -> dict[str, str]:
+    """The environment of the process, without the names that point git at a repository."""
+    return {name: value for name, value in os.environ.items() if name not in _REPOSITORY_VARIABLES}
+
+
+def _argument_cost(text: str) -> int:
+    """The bytes that one argument or one environment entry takes in a call."""
+    return len(os.fsencode(text)) + 1 + _POINTER_BYTES
+
+
+def _byte_bound() -> int:
+    """The most bytes of path arguments for one call of git, on this machine.
+
+    Half of what the system leaves for arguments after the environment that git
+    gets: ``(SC_ARG_MAX - environment) // 2``, never below
+    :data:`PATH_BYTES_FLOOR`. The floor is used when the system gives no limit
+    (an error or -1). Computed at each call, because the environment can change.
+    """
+    try:
+        limit = os.sysconf("SC_ARG_MAX")
+    except (ValueError, OSError):
+        return PATH_BYTES_FLOOR
+    if limit <= PATH_BYTES_FLOOR:
+        return PATH_BYTES_FLOOR
+    environment = sum(
+        _argument_cost(f"{name}={value}") for name, value in _git_environment().items()
+    )
+    return max(PATH_BYTES_FLOOR, (limit - environment) // 2)
+
+
+def _parts(names: Sequence[str]) -> Iterator[Sequence[str]]:
+    """Split ``names`` into runs, in order, that one call of git can take.
+
+    A run holds at most :data:`PATHS_PER_CALL` names and at most
+    the bytes that :func:`_byte_bound` gives. Every name is in exactly one run.
+    The limits are read here, at call time. A name that alone exceeds the byte
+    limit makes a run of its own.
+    """
+    bound = _byte_bound()
+    start = 0
+    size = 0
+    for index, name in enumerate(names):
+        cost = _argument_cost(name)
+        if index > start and (index - start >= PATHS_PER_CALL or size + cost > bound):
+            yield names[start:index]
+            start, size = index, 0
+        size += cost
+    if start < len(names):
+        yield names[start:]
 
 
 def discover_revision(repo_path: Path) -> Revision:
@@ -162,38 +266,36 @@ def check_clean(repo_path: Path, paths: Sequence[Path]) -> Cleanliness:
     never seen committed — untracked — is reported dirty too: ``git diff
     --quiet`` alone would call it clean, having nothing to diff against, and
     an anchor pointing at content that was never committed is exactly the
-    case this check exists to catch.
+    case this check exists to catch. Many paths are read in parts, and a part
+    that fails fails the read.
     """
     if not paths:
         return Cleanliness(clean=True, dirty_paths=())
-    output = _run(
-        repo_path, "status", "--porcelain=v1", "-z", "--", *(str(path) for path in paths)
+    dirty = tuple(
+        sorted(
+            name
+            for part in _parts([str(path) for path in paths])
+            for name in _dirty_paths(_run(repo_path, "status", "--porcelain=v1", "-z", "--", *part))
+        )
     )
-    dirty = tuple(sorted(_dirty_paths(output)))
     return Cleanliness(clean=not dirty, dirty_paths=dirty)
 
 
 def committed_paths(repo_path: Path, revision: str, paths: Sequence[Path]) -> frozenset[str]:
     """The subset of ``paths`` that ``revision`` holds, as repository-relative POSIX names.
 
-    ``git ls-tree -r --name-only -z <revision> -- <paths>``: one call for all
-    the paths. Used with :func:`check_clean` to decide that a repository holds
-    the committed content at every path an anchor names. A path the
-    revision never held is missing from the answer.
+    ``git ls-tree -r --name-only -z <revision> -- <paths>``, in parts when the
+    paths are many (see the module docstring). Used with :func:`check_clean` to
+    decide that a repository holds the committed content at every path an anchor
+    names. A path the revision never held is missing from the answer.
     """
     if not paths:
         return frozenset()
-    output = _run(
-        repo_path,
-        "ls-tree",
-        "-r",
-        "--name-only",
-        "-z",
-        revision,
-        "--",
-        *(path.as_posix() for path in paths),
-    )
-    return frozenset(name for name in output.decode("utf-8").split("\0") if name)
+    held: set[str] = set()
+    for part in _parts([path.as_posix() for path in paths]):
+        output = _run(repo_path, "ls-tree", "-r", "--name-only", "-z", revision, "--", *part)
+        held.update(name for name in output.decode("utf-8").split("\0") if name)
+    return frozenset(held)
 
 
 def _dirty_paths(output: bytes) -> list[str]:
@@ -419,6 +521,8 @@ def _identifier_pattern(identifier: str) -> str:
 
 
 __all__ = [
+    "PATHS_PER_CALL",
+    "PATH_BYTES_FLOOR",
     "SIGNATURE_WORDS",
     "Cleanliness",
     "Person",

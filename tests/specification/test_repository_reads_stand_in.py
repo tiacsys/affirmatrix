@@ -29,7 +29,6 @@ from . import repository_reads_support as support
 pytestmark = support.requires_git
 
 
-@support.red(333, "case sync runs git with the seven variables in its environment")
 def test_case_sync_runs_git_without_the_variables_that_name_a_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -57,7 +56,6 @@ def test_case_sync_runs_git_without_the_variables_that_name_a_repository(
     assert stand_in.leaks() == []
 
 
-@support.red(333, "edge affirm runs git with the seven variables in its environment")
 def test_edge_affirm_runs_git_without_the_variables_that_name_a_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -84,7 +82,6 @@ def test_edge_affirm_runs_git_without_the_variables_that_name_a_repository(
     assert stand_in.leaks() == []
 
 
-@support.red(333, "node show runs git with the seven variables in its environment")
 def test_node_show_runs_git_without_the_variables_that_name_a_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -111,7 +108,6 @@ def test_node_show_runs_git_without_the_variables_that_name_a_repository(
     assert stand_in.leaks() == []
 
 
-@support.red(333, "edge show runs git show with the seven variables in its environment")
 def test_edge_show_runs_the_before_content_read_without_the_variables_that_name_a_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -141,7 +137,6 @@ def test_edge_show_runs_the_before_content_read_without_the_variables_that_name_
     assert stand_in.leaks() == []
 
 
-@support.red(333, "edge show reads the case history with the seven variables in its environment")
 def test_edge_show_runs_the_case_history_reads_without_the_variables_that_name_a_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -191,7 +186,6 @@ def test_a_repository_read_keeps_the_ceiling_and_the_config_variables(
     assert stand_in.lacking() == []
 
 
-@support.red(333, "proof check runs git for the gate revision with the seven variables")
 def test_proof_check_reads_the_gate_revision_without_the_variables_that_name_a_repository(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

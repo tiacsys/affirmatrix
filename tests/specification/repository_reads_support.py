@@ -67,8 +67,6 @@ CRASHED = -1
 REAL_GIT = shutil.which("git")
 requires_git = pytest.mark.skipif(REAL_GIT is None, reason="git is not on PATH")
 
-red = prov.red
-
 
 def lower_limit(monkeypatch: pytest.MonkeyPatch, paths: int) -> None:
     """Make one call of git take at most ``paths`` paths.
