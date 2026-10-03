@@ -38,6 +38,12 @@ COUNT = 9
 DIRTY = (2, 8)
 UNCOMMITTED = (5,)
 LIMIT = 2
+#: The long paths of the one test that reaches the limit of the system: each path holds
+#: LEVELS directories and a file name of COMPONENT_LENGTH bytes each, so a path is about
+#: 3.5 KB, and the files lie in CHAINS directory chains.
+LEVELS = 13
+COMPONENT_LENGTH = 250
+CHAINS = 20
 
 
 def _expected(fixture: base.Fixture) -> dict[str, dict[str, str]]:
@@ -152,11 +158,13 @@ def test_a_read_of_so_many_paths_that_the_system_refuses_the_call_still_gives_re
 ) -> None:
     """A read of so many paths that the system refuses one call gives the answer of one call.
 
-    A repository holds a committed file for each of very many requirements. The names
-    of the files are long. The paths together are larger than the limit of the
-    operating system for the arguments of one program. Running case sync exits with
-    status 0. Each node record carries the revision of the repository. No line reports a
-    missing extraction revision.
+    A repository holds a committed file for each of several hundred requirements. Each
+    file lies in directories deep in the tree, and each path is about 3.5 KB long, with
+    no one name longer than 250 bytes. The paths together are larger than the limit of
+    the operating system for the arguments of one program, so that the number of bytes
+    and not the number of paths decides where a read is cut in parts. Running case sync
+    exits with status 0. Each node record carries the revision of the repository. No line
+    reports a missing extraction revision.
 
     :verifies: SEG-SREQ-334
     :test-id: SEG-TS-311
@@ -165,12 +173,13 @@ def test_a_read_of_so_many_paths_that_the_system_refuses_the_call_still_gives_re
     limit = os.sysconf("SC_ARG_MAX")
     if limit > 8 * 1024 * 1024:
         pytest.skip(f"the limit of {limit} bytes needs more files than this test makes")
-    name_length = 120
-    count = math.ceil(limit * 1.15 / (name_length + 1))
-    repository = base.init_repository(tmp_path / "big")
+    directory = "/".join(f"{level:02d}".ljust(COMPONENT_LENGTH, "d") for level in range(LEVELS))
     paths = []
+    count = math.ceil(limit * 1.15 / (len(directory) + 1 + COMPONENT_LENGTH + 5))
+    repository = base.init_repository(tmp_path / "big")
     for number in range(count):
-        path = f"d{number % 50:02d}/" + "n" * (name_length - 12) + f"{number:07d}.txt"
+        name = f"{number:04d}".ljust(COMPONENT_LENGTH, "n") + ".txt"
+        path = f"c{number % CHAINS:02d}/{directory}/{name}"
         base.write(repository, path, f"text {number}\n")
         paths.append(path)
     base.commit_all(repository, "every file")
