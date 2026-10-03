@@ -19,8 +19,6 @@ from __future__ import annotations
 import hashlib
 from datetime import date
 
-import pytest
-
 from affirmatrix import diagnostics, gates, graph, records, satisfaction
 from affirmatrix.records import LinkState, TestResult
 
@@ -158,7 +156,6 @@ def test_a_failing_outcome_excused_by_a_valid_waiver_only_informs() -> None:
         assert not report.blocked
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-129: the gate does not judge skipped outcomes yet")
 def test_a_valid_waiver_changes_nothing_for_a_skipped_outcome() -> None:
     """A waiver does not excuse a skipped outcome.
 
@@ -186,7 +183,6 @@ def test_a_valid_waiver_changes_nothing_for_a_skipped_outcome() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-199: the gate does not judge skipped outcomes yet")
 def test_a_skipped_outcome_is_reported_as_information() -> None:
     """A skipped outcome is reported as information and does not block.
 
@@ -211,7 +207,6 @@ def test_a_skipped_outcome_is_reported_as_information() -> None:
     assert not report.blocked
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-006: the gate does not judge skipped outcomes yet")
 def test_a_skipped_outcome_beside_a_passed_one_leaves_the_leaf_satisfied() -> None:
     """A skipped outcome does not stop a leaf from being satisfied.
 
@@ -227,7 +222,6 @@ def test_a_skipped_outcome_beside_a_passed_one_leaves_the_leaf_satisfied() -> No
     assert satisfaction.leaf_satisfied(built, LEAF)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-006: the gate does not judge skipped outcomes yet")
 def test_a_leaf_whose_only_outcome_was_skipped_is_not_satisfied() -> None:
     """A leaf whose only outcome was skipped is not satisfied.
 
@@ -268,7 +262,6 @@ def test_a_failed_outcome_excused_by_a_valid_waiver_satisfies_the_leaf() -> None
     assert satisfaction.leaf_satisfied(built, LEAF)
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-SREQ-067: the gate does not judge skipped outcomes yet")
 def test_a_stale_skipped_outcome_is_reported_once_as_stale() -> None:
     """A skipped outcome from another revision is reported once, as stale.
 

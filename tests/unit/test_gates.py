@@ -3,20 +3,21 @@ and condition vocabularies it reads and closes.
 
 The package gate is a pure function over a built graph: no store access, no
 refusal, no enforcement — it judges and reports. The report's two derived
-views, ``diagnostics`` and ``blocked``, are computed from the same seven typed
+views, ``diagnostics`` and ``blocked``, are computed from the same eight typed
 findings, so the tests that matter most are the ones proving the views cannot
 disagree: an info-only report never blocks, any warning does, and the
 worklist and the gap attribution each land on exactly the node the
 requirement names — the worklist at the edge (SEG-SREQ-043), the gap at the
 leaf where coverage is actually missing, never an ancestor (SEG-SREQ-044). An
 empty design set is blocked outright (SEG-SREQ-045), and a scope with nothing
-wrong in it is not. A non-passing outcome is a finding whether or not a
+wrong in it is not. A failing outcome is a finding whether or not a
 waiver excuses it, judged against an explicit, caller-supplied
 ``evaluation_date`` (SEG-SREQ-059's expiry half) rather than the system
-clock. A stale outcome — recorded revision differing from an explicit,
-caller-supplied ``current_revision`` — is cut from the graph before every
-other finding is computed, so it is absent from coverage and from the waiver
-seam alike and is reported exactly once, informationally.
+clock. A skipped outcome is information and never blocks. A stale outcome —
+recorded revision differing from an explicit, caller-supplied
+``current_revision`` — is cut from the graph before every other finding is
+computed, so it is absent from coverage and from the waiver seam alike and is
+reported exactly once, informationally.
 
 Fixture graphs are built in memory from literal records, like
 ``test_drift.py`` and ``test_affirmation.py``; the one end-to-end test builds
@@ -235,6 +236,7 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
         discarded_outcomes=frozenset({"run-1/TS-1"}),
         unwaived_outcomes=frozenset(),
         excused_outcomes=frozenset({"run-2/TS-1"}),
+        skipped_outcomes=frozenset({"run-4/TS-1"}),
         design_set_empty=False,
     )
     assert report.diagnostics
@@ -252,6 +254,7 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
             discarded_outcomes=frozenset(),
             unwaived_outcomes=frozenset(),
             excused_outcomes=frozenset(),
+            skipped_outcomes=frozenset(),
             design_set_empty=False,
         ),
         gates.CoverageReport(
@@ -261,6 +264,7 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
             discarded_outcomes=frozenset(),
             unwaived_outcomes=frozenset(),
             excused_outcomes=frozenset(),
+            skipped_outcomes=frozenset(),
             design_set_empty=False,
         ),
         gates.CoverageReport(
@@ -270,6 +274,7 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
             discarded_outcomes=frozenset(),
             unwaived_outcomes=frozenset(),
             excused_outcomes=frozenset(),
+            skipped_outcomes=frozenset(),
             design_set_empty=True,
         ),
         gates.CoverageReport(
@@ -279,6 +284,7 @@ def test_a_report_with_only_info_findings_is_not_blocked() -> None:
             discarded_outcomes=frozenset(),
             unwaived_outcomes=frozenset({"run-1/TS-1"}),
             excused_outcomes=frozenset(),
+            skipped_outcomes=frozenset(),
             design_set_empty=False,
         ),
     ],
@@ -301,32 +307,36 @@ def test_any_warning_finding_blocks_the_stale_outcome_included() -> None:
         discarded_outcomes=frozenset(),
         unwaived_outcomes=frozenset(),
         excused_outcomes=frozenset(),
+        skipped_outcomes=frozenset(),
         design_set_empty=False,
     )
     assert report.blocked
 
 
 def test_diagnostics_and_blocked_never_disagree() -> None:
-    """The two views are computed from the same seven fields; ``blocked`` is
+    """The two views are computed from the same eight fields; ``blocked`` is
     exactly "some diagnostic blocks the package", never a second opinion."""
     empty: frozenset[str] = frozenset()
     reports = [
-        gates.CoverageReport((), empty, empty, empty, empty, empty, design_set_empty=False),
+        gates.CoverageReport((), empty, empty, empty, empty, empty, empty, design_set_empty=False),
         gates.CoverageReport(
-            (), empty, empty, frozenset({"run-1/TS-1"}), empty, empty, design_set_empty=False
+            (), empty, empty, frozenset({"run-1/TS-1"}), empty, empty, empty, design_set_empty=False
         ),
         gates.CoverageReport(
-            (), frozenset({"SREQ-1"}), empty, empty, empty, empty, design_set_empty=False
+            (), frozenset({"SREQ-1"}), empty, empty, empty, empty, empty, design_set_empty=False
         ),
-        gates.CoverageReport((), empty, empty, empty, empty, empty, design_set_empty=True),
+        gates.CoverageReport((), empty, empty, empty, empty, empty, empty, design_set_empty=True),
         gates.CoverageReport(
-            (), empty, empty, empty, frozenset({"run-1/TS-1"}), empty, design_set_empty=False
-        ),
-        gates.CoverageReport(
-            (), empty, empty, empty, empty, frozenset({"run-1/TS-1"}), design_set_empty=False
+            (), empty, empty, empty, frozenset({"run-1/TS-1"}), empty, empty, design_set_empty=False
         ),
         gates.CoverageReport(
-            (), empty, frozenset({"run-1/TS-1"}), empty, empty, empty, design_set_empty=False
+            (), empty, empty, empty, empty, frozenset({"run-1/TS-1"}), empty, design_set_empty=False
+        ),
+        gates.CoverageReport(
+            (), empty, frozenset({"run-1/TS-1"}), empty, empty, empty, empty, design_set_empty=False
+        ),
+        gates.CoverageReport(
+            (), empty, empty, empty, empty, empty, frozenset({"run-1/TS-1"}), design_set_empty=False
         ),
     ]
     for report in reports:
@@ -338,14 +348,24 @@ def test_diagnostics_and_blocked_never_disagree() -> None:
 
 def test_every_diagnostics_condition_is_a_member_of_the_closed_vocabulary() -> None:
     """SEG-SREQ-064: whatever a report finds, every diagnostic's condition is
-    one of the seven fixed :class:`gates.Condition` members — never a
+    one of the eight fixed :class:`gates.Condition` members — never a
     sentence assembled for the occurrence."""
     nodes, edges = leaf_fixture()
     failed = outcome("run-1/TS-1", result=records.TestResult.FAILED)
     stray = outcome("run-2/TS-1", revision="stale-revision")
     stray_spec = specification("TS-2")
-    all_nodes = [n if n.local_id != "run-1/TS-1" else failed for n in nodes] + [stray, stray_spec]
-    all_edges = [*edges, edge("Confirms", "run-2/TS-1", "TS-2", LinkState.PENDING)]
+    skipped = outcome("run-3/TS-1", result=records.TestResult.SKIPPED)
+    all_nodes = [n if n.local_id != "run-1/TS-1" else failed for n in nodes] + [
+        stray,
+        stray_spec,
+        skipped,
+    ]
+    all_edges = [
+        *edges,
+        edge("Confirms", "run-2/TS-1", "TS-2", LinkState.PENDING),
+        edge("Confirms", "run-3/TS-1", "TS-1", LinkState.ACTIVE),
+        edge("Witnesses", "run-3/TS-1", "pkg.fn", LinkState.ACTIVE),
+    ]
     built = graph.build(Source(all_nodes, all_edges))
 
     report = gates.package_gate(
@@ -676,7 +696,7 @@ def test_a_stale_outcome_is_never_also_reported_discarded() -> None:
     assert sum(d.subject == "run-1/TS-1" for d in report.diagnostics) == 1
 
 
-def test_a_stale_non_passing_outcome_is_never_also_reported_unwaived_or_excused() -> None:
+def test_a_stale_failing_outcome_is_never_also_reported_unwaived_or_excused() -> None:
     """A stale, failing outcome is reported once, as stale — never doubled
     with a waiver-seam finding for the same underlying reason."""
     nodes, edges = failing_leaf_fixture()
@@ -737,7 +757,7 @@ def failing_leaf_fixture() -> tuple[list[records.NodeRecord], list[records.EdgeR
     return failed, edges
 
 
-def test_a_non_passing_outcome_with_no_excusing_waiver_is_a_blocking_warning() -> None:
+def test_a_failing_outcome_with_no_excusing_waiver_is_a_blocking_warning() -> None:
     nodes, edges = failing_leaf_fixture()
     built = graph.build(Source(nodes, edges))
 
@@ -754,7 +774,7 @@ def test_a_non_passing_outcome_with_no_excusing_waiver_is_a_blocking_warning() -
     )
 
 
-def test_a_non_passing_outcome_excused_by_a_valid_waiver_is_informational_only() -> None:
+def test_a_failing_outcome_excused_by_a_valid_waiver_is_informational_only() -> None:
     nodes, edges = failing_leaf_fixture()
     excuse = waiver("WVR-1", expiry=date(2099, 1, 1))
     built = graph.build(Source([*nodes, excuse], [*edges, excuses("WVR-1", "run-1/TS-1")]))
@@ -772,7 +792,7 @@ def test_a_non_passing_outcome_excused_by_a_valid_waiver_is_informational_only()
     )
 
 
-def test_a_non_passing_outcome_excused_by_an_expired_waiver_still_blocks() -> None:
+def test_a_failing_outcome_excused_by_an_expired_waiver_still_blocks() -> None:
     """SEG-SREQ-059's expiry half: an excusing waiver past its date is invalid."""
     nodes, edges = failing_leaf_fixture()
     expired = waiver("WVR-1", expiry=date(2020, 1, 1))
@@ -787,7 +807,7 @@ def test_a_non_passing_outcome_excused_by_an_expired_waiver_still_blocks() -> No
     assert report.blocked
 
 
-def test_a_non_passing_outcome_with_a_dangling_excusal_still_blocks() -> None:
+def test_a_failing_outcome_with_a_dangling_excusal_still_blocks() -> None:
     """An Excuses edge whose Waiver record is absent excuses nothing — the
     waiver itself must be present, not merely declared, exactly as at
     satisfaction's own excusal reading."""
@@ -832,6 +852,98 @@ def test_evaluation_date_is_not_inert() -> None:
 
     assert not before_expiry.blocked
     assert after_expiry.blocked
+
+
+# --- skipped outcomes (SEG-SREQ-199) ----------------------------------------------
+
+
+def _skip_gate(
+    *extra_outcomes: records.NodeRecord,
+    extra_edges: tuple[records.EdgeRecord, ...] = (),
+) -> gates.CoverageReport:
+    """The gate over :func:`leaf_fixture` plus these outcomes and edges."""
+    nodes, edges = leaf_fixture()
+    built = graph.build(Source([*nodes, *extra_outcomes], [*edges, *extra_edges]))
+    return gates.package_gate(
+        built, evaluation_date=EVALUATION_DATE, current_revision=CURRENT_REVISION
+    )
+
+
+def _confirm_and_witness(outcome_id: str, spec_id: str = "TS-1") -> tuple[records.EdgeRecord, ...]:
+    return (
+        edge("Confirms", outcome_id, spec_id, LinkState.ACTIVE),
+        edge("Witnesses", outcome_id, "pkg.fn", LinkState.ACTIVE),
+    )
+
+
+def test_a_skipped_outcome_without_a_witness_is_listed_as_skipped_and_as_discarded() -> None:
+    skipped = outcome("run-2/TS-1", result=records.TestResult.SKIPPED)
+    report = _skip_gate(
+        skipped, extra_edges=(edge("Confirms", "run-2/TS-1", "TS-1", LinkState.ACTIVE),)
+    )
+
+    assert report.skipped_outcomes == {"run-2/TS-1"}
+    assert report.discarded_outcomes == {"run-2/TS-1"}
+    assert {d.severity for d in report.diagnostics if d.subject == "run-2/TS-1"} == {
+        diagnostics.Severity.INFO
+    }
+    assert report.coverage_gaps == frozenset()
+    assert not report.blocked
+
+
+def test_the_skipped_finding_carries_no_detail() -> None:
+    skipped = outcome("run-2/TS-1", result=records.TestResult.SKIPPED)
+    report = _skip_gate(skipped, extra_edges=_confirm_and_witness("run-2/TS-1"))
+
+    (finding,) = [d for d in report.diagnostics if d.condition == gates.Condition.SKIPPED_OUTCOME]
+    assert finding.detail == ""
+
+
+def test_skipped_findings_are_listed_in_the_order_of_their_subjects() -> None:
+    later = outcome("run-3/TS-1", result=records.TestResult.SKIPPED)
+    earlier = outcome("run-2/TS-1", result=records.TestResult.SKIPPED)
+    report = _skip_gate(
+        later,
+        earlier,
+        extra_edges=(*_confirm_and_witness("run-3/TS-1"), *_confirm_and_witness("run-2/TS-1")),
+    )
+
+    skips = [d for d in report.diagnostics if d.condition == gates.Condition.SKIPPED_OUTCOME]
+    subjects = [d.subject for d in skips]
+    assert subjects == ["run-2/TS-1", "run-3/TS-1"]
+
+
+def test_a_skipped_outcome_does_not_hide_a_failing_one() -> None:
+    failed = outcome("run-2/TS-1", result=records.TestResult.FAILED)
+    skipped = outcome("run-3/TS-1", result=records.TestResult.SKIPPED)
+    report = _skip_gate(
+        failed,
+        skipped,
+        extra_edges=(*_confirm_and_witness("run-2/TS-1"), *_confirm_and_witness("run-3/TS-1")),
+    )
+
+    assert report.unwaived_outcomes == {"run-2/TS-1"}
+    assert report.skipped_outcomes == {"run-3/TS-1"}
+    assert {d.subject for d in report.diagnostics if d.severity.blocks_package} == {
+        "SREQ-1",
+        "run-2/TS-1",
+    }
+
+
+def test_a_stale_skipped_only_specification_is_a_gap_with_one_stale_finding() -> None:
+    nodes, edges = leaf_fixture()
+    stale_skip = outcome("run-1/TS-1", result=records.TestResult.SKIPPED, revision="other")
+    swapped = [stale_skip if n.local_id == "run-1/TS-1" else n for n in nodes]
+    built = graph.build(Source(swapped, edges))
+
+    report = gates.package_gate(
+        built, evaluation_date=EVALUATION_DATE, current_revision=CURRENT_REVISION
+    )
+
+    assert report.coverage_gaps == {"SREQ-1"}
+    assert [d.condition for d in report.diagnostics if d.subject == "run-1/TS-1"] == [
+        gates.Condition.STALE_OUTCOME
+    ]
 
 
 # --- purity and repeatability ---------------------------------------------------

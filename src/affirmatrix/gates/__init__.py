@@ -5,7 +5,8 @@ While any condition of a gate is unmet, the action that gate guards is blocked
 is the coverage report: structural gaps reported at the leaf where coverage is
 actually missing rather than up the ancestor chain, the worklist of every
 in-scope strong edge that is not active — including pending and broken, which
-affirmation cannot resolve — a stale-outcomes listing, and the overall status.
+affirmation cannot resolve — a stale-outcomes listing, a skipped-outcomes
+listing, and the overall status.
 
 The commit gate and the release gate are deferred past iteration 0: the commit
 gate's conditions are all extraction conditions and record production is
@@ -16,16 +17,16 @@ caller built as its scope and does no scope collection of its own — walking
 strong edges to decide what is reachable is the proof generator's item
 (SEG-SREQ-036); iteration 0 hands it the whole graph. Every finding becomes a
 :class:`~affirmatrix.diagnostics.Diagnostic`, and :class:`CoverageReport`'s
-``diagnostics`` and ``blocked`` are derived views over the same seven typed
+``diagnostics`` and ``blocked`` are derived views over the same eight typed
 findings — never a second telling that could disagree with the first. Every
 gate condition here — an unready edge, a coverage gap, an empty design set —
 is a warning: it blocks the package, never a commit, because a
-commit-blocking error arrives only with the extractors. A discarded outcome
-and a stale one are both informational: visible in the report, blocking
-nothing by themselves.
+commit-blocking error arrives only with the extractors. A discarded outcome,
+a stale one and a skipped one are all informational: visible in the report,
+blocking nothing by themselves.
 
 **The closed condition vocabulary (SEG-SREQ-064, SEG-SREQ-065).** Every
-diagnostic this gate reports carries one of seven fixed :class:`Condition`
+diagnostic this gate reports carries one of eight fixed :class:`Condition`
 values — never an occurrence-specific sentence built on the fly. Anything
 that varies from one occurrence of the same condition to the next — which
 state an edge is in, say — travels on
@@ -62,26 +63,35 @@ supplies it a *view*, not a revision-aware question. A stale-only
 specification therefore reads as an ordinary coverage gap; a fresh sibling
 outcome keeps it covered. The cut is uniform, not limited to coverage: a
 stale outcome is equally absent from the waiver seam below, so it is reported
-exactly once, as the stale finding, never doubled with a discard or a
-non-passing finding for the same underlying reason. (Reading past
+exactly once, as the stale finding, never doubled with a discard, a skipped
+or a failing-outcome finding for the same underlying reason. (Reading past
 SEG-SREQ-063's own words, which speak only of judging the specification a
 stale outcome confirms — deliberate, so one telling never disagrees with
 another.)
 
-**The waiver seam.** A non-passing outcome (the ``TestResult`` non-``PASSED``
-set, uniformly — failed, error and skipped alike) is now a finding of its own
-(SEG-SREQ-060, SEG-SREQ-061), independent of whether that outcome is
-otherwise evidence-complete: it can double up with a
-:attr:`~affirmatrix.diagnostics.Severity.INFO` discard finding on the same
-outcome, which is deliberate rather than an oversight — the two findings
-report different things that both happen to be true of one subject. Excusal
-is resolved the way :mod:`affirmatrix.satisfaction` resolves it — presence of
-a Waiver record reached through an incoming ``Excuses`` edge (Waiver to
-TestOutcome, per ``case/schema/edge-excuses.schema.json``), never the edge's
-own state — but this module asks the question itself rather than reusing
+**The waiver seam.** A failing outcome is one whose result is failed or error
+(SEG-SREQ-129). Each one is a finding of its own (SEG-SREQ-060,
+SEG-SREQ-061), whether or not the outcome is otherwise complete evidence. It
+can double up with a :attr:`~affirmatrix.diagnostics.Severity.INFO` discard
+finding on the same outcome. This is deliberate: the two findings report
+different facts that are both true of one subject. A valid waiver excuses a
+failing outcome and nothing else, so the seam never looks at a skipped
+outcome. Excusal is resolved the way :mod:`affirmatrix.satisfaction` resolves
+it — presence of a Waiver record reached through an incoming ``Excuses`` edge
+(Waiver to TestOutcome, per ``case/schema/edge-excuses.schema.json``), never
+the edge's own state — but this module asks the question itself rather than reusing
 satisfaction's private predicate, so that a swappable satisfaction engine
 never has to answer more than the two questions this gate actually borrows
 (see the module's read for what those are).
+
+**Skipped outcomes (SEG-SREQ-199).** A skipped outcome is absence of
+evidence, not a verdict on the implementation. The gate lists each one as an
+:attr:`~affirmatrix.diagnostics.Severity.INFO` finding and never blocks on it.
+A waiver adds no finding for a skipped outcome and changes nothing about it.
+:mod:`affirmatrix.satisfaction` does not count a skipped outcome as coverage
+(SEG-SREQ-006), so a leaf whose only outcome was skipped is still a coverage
+gap, and that gap blocks. The skipped finding does not. The stale cut comes
+first, so a skipped outcome from another revision is reported once, as stale.
 
 **SEG-SREQ-059, only half realized.** A waiver is valid only when unexpired
 *and* its approver is authorised — this gate checks only the first half. The
@@ -112,6 +122,7 @@ _REFINES = "Refines"
 _TEST_OUTCOME = "TestOutcome"
 _WAIVER = "Waiver"
 _EXCUSES = "Excuses"
+_FAILING_RESULTS = frozenset({TestResult.FAILED, TestResult.ERROR})
 
 
 class Condition(StrEnum):
@@ -128,22 +139,25 @@ class Condition(StrEnum):
     UNREADY_EDGE = "strong edge not active"
     COVERAGE_GAP = "the requirement's own coverage is incomplete"
     EMPTY_DESIGN_SET = "the design set is empty"
-    UNWAIVED_NON_PASSING_OUTCOME = "non-passing outcome is not excused by a valid waiver"
-    EXCUSED_NON_PASSING_OUTCOME = "non-passing outcome is excused by a valid waiver"
+    UNWAIVED_FAILING_OUTCOME = "failing outcome is not excused by a valid waiver"
+    EXCUSED_FAILING_OUTCOME = "failing outcome is excused by a valid waiver"
     DISCARDED_OUTCOME = "outcome discarded as incomplete evidence"
+    SKIPPED_OUTCOME = "outcome was skipped"
     STALE_OUTCOME = "outcome's recorded revision differs from the current revision"
 
 
 @dataclass(frozen=True, slots=True)
 class CoverageReport:
-    """The package gate's report: seven typed findings, and two derived views.
+    """The package gate's report: eight typed findings, and two derived views.
 
     ``unready_edges``, ``coverage_gaps``, ``stale_outcomes``,
-    ``discarded_outcomes``, ``unwaived_outcomes``, ``excused_outcomes`` and
-    ``design_set_empty`` are what :func:`package_gate` actually found.
-    ``diagnostics`` and ``blocked`` are computed from those seven and nothing
-    else, so the report cannot disagree with itself about what blocks: there
-    is only one place severity is decided, and both views read it from there.
+    ``discarded_outcomes``, ``unwaived_outcomes``, ``excused_outcomes``,
+    ``skipped_outcomes`` and ``design_set_empty`` are what :func:`package_gate`
+    actually found. ``unwaived_outcomes`` and ``excused_outcomes`` hold failing
+    outcomes only. ``diagnostics`` and ``blocked`` are computed from those
+    eight and nothing else, so the report cannot disagree with itself about
+    what blocks: there is only one place severity is decided, and both views
+    read it from there.
     """
 
     unready_edges: tuple[EdgeRecord, ...]
@@ -152,6 +166,7 @@ class CoverageReport:
     discarded_outcomes: frozenset[str]
     unwaived_outcomes: frozenset[str]
     excused_outcomes: frozenset[str]
+    skipped_outcomes: frozenset[str]
     design_set_empty: bool
 
     def __post_init__(self) -> None:
@@ -161,17 +176,18 @@ class CoverageReport:
         object.__setattr__(self, "discarded_outcomes", frozenset(self.discarded_outcomes))
         object.__setattr__(self, "unwaived_outcomes", frozenset(self.unwaived_outcomes))
         object.__setattr__(self, "excused_outcomes", frozenset(self.excused_outcomes))
+        object.__setattr__(self, "skipped_outcomes", frozenset(self.skipped_outcomes))
 
     @property
     def diagnostics(self) -> tuple[Diagnostic, ...]:
         """Every typed finding, as one flat sequence of diagnostics.
 
         Gate conditions — an unready edge, a coverage gap, an empty design
-        set, an unwaived non-passing outcome — are all
+        set, an unwaived failing outcome — are all
         :attr:`~affirmatrix.diagnostics.Severity.WARNING`. A discarded
-        outcome, a stale outcome, and a validly excused non-passing outcome
-        are all :attr:`~affirmatrix.diagnostics.Severity.INFO`. Every
-        diagnostic's condition is one member of :class:`Condition`
+        outcome, a stale outcome, a skipped outcome, and a validly excused
+        failing outcome are all :attr:`~affirmatrix.diagnostics.Severity.INFO`.
+        Every diagnostic's condition is one member of :class:`Condition`
         (SEG-SREQ-064); whatever varies by occurrence travels on ``detail``
         instead (SEG-SREQ-065).
 
@@ -180,6 +196,7 @@ class CoverageReport:
         :implements: SEG-SREQ-064
         :implements: SEG-SREQ-065
         :implements: SEG-SREQ-067
+        :implements: SEG-SREQ-199
         """
         return (
             tuple(
@@ -213,7 +230,7 @@ class CoverageReport:
             + tuple(
                 Diagnostic(
                     severity=Severity.WARNING,
-                    condition=Condition.UNWAIVED_NON_PASSING_OUTCOME,
+                    condition=Condition.UNWAIVED_FAILING_OUTCOME,
                     subject=local_id,
                 )
                 for local_id in sorted(self.unwaived_outcomes)
@@ -229,10 +246,18 @@ class CoverageReport:
             + tuple(
                 Diagnostic(
                     severity=Severity.INFO,
-                    condition=Condition.EXCUSED_NON_PASSING_OUTCOME,
+                    condition=Condition.EXCUSED_FAILING_OUTCOME,
                     subject=local_id,
                 )
                 for local_id in sorted(self.excused_outcomes)
+            )
+            + tuple(
+                Diagnostic(
+                    severity=Severity.INFO,
+                    condition=Condition.SKIPPED_OUTCOME,
+                    subject=local_id,
+                )
+                for local_id in sorted(self.skipped_outcomes)
             )
             + tuple(
                 Diagnostic(
@@ -281,13 +306,15 @@ def package_gate(graph: Graph, *, evaluation_date: date, current_revision: str) 
     — is cut out of ``graph`` before every other finding is computed, so it
     is absent for coverage and for the waiver seam alike and surfaces exactly
     once, as the stale finding (see the module docstring's staleness
-    section).
+    section). The skipped outcomes are asked of that same cut graph, and they
+    stay in it. :mod:`affirmatrix.satisfaction` leaves them out of coverage
+    itself. The waiver seam looks at failing outcomes only.
     """
     stale = _stale_outcomes(graph, current_revision)
     judged = graph.restricted_to(graph.node_ids() - stale)
     requirements = judged.nodes_of_kind(_REQUIREMENT)
     verdict = satisfaction.evaluate(judged)
-    unwaived, excused = _non_passing_outcomes(judged, evaluation_date)
+    unwaived, excused = _failing_outcomes(judged, evaluation_date)
     return CoverageReport(
         unready_edges=_unready_edges(judged),
         coverage_gaps=_coverage_gaps(judged, requirements),
@@ -295,6 +322,7 @@ def package_gate(graph: Graph, *, evaluation_date: date, current_revision: str) 
         discarded_outcomes=verdict.discarded_outcomes,
         unwaived_outcomes=unwaived,
         excused_outcomes=excused,
+        skipped_outcomes=_skipped_outcomes(judged),
         design_set_empty=not requirements,
     )
 
@@ -360,21 +388,25 @@ def _refiners(graph: Graph, local_id: str) -> tuple[str, ...]:
     return tuple(edge.from_id for edge in graph.incoming(local_id, _REFINES))
 
 
-def _non_passing_outcomes(
+def _failing_outcomes(
     graph: Graph, evaluation_date: date
 ) -> tuple[frozenset[str], frozenset[str]]:
-    """Every non-passing outcome, split by whether a valid waiver excuses it.
+    """Every failing outcome, split by whether a valid waiver excuses it.
 
-    "Non-passing" is the ``TestResult`` non-``PASSED`` set, uniformly — failed,
-    error and skipped alike, whatever the outcome's own evidentiary
-    completeness; that boundary belongs to :mod:`affirmatrix.satisfaction`'s
-    discard rule, not to this one, so an outcome can appear here and among
-    ``discarded_outcomes`` at once.
+    :implements: SEG-SREQ-060
+    :implements: SEG-SREQ-061
+
+    A failing outcome is one whose result is failed or error. A passed outcome
+    has nothing to excuse. A waiver changes nothing for a skipped outcome, so
+    it never reaches the split. The outcome's own evidentiary completeness
+    does not matter here. That boundary belongs to
+    :mod:`affirmatrix.satisfaction`'s discard rule. An outcome can therefore
+    appear here and among ``discarded_outcomes`` at once.
     """
     unwaived: set[str] = set()
     excused: set[str] = set()
     for outcome in graph.nodes_of_kind(_TEST_OUTCOME):
-        if outcome.result is TestResult.PASSED:
+        if outcome.result not in _FAILING_RESULTS:
             continue
         waiver = _excusing_waiver(graph, outcome.local_id)
         if waiver is not None and _waiver_unexpired(waiver, evaluation_date):
@@ -382,6 +414,22 @@ def _non_passing_outcomes(
         else:
             unwaived.add(outcome.local_id)
     return frozenset(unwaived), frozenset(excused)
+
+
+def _skipped_outcomes(graph: Graph) -> frozenset[str]:
+    """Every outcome whose result is skipped.
+
+    A skip is absence of evidence, so this function only names it for the
+    report. It asks nothing about waivers, because a waiver excuses a failing
+    outcome and no other (SEG-SREQ-129). It asks nothing about completeness
+    either. A skipped outcome without a witnessed implementation is therefore
+    listed here and among ``discarded_outcomes``.
+    """
+    return frozenset(
+        outcome.local_id
+        for outcome in graph.nodes_of_kind(_TEST_OUTCOME)
+        if outcome.result is TestResult.SKIPPED
+    )
 
 
 def _excusing_waiver(graph: Graph, outcome_id: str) -> NodeRecord | None:

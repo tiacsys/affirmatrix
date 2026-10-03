@@ -287,7 +287,7 @@ errors beyond ``Exception``. A reader who catches ``…Error`` catches a problem
 with the request; a reader who catches ``GenerationRefused`` catches an answer.
 
 **Where closed sets live.** A gate's set of conditions is declared beside the
-gate: the package gate's seven conditions are an enumeration in ``gates``, and
+gate: the package gate's eight conditions are an enumeration in ``gates``, and
 every diagnostic it reports names a member of it, never an occurrence-specific
 sentence. What varies between occurrences travels in a separate detail field.
 The shared ``diagnostics`` module holds only vocabulary with no component's

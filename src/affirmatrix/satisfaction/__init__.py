@@ -24,6 +24,10 @@ Two boundaries worth stating, because the prototype crossed both:
   specification uncovered — and it is not silent: every discarded outcome is
   named in the verdict.
 
+A skipped outcome is absence of evidence. It does not cover a specification
+and it does not fail one. The leaf rule leaves it out before it judges the
+outcomes that remain (SEG-SREQ-006).
+
 The evaluator may assume an acyclic refines relation: cycle *reporting* is the
 graph builder's (SEG-SREQ-004), so the recursion terminates by precondition.
 
@@ -110,8 +114,9 @@ def leaf_satisfied(graph: Graph, local_id: str) -> bool:
     """The leaf rule: a requirement nothing refines is satisfied when, and
     only when, it carries at least one active verifies edge, at least one
     active implements edge, and every test specification named by a verifies
-    edge has at least one confirming outcome, with every confirming outcome
-    either passed or excused by a waiver.
+    edge has at least one confirming outcome whose result is not skipped, with
+    every confirming outcome whose result is not skipped either passed or
+    excused by a waiver.
 
     :implements: SEG-SREQ-006
 
@@ -129,7 +134,11 @@ def leaf_satisfied(graph: Graph, local_id: str) -> bool:
     discard rule below already means by it: an outcome counts only once it
     both confirms this specification and witnesses an implementation: an
     incomplete outcome is discarded, not counted either way, so it neither
-    satisfies nor fails a specification it hangs off.
+    satisfies nor fails a specification it hangs off. A skipped outcome is
+    left out the same way, before the existence test and before the universal.
+    It does not satisfy a specification, and it does not fail one. A waiver
+    does not change this, because a waiver excuses a failing outcome and no
+    other.
     """
     verifying = graph.incoming(local_id, _VERIFIES)
     if not _any_active(verifying):
@@ -214,8 +223,9 @@ def _specification_confirmed(graph: Graph, spec_id: str) -> bool:
 
     :implements: SEG-SREQ-006
 
-    At least one evidence-valid outcome must confirm this specification, and
-    every one that does must either have passed or be excused by a waiver.
+    At least one evidence-valid outcome that was not skipped must confirm this
+    specification. Every one that does must either have passed or be excused
+    by a waiver. A skipped outcome is not counted at all.
     The universal closes the hole the old existential left open: one passing
     outcome beside an unwaived failing one no longer satisfies, and a
     specification with no confirming outcome at all never satisfies
@@ -225,7 +235,7 @@ def _specification_confirmed(graph: Graph, spec_id: str) -> bool:
     confirming = [
         edge.from_id
         for edge in graph.incoming(spec_id, _CONFIRMS)
-        if _is_evidence(graph, edge.from_id)
+        if _is_evidence(graph, edge.from_id) and not _skipped(graph, edge.from_id)
     ]
     if not confirming:
         return False
@@ -286,6 +296,20 @@ def _passing(graph: Graph, outcome_id: str) -> bool:
     except KeyError:
         return False
     return node.result is TestResult.PASSED
+
+
+def _skipped(graph: Graph, outcome_id: str) -> bool:
+    """Whether this outcome records a skip.
+
+    An outcome the graph has no node for has no result to read, so it is not
+    a skip. It stays among the confirming outcomes and fails as not passing,
+    exactly as before.
+    """
+    try:
+        node = graph.node(outcome_id)
+    except KeyError:
+        return False
+    return node.result is TestResult.SKIPPED
 
 
 def _discarded(graph: Graph) -> frozenset[str]:

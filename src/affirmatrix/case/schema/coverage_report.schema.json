@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://affirmatrix.dev/case/schema/coverage_report.schema.json",
   "title": "A coverage report document",
-  "description": "One evidence package's coverage report (SEG-SREQ-035): the package gate's CoverageReport, serialized. Single-authored — the generator adds nothing beyond what the gate itself found: the seven typed findings, the diagnostics each one becomes, and whether the scope is blocked.",
+  "description": "One evidence package's coverage report (SEG-SREQ-035): the package gate's CoverageReport, serialized. Single-authored — the generator adds nothing beyond what the gate itself found: the eight typed findings, the diagnostics each one becomes, and whether the scope is blocked.",
   "type": "object",
   "required": [
     "unreadyEdges",
@@ -84,7 +84,7 @@
         "type": "string",
         "minLength": 1
       },
-      "description": "Non-passing outcome identifiers with no valid excusing waiver (SEG-SREQ-060)."
+      "description": "Failing outcome identifiers, that is failed or error, with no valid excusing waiver (SEG-SREQ-060)."
     },
     "excusedOutcomes": {
       "type": "array",
@@ -92,7 +92,15 @@
         "type": "string",
         "minLength": 1
       },
-      "description": "Non-passing outcome identifiers validly excused by a waiver (SEG-SREQ-061)."
+      "description": "Failing outcome identifiers, that is failed or error, validly excused by a waiver (SEG-SREQ-061)."
+    },
+    "skippedOutcomes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Outcome identifiers whose result is skipped (SEG-SREQ-199). A skipped outcome is absence of evidence: it never blocks, and no waiver excuses it. The writer always emits this array. A package sealed before the field existed carries none, and a reader treats an absent array as not judged for skips, which differs from an empty array."
     },
     "designSetEmpty": {
       "type": "boolean",

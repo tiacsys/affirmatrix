@@ -195,14 +195,61 @@ def test_a_verifying_spec_with_no_outcome_blocks_its_leaf() -> None:
     assert not verdict.is_satisfied("R")
 
 
-@pytest.mark.parametrize(
-    "result", (TestResult.FAILED, TestResult.ERROR, TestResult.SKIPPED), ids=lambda r: r.value
-)
-def test_an_outcome_that_did_not_pass_is_not_a_passing_outcome(result: TestResult) -> None:
+@pytest.mark.parametrize("result", (TestResult.FAILED, TestResult.ERROR), ids=lambda r: r.value)
+def test_a_failing_outcome_is_not_a_passing_outcome(result: TestResult) -> None:
     """The rule reads the recorded result; existence of an execution is not it."""
     nodes, edges = covered_leaf("R", result=result)
     verdict = satisfaction.evaluate(build(nodes, edges))
     assert not verdict.is_satisfied("R")
+
+
+# ── Skipped outcomes — absence of evidence, neither cover nor failure ───────
+
+
+def _with_second_outcome(result: TestResult):
+    nodes, edges = covered_leaf("R")
+    nodes.append(outcome("R/outcome2", result=result))
+    edges.append(confirms("R/outcome2", "R/spec"))
+    edges.append(witnesses("R/outcome2", "R/impl"))
+    return nodes, edges
+
+
+def test_a_skipped_outcome_beside_a_passing_one_does_not_block_its_leaf() -> None:
+    nodes, edges = _with_second_outcome(TestResult.SKIPPED)
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert verdict.is_satisfied("R")
+
+
+def test_a_leaf_whose_only_confirming_outcome_was_skipped_is_unsatisfied() -> None:
+    nodes, edges = covered_leaf("R", result=TestResult.SKIPPED)
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert not verdict.is_satisfied("R")
+
+
+def test_a_skipped_outcome_does_not_rescue_an_unwaived_failing_one() -> None:
+    nodes, edges = covered_leaf("R", result=TestResult.FAILED)
+    nodes.append(outcome("R/outcome2", result=TestResult.SKIPPED))
+    edges.append(confirms("R/outcome2", "R/spec"))
+    edges.append(witnesses("R/outcome2", "R/impl"))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert not verdict.is_satisfied("R")
+
+
+def test_a_waiver_does_not_make_a_skipped_outcome_count() -> None:
+    nodes, edges = covered_leaf("R", result=TestResult.SKIPPED)
+    nodes.append(waiver("WVR-1"))
+    edges.append(excuses("WVR-1", "R/outcome"))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert not verdict.is_satisfied("R")
+
+
+def test_a_skipped_outcome_without_a_witness_is_still_discarded() -> None:
+    nodes, edges = covered_leaf("R")
+    nodes.append(outcome("R/outcome2", result=TestResult.SKIPPED))
+    edges.append(confirms("R/outcome2", "R/spec"))
+    verdict = satisfaction.evaluate(build(nodes, edges))
+    assert verdict.discarded_outcomes == {"R/outcome2"}
+    assert verdict.is_satisfied("R")
 
 
 def test_a_spec_on_a_non_active_verifies_edge_still_owes_a_passing_outcome() -> None:

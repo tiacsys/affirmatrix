@@ -57,13 +57,14 @@ is the proof generator's item; iteration 0 has no proof generator yet, so the
 gate is simply handed the whole graph. The same function will serve a
 reachability subset once that lands, unchanged.
 
-Seven findings, two derived views
+Eight findings, two derived views
 ---------------------------------
 
-:class:`~affirmatrix.gates.CoverageReport` stores exactly seven things it
+:class:`~affirmatrix.gates.CoverageReport` stores exactly eight things it
 found — the non-active worklist, the coverage gaps, the stale outcomes, the
-discarded outcomes, the non-passing outcomes not excused by a valid waiver,
-the non-passing outcomes that are, and whether the design set is empty — and
+discarded outcomes, the failing outcomes not excused by a valid waiver, the
+failing outcomes that are, the skipped outcomes, and whether the design set is
+empty — and
 computes two views from them: ``diagnostics``, every finding turned into a
 :class:`~affirmatrix.diagnostics.Diagnostic`, and ``blocked``, whether any of
 them has a severity that blocks a package. Both are properties, not stored
@@ -74,25 +75,26 @@ is asserting something the types make true by construction, not a
 coincidence to protect.
 
 Every gate condition here — an unready edge, a coverage gap, an empty design
-set, a non-passing outcome not validly excused — is a
+set, a failing outcome not validly excused — is a
 :attr:`~affirmatrix.diagnostics.Severity.WARNING`: it blocks generating a
 package, never a commit. A commit-blocking
 :attr:`~affirmatrix.diagnostics.Severity.ERROR` arrives only with the
 extractors, which is where the conditions that are actually about content
 production live; this gate produces none in iteration 0. A discarded
-outcome, a stale outcome, and a validly excused non-passing outcome are all
+outcome, a stale outcome, a skipped outcome, and a validly excused failing
+outcome are all
 :attr:`~affirmatrix.diagnostics.Severity.INFO` — named in the report, never
-blocking anything by themselves: all three are visible so a reader is never
+blocking anything by themselves: all four are visible so a reader is never
 left inferring why an outcome went unmentioned. The discard and waiver
 findings can coincide on one outcome — an incomplete outcome that is also
-non-passing and unwaived earns both a discard finding and a blocking one —
+failing and unwaived earns both a discard finding and a blocking one —
 which is intended, not double-counting: each finding states a different fact
 that happens to be true of the same subject. A stale outcome is the one
 exception to that rule: see "Staleness" below for why it is never doubled
 with any other finding on the same subject.
 
 Every diagnostic's ``condition`` is one member of
-:class:`~affirmatrix.gates.Condition`, a closed, seven-member vocabulary
+:class:`~affirmatrix.gates.Condition`, a closed, eight-member vocabulary
 (SEG-SREQ-064) — never a sentence assembled for the occurrence. What varies
 from one occurrence of a condition to the next travels on ``detail`` instead
 (SEG-SREQ-065): an unready edge's own state, the one condition here with
@@ -168,8 +170,8 @@ coverage gap, exactly as if that outcome had never been recorded; a fresh
 sibling outcome keeps the specification covered. And because the cut happens
 before every other finding, not only the coverage-facing ones, a stale
 outcome is equally invisible to the waiver seam below — a stale, failing
-outcome is never also reported as an unwaived or excused non-passing
-outcome, and never also as a discarded one. It is reported exactly once, as
+outcome is never also reported as an unwaived or excused failing
+outcome, and never also as a discarded or a skipped one. It is reported exactly once, as
 the stale finding. This reads past SEG-SREQ-063's own words, which speak
 only of judging the specification a stale outcome confirms — deliberate, so
 one telling of "does not count" never disagrees with another.
@@ -207,12 +209,14 @@ engine only ever has to answer the two questions above; everything the gate
 computes about waiver validity is this component's own, and stays so when
 that engine changes.
 
-The waiver seam: non-passing outcomes (SEG-SREQ-060, SEG-SREQ-061)
-----------------------------------------------------------------------
+The waiver seam: failing outcomes (SEG-SREQ-129, SEG-SREQ-060, SEG-SREQ-061)
+----------------------------------------------------------------------------
 
-Every ``TestOutcome`` node whose recorded result is not ``PASSED`` — failed,
-error, or skipped alike, uniformly, whatever the outcome's own evidentiary
-completeness — is judged for an excusing waiver. Excusal is resolved by
+Every ``TestOutcome`` node whose recorded result is failed or error — a failing
+outcome (SEG-SREQ-129), whatever the outcome's own evidentiary completeness —
+is judged for an excusing waiver. A passed outcome has nothing to excuse. A
+skipped outcome is not excusable, and the next section says what the gate does
+with it. Excusal is resolved by
 walking the outcome's incoming ``Excuses`` edges (Waiver to TestOutcome, per
 ``case/schema/edge-excuses.schema.json``) to the Waiver record each names:
 presence of that record is what counts, never the edge's own state, which an
@@ -220,7 +224,7 @@ excusal edge — evidence, like ``Confirms`` and ``Witnesses`` — can never
 carry as anything but pending. An excusing edge whose Waiver record is
 absent from the graph excuses nothing.
 
-A non-passing outcome with no valid excusing waiver is
+A failing outcome with no valid excusing waiver is
 :attr:`~affirmatrix.diagnostics.Severity.WARNING` (SEG-SREQ-060); one validly
 excused is :attr:`~affirmatrix.diagnostics.Severity.INFO` (SEG-SREQ-061).
 "Valid" is where this pass stops short of the full requirement: SEG-SREQ-059
@@ -238,11 +242,33 @@ this codebase for exactly that reason: marking it would claim a check this
 gate does not perform. When an authorisation roster exists, the approver
 half joins this predicate and the marker follows.
 
+Skipped outcomes (SEG-SREQ-199)
+-------------------------------
+
+A skipped outcome is the runner's statement that a test did not run. It is not
+a verdict on the implementation, so the gate treats it as absence of evidence.
+The gate lists every skipped outcome in ``skipped_outcomes`` and reports each
+one as an :attr:`~affirmatrix.diagnostics.Severity.INFO` finding
+(SEG-SREQ-199). The finding names the outcome and carries no detail. A skipped
+outcome never blocks the package by itself.
+
+The gate asks for the skipped outcomes of the graph that remains after the
+stale cut. A skipped outcome from another revision is therefore reported once,
+as stale, and never as skipped. The gate does not cut a skipped outcome out of
+that graph. Satisfaction leaves it out of coverage itself (SEG-SREQ-006). A
+leaf with a passed outcome and a skipped one is satisfied. A leaf whose only
+outcome was skipped is a coverage gap, and that gap blocks.
+
+A waiver changes none of this, because a waiver excuses a failing outcome and
+no other (SEG-SREQ-129). It adds no finding, and it does not make the skip
+count as coverage. A skipped outcome that has no ``Witnesses`` edge is also
+discarded, and the report then holds both INFO findings.
+
 The coverage report as a persisted document
 ------------------------------------------------
 
 An evidence package's coverage report document (see :doc:`proof-package`) is
-this ``CoverageReport`` serialized whole — the same seven typed findings and
+this ``CoverageReport`` serialized whole — the same eight typed findings and
 the same two derived views, restated in the shape a schema can validate.
 The generator that assembles a package adds nothing to it: a reader
 comparing the persisted document against a fresh call to ``package_gate``

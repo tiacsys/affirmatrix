@@ -104,7 +104,7 @@ did **not** report stale — appears here with its result, the revision it
 ran against, and the specification it confirms. An outcome the gate reports
 stale is silently absent, exactly as if it had never been recorded: the
 coverage report is where staleness is named, once, and this document does
-not repeat the telling. A non-passing outcome the coverage report reports
+not repeat the telling. A failing outcome the coverage report reports
 validly excused additionally carries its waiver's identifier and a *copy*
 of the waiver's own expiry — a copy kept deliberately so a later release
 check needs no graph walk. The waiver record itself remains the single
@@ -115,7 +115,7 @@ The coverage report: the gate's own report, and nothing more
 --------------------------------------------------------------
 
 The coverage report document is :class:`~affirmatrix.gates.CoverageReport`
-serialized whole: the seven typed findings, the diagnostics each one
+serialized whole: the eight typed findings, the diagnostics each one
 becomes — with ``condition``, ``subject`` and ``detail`` kept apart exactly
 as the gate keeps them — and whether the scope is blocked. Single-authored:
 ``assemble`` adds nothing beyond what the gate itself already found, and a
@@ -131,7 +131,7 @@ the member scope the expansion actually collected, whether that scope is
 total (SEG-SREQ-039), the current revision, and a relative filename
 reference to each of the other three documents. Scope (SEG-SREQ-038) and
 totality live here, on the package as a whole, rather than on the coverage
-report — the coverage report's seven fields are exactly, and only, the
+report — the coverage report's eight typed findings are exactly, and only, the
 gate's own findings, and growing them to carry scope too would blur that.
 The single ``revision`` is the one source revision a single-repository
 layout has (ADR-0002), where a multi-repository layout would anchor one

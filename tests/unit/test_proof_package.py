@@ -282,7 +282,7 @@ def test_each_blocking_condition_is_refused(nodes_edges, requested_ids, expected
     assert expected_condition in conditions
 
 
-def test_an_unwaived_non_passing_outcome_is_refused() -> None:
+def test_an_unwaived_failing_outcome_is_refused() -> None:
     nodes, edges = ready_fixture()
     failed = [
         outcome("run-1/TS-1", result=TestResult.FAILED) if n.local_id == "run-1/TS-1" else n
@@ -298,7 +298,7 @@ def test_an_unwaived_non_passing_outcome_is_refused() -> None:
             current_revision=CURRENT_REVISION,
         )
     conditions = {d.condition for d in caught.value.coverage_report.diagnostics}
-    assert gates.Condition.UNWAIVED_NON_PASSING_OUTCOME in conditions
+    assert gates.Condition.UNWAIVED_FAILING_OUTCOME in conditions
 
 
 def test_generation_refused_is_not_a_scope_error_value_error_or_store_error() -> None:
@@ -537,7 +537,7 @@ def test_an_outcome_confirming_two_in_scope_specifications_is_refused() -> None:
         )
 
 
-def test_an_excused_non_passing_outcome_carries_its_waiver_id_and_a_copy_of_its_expiry() -> None:
+def test_an_excused_failing_outcome_carries_its_waiver_id_and_a_copy_of_its_expiry() -> None:
     sreq, spec = requirement("SREQ-1"), specification("TS-1")
     impl = implementation("pkg.fn")
     run = outcome("run-1/TS-1", result=TestResult.FAILED)
@@ -568,6 +568,61 @@ def test_the_coverage_report_document_matches_the_typed_report() -> None:
     assert document["diagnostics"] == []
     assert document["coverageGaps"] == []
     assert document["staleOutcomes"] == []
+    assert document["skippedOutcomes"] == []
+
+
+def _skipped_fixture():
+    nodes, edges = ready_fixture()
+    nodes.append(outcome("run-2/TS-1", result=TestResult.SKIPPED))
+    edges += [
+        edge("Confirms", "run-2/TS-1", "TS-1"),
+        edge("Witnesses", "run-2/TS-1", "pkg.fn"),
+    ]
+    return nodes, edges
+
+
+def test_a_skipped_outcome_is_named_in_the_coverage_report_document_and_does_not_refuse() -> None:
+    nodes, edges = _skipped_fixture()
+    package = assembled(nodes, edges, {"SREQ-1"})
+    document = package.documents[proof.COVERAGE_REPORT]
+    assert document["skippedOutcomes"] == ["run-2/TS-1"]
+    assert document["blocked"] is False
+    assert [(d["severity"], d["condition"], d["subject"]) for d in document["diagnostics"]] == [
+        ("info", str(gates.Condition.SKIPPED_OUTCOME), "run-2/TS-1")
+    ]
+
+
+def test_a_skipped_outcome_stays_in_the_execution_coverage_record_without_a_waiver_entry() -> None:
+    nodes, edges = _skipped_fixture()
+    nodes.append(waiver("WVR-1"))
+    edges.append(edge("Excuses", "WVR-1", "run-2/TS-1", state=LinkState.PENDING))
+    package = assembled(nodes, edges, {"SREQ-1"})
+    entries = {e["id"]: e for e in package.documents[proof.EXECUTION_COVERAGE_RECORD]["outcomes"]}
+    assert entries["run-2/TS-1"]["result"] == "skipped"
+    assert "waiver" not in entries["run-2/TS-1"]
+
+
+def test_a_package_holding_a_skipped_outcome_persists_and_reads_back(tmp_path) -> None:
+    nodes, edges = _skipped_fixture()
+    package = assembled(nodes, edges, {"SREQ-1"})
+    store = case.AffirmationStore(root=tmp_path / "case")
+    _package.persist(package, store)
+    assert dict(store.read_package(package.scope.snapshot_id)) == dict(package.documents)
+
+
+def test_a_coverage_report_sealed_before_the_skipped_field_existed_still_validates(
+    tmp_path,
+) -> None:
+    """The array is not required: an older package carries none, and a reader
+    tells an absent array (not judged for skips) from an empty one."""
+    nodes, edges = ready_fixture()
+    package = assembled(nodes, edges, {"SREQ-1"})
+    document = package.documents[proof.COVERAGE_REPORT]
+    older = {key: value for key, value in document.items() if key != "skippedOutcomes"}
+    store = case.AffirmationStore(root=tmp_path / "case")
+    store.write_proof_document(package.scope.snapshot_id, proof.COVERAGE_REPORT, older)
+    read_back = store.read_proof_document(package.scope.snapshot_id, proof.COVERAGE_REPORT)
+    assert "skippedOutcomes" not in read_back
 
 
 # ── The evidence manifest ───────────────────────────────────────────────────

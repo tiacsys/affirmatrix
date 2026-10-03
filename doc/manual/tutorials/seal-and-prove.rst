@@ -67,6 +67,7 @@ false:
      "diagnostics": [],
      "discardedOutcomes": [],
      "excusedOutcomes": [],
+     "skippedOutcomes": [],
      "staleOutcomes": [],
      "unreadyEdges": [],
      "unwaivedOutcomes": []

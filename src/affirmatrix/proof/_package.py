@@ -343,7 +343,7 @@ def _execution_coverage_record_document(
     ``report.stale_outcomes`` — is silently absent here, exactly as it would
     be if it had never been recorded; the coverage report is where staleness
     is named, once, and this document does not repeat the telling. A
-    non-passing outcome the report reports validly excused carries its
+    failing outcome the report reports validly excused carries its
     waiver's identifier and a copy of the waiver's expiry — kept deliberately
     so a later release check needs no graph walk — the waiver record itself
     remains the single source of truth for that date.
@@ -418,7 +418,7 @@ def _excusing_waiver(subgraph: Graph, outcome_id: str) -> NodeRecord:
 def coverage_report_document(report: gates.CoverageReport) -> Mapping[str, object]:
     """The coverage report, serialized whole — single-authored, nothing added.
 
-    Every field here is a direct reading of one of ``report``'s own seven
+    Every field here is a direct reading of one of ``report``'s own eight
     typed findings or its two derived views; this function states none of
     its own. Public, and the one serialization site: a package's own
     ``coverage_report.jsonld`` document and the command line's machine
@@ -434,6 +434,7 @@ def coverage_report_document(report: gates.CoverageReport) -> Mapping[str, objec
         "discardedOutcomes": sorted(report.discarded_outcomes),
         "unwaivedOutcomes": sorted(report.unwaived_outcomes),
         "excusedOutcomes": sorted(report.excused_outcomes),
+        "skippedOutcomes": sorted(report.skipped_outcomes),
         "designSetEmpty": report.design_set_empty,
         "diagnostics": [
             {
@@ -457,7 +458,7 @@ def _evidence_manifest_document(scope: Scope, current_revision: str) -> Mapping[
     Scope (SEG-SREQ-038) and the partial-vs-total signal (SEG-SREQ-039) both
     live here, on the package's own binder document, rather than on the
     coverage report: both are stated over the package as a whole, and the
-    coverage report's seven fields are exactly, and only, the gate's own
+    coverage report's eight typed findings are exactly, and only, the gate's own
     findings. The single ``revision`` is the one source revision a
     single-repository layout has, where a multi-repository layout would
     anchor one per repository.
