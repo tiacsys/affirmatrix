@@ -433,6 +433,15 @@ Judgement inputs
    stream and no producer is configured, then the command-line interface
    shall exit with status 2, a request it could not judge.
 
+.. sreq:: The current stream comes from the first source that is present
+   :id: SEG-SREQ-202
+   :refines: SEG-SREQ-105
+
+   When a verb needs the current stream, the command-line interface shall
+   take it from the first of these that is present: the stream the operator
+   gives, the streams read from the producer's configured inputs, the
+   producer at its configured location.
+
 Draft posture
 -------------
 

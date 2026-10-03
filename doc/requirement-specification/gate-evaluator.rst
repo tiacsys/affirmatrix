@@ -7,6 +7,11 @@ enforce it. Its requirements fix which findings block and which merely inform,
 what a blocked report must contain for anyone to act on it, and one condition
 that would otherwise pass in silence — a scope with nothing in it to seal.
 
+A skipped outcome is the runner's statement that the test did not run under
+one configuration. It is not a verdict on the implementation. The graph
+records the skip so that it mirrors the run faithfully. The gate judges the
+skip as absence of evidence and reports it.
+
 Waivers
 -------
 
@@ -15,7 +20,8 @@ Waivers
    :refines: SEG-SYS-006
 
    The gate evaluator shall let a valid waiver, and only a valid waiver,
-   excuse a non-passing outcome.
+   excuse a failing outcome, that is, an outcome whose result is failed or
+   error.
 
 .. sreq:: A waiver is valid only when unexpired and its approver is authorised
    :id: SEG-SREQ-059
@@ -28,14 +34,14 @@ Waivers
    :id: SEG-SREQ-060
    :refines: SEG-SREQ-129
 
-   If a non-passing outcome is not excused by a valid waiver, then the gate
+   If a failing outcome is not excused by a valid waiver, then the gate
    evaluator shall report that outcome as blocking.
 
 .. sreq:: A validly excused failure only informs
    :id: SEG-SREQ-061
    :refines: SEG-SREQ-129
 
-   If a non-passing outcome is excused by a valid waiver, then the gate
+   If a failing outcome is excused by a valid waiver, then the gate
    evaluator shall report that outcome as informational.
 
 Staleness
@@ -118,3 +124,10 @@ The report and its vocabulary
 
    The gate evaluator shall keep every diagnostic's condition free of detail
    that varies by occurrence, such as which state an edge is in.
+
+.. sreq:: A skipped outcome is reported as information
+   :id: SEG-SREQ-199
+   :refines: SEG-SREQ-131
+
+   The gate evaluator shall report each outcome whose result is skipped as an
+   informational finding in its report.

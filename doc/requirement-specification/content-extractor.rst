@@ -21,11 +21,12 @@ C located by Doxygen
 
 A parser only locates. For C the Doxygen output says where each symbol sits;
 the hashed bytes are always read from the source file, never taken from
-Doxygen's own text, which is reflowed. A *symbol* is an implementation need's
-symbol, or a test-case need's test function. Identity and edges come from the
-need exports; the source supplies content and nothing else. Where exactly a
-span starts and ends is fixed in the architecture documentation, not here;
-these requirements say what each hash covers.
+Doxygen's own text, which is reflowed. A *symbol* is the name that an
+implementation need carries in its title, or that a test-case need carries as
+its test function. Identity and edges come from the need exports; the source
+supplies content and nothing else. Where exactly a span starts and ends is
+fixed in the architecture documentation, not here; these requirements say what
+each hash covers.
 
 .. sreq:: The content extractor supplies C nodes from exports and located source
    :id: SEG-SREQ-152
@@ -103,6 +104,20 @@ these requirements say what each hash covers.
    If the Doxygen output does not hold exactly one member named by a
    node's symbol, then the content extractor shall report an error for
    that node instead of omitting it.
+
+.. sreq:: An Implementation's symbol is its need's title
+   :id: SEG-SREQ-200
+   :refines: SEG-SREQ-159
+
+   The content extractor shall take the symbol of each Implementation from
+   the title of its implementation need.
+
+.. sreq:: A TestSpecification's symbol is its need's test function
+   :id: SEG-SREQ-201
+   :refines: SEG-SREQ-159
+
+   The content extractor shall take the symbol of each TestSpecification
+   from the test function of its test-case need.
 
 .. sreq:: A location outside the repository is an error
    :id: SEG-SREQ-162

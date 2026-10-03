@@ -8,6 +8,10 @@ refines — together with the properties that make the answer worth having. It
 reads the whole graph rather than a scope, it repeats, and it changes
 nothing.
 
+A skipped outcome is the runner's statement that the test did not run under
+one configuration. It adds no evidence and takes none away. A specification
+that every run skipped has no evidence, so its leaf is not satisfied.
+
 .. sreq:: Leaf satisfaction rule
    :id: SEG-SREQ-006
    :refines: SEG-SYS-002
@@ -16,8 +20,9 @@ nothing.
    when, and only when, it carries at least one active verifies edge, at least
    one active implements edge, and every test specification named by a
    verifies edge — whatever that edge's own state — has at least one
-   confirming outcome, and every confirming outcome either passed or is
-   excused by a waiver.
+   confirming outcome whose result is not skipped, and every confirming
+   outcome whose result is not skipped either passed or is excused by a
+   waiver.
 
 .. sreq:: Non-leaf satisfaction rule
    :id: SEG-SREQ-007
