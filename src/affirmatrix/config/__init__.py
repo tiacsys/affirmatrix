@@ -34,9 +34,11 @@ The file is real YAML, read with ``yaml.safe_load``:
 The producer block may also name the inputs the extraction readers consume —
 ``repository``, ``requirements`` (``export``, ``types``, ``source``),
 ``specifications`` and ``implementations`` (each ``export`` and ``doxygen``),
-and a list of ``outcomes`` (each ``artifact``, ``revision`` and ``name``).
-Every named field of a sub-block present is required; a missing or mistyped
-one raises, naming its dotted key.
+and a list of ``outcomes`` (each ``artifact``, ``revision`` and ``name``, and
+optionally ``repository``). Every named field of a sub-block present is
+required, except the ``repository`` of a run. It names the configured
+repository that the files of the run lie under, and the producer's repository
+is the default. A missing or mistyped field raises, naming its dotted key.
 
 A relative path the file gives (``case``, ``producer.root``, every
 ``repositories`` value and every location under the producer's readers) is
@@ -115,12 +117,15 @@ class RunInputs:
     """Where one run to be extracted is recorded.
 
     ``artifact`` is the run artifact, ``revision`` the record of the run's
-    full revision and ``name`` the record of the run's name.
+    full revision and ``name`` the record of the run's name. ``repository``
+    names the configured repository that the files of the run lie under, or
+    is ``None`` for the producer's own repository.
     """
 
     artifact: Path
     revision: Path
     name: Path
+    repository: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -398,7 +403,7 @@ def _implementation_inputs(
 
 
 def _outcome_inputs(producer: Mapping[str, object], base: Path) -> tuple[RunInputs, ...]:
-    """Each run's artifact, revision record and name record, in file order.
+    """Each run's artifact, revision record, name record and repository name, in file order.
 
     :implements: SEG-SREQ-197
     """
@@ -417,9 +422,20 @@ def _outcome_inputs(producer: Mapping[str, object], base: Path) -> tuple[RunInpu
                 artifact=_path(run, where, "artifact", base),
                 revision=_path(run, where, "revision", base),
                 name=_path(run, where, "name", base),
+                repository=_run_repository(run, where),
             )
         )
     return tuple(result)
+
+
+def _run_repository(run: Mapping[str, object], where: str) -> str | None:
+    """The name of the repository a run's files lie under, or ``None`` when not given."""
+    value = run.get("repository")
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ConfigError(f"'{where}.repository' must be a string, not {value!r}")
+    return value
 
 
 def _block(producer: Mapping[str, object], key: str) -> Mapping[str, object] | None:

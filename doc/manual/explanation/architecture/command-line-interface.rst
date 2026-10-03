@@ -46,10 +46,11 @@ it in one order. ``--current <path>`` names a would-be store explicitly and
 wins. Otherwise the producer is composed from the configuration: the
 requirements reader when ``producer.requirements`` is set, then the content
 extractor when ``producer.implementations`` or ``producer.specifications`` is
-set, chained in that order into one stream
+set, then the outcome extractor when ``producer.outcomes`` lists a run, chained
+in that order into one stream
 (:func:`affirmatrix.sources.composed.from_config`). Only when the
-configuration names no reader does ``producer.root`` (the would-be store)
-apply. Absent all of them, or when a configured input cannot be read, the
+configuration names no reader and no run does ``producer.root`` (the would-be
+store) apply. Absent all of them, or when a configured input cannot be read, the
 command exits 2: it was asked to judge something with no second stream to
 compare against.
 
@@ -60,7 +61,41 @@ the requirements source directory relative to the repository's path. A source
 directory that does not lie under the repository, a ``producer.repository``
 that is missing or not in ``repositories``, an unreadable export and a source
 file that cannot be read are each a request it could not judge (exit 2).
-``producer.outcomes`` is read by the loader and not yet composed.
+Each run in ``producer.outcomes`` lies under the repository that its
+``repository`` key names. The producer's repository is the default. The
+composition reads the runs of one repository with one outcome extractor,
+rooted at the path of that repository, and the anchor of an outcome names that
+repository. The outcomes need ``producer.specifications``, because a result
+cannot map to a test specification without that export. A run that names a
+repository missing from ``repositories``, and outcomes without
+``producer.specifications``, are each a request it could not judge (exit 2).
+
+A run artifact often lies outside the source checkout, for example in a build
+directory. Map that directory to a repository name and give each run that name:
+
+.. code-block:: yaml
+
+   repositories:
+     source: /path/to/source
+     results: /path/to/build/twister-out
+   producer:
+     repository: source
+     specifications:
+       export: /path/to/needs/test-specification/needs.json
+       doxygen: /path/to/xml/dox-testspec
+     implementations:
+       export: /path/to/needs/api-traceability/needs.json
+       doxygen: /path/to/xml/dox-api
+     outcomes:
+       - artifact: /path/to/build/twister-out/twister.json
+         revision: /path/to/build/revisions/source.sha
+         name: /path/to/build/revisions/run.name
+         repository: results
+
+The artifact lies under the path of ``results``, so its anchor reads
+``twister.json`` in the repository ``results``. The ``revision`` and ``name``
+records are files that hold one line each. The key ``implementations`` is
+optional. Without it, no Witnesses edge is supplied.
 
 The exit-status vocabulary
 ------------------------------
@@ -150,17 +185,19 @@ is absent or empty:
    implementation: implementation
    roles: [SoftwareEngineer, TestEngineer]
 
-============================  =========================================================
-Key                           Carries
-============================  =========================================================
-``case``                      the case root (default ``./case``)
-``producer.root``              the current stream's producer (default: none configured)
-``producer.repository`` and    the readers' inputs; when any reader is set it supplies
-the reader blocks              the current stream and ``producer.root`` is ignored
-``repositories.<name>``        a repository name an anchor may carry, mapped to its path
-``implementation``             which configured repository is the implementation one
-``roles``                      a list, the accepted affirmation roles
-============================  =========================================================
+====================================  ===============================================================
+Key                                   Carries
+====================================  ===============================================================
+``case``                              the case root (default ``./case``)
+``producer.root``                     the current stream's producer (default: none configured)
+``producer.repository``, the reader   the readers' inputs; when any reader or run is set it supplies
+blocks and ``producer.outcomes``      the current stream and ``producer.root`` is ignored
+``producer.outcomes[].repository``    the repository a run's files lie under (default: the
+                                      producer's repository)
+``repositories.<name>``               a repository name an anchor may carry, mapped to its path
+``implementation``                    which configured repository is the implementation one
+``roles``                             a list, the accepted affirmation roles
+====================================  ===============================================================
 
 A name absent from ``repositories`` — including every name the would-be
 store's own anchors carry, since those are literal paths, never configured

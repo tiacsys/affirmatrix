@@ -441,3 +441,28 @@ def test_a_producer_path_that_is_not_a_string_is_a_refusal(tmp_path: Path) -> No
 def test_a_producer_repository_that_is_not_a_string_is_a_refusal(tmp_path: Path) -> None:
     with pytest.raises(config.ConfigError, match=r"producer\.repository"):
         _producer(tmp_path, "producer:\n  repository: [a]\n")
+
+
+def test_a_runs_repository_name_is_carried(tmp_path: Path) -> None:
+    """SEG-SREQ-197."""
+    producer = _producer(
+        tmp_path,
+        "producer:\n  outcomes:\n    - {artifact: a, revision: r, name: n, repository: evidence}\n",
+    )
+    assert producer is not None and producer.outcomes[0].repository == "evidence"
+
+
+def test_a_run_without_a_repository_name_carries_none(tmp_path: Path) -> None:
+    """SEG-SREQ-197."""
+    producer = _producer(
+        tmp_path, "producer:\n  outcomes:\n    - {artifact: a, revision: r, name: n}\n"
+    )
+    assert producer is not None and producer.outcomes[0].repository is None
+
+
+def test_a_runs_repository_that_is_not_a_string_is_a_refusal(tmp_path: Path) -> None:
+    with pytest.raises(config.ConfigError, match=r"producer\.outcomes\[0\]\.repository"):
+        _producer(
+            tmp_path,
+            "producer:\n  outcomes:\n    - {artifact: a, revision: r, name: n, repository: 3}\n",
+        )

@@ -11,15 +11,16 @@ are being taken is already a :class:`~affirmatrix.sources.SourceError`.
 :func:`from_config` builds the producer a configuration describes:
 
 * No reader configured — a ``producer`` block absent, or naming only
-  ``root``, ``repository`` or ``outcomes`` — is the would-be store over
+  ``root`` or ``repository``, or an empty ``outcomes`` — is the would-be store over
   ``producer.root``, or a refusal when that is not set either. A configured
   reader always wins over ``producer.root``; ``root`` is the store loader's own
   key and is used only when no reader is configured.
 * Otherwise the requirements reader (when ``producer.requirements`` is set),
   then the content extractor (when ``producer.implementations`` or
-  ``producer.specifications`` is set), chained in that order. Both anchor every
-  record to the repository ``producer.repository`` names, which must be a key
-  of ``repositories``.
+  ``producer.specifications`` is set), then one outcome extractor for each
+  repository that the runs of ``producer.outcomes`` name, chained in that
+  order. The first two anchor every record to the repository
+  ``producer.repository`` names, which must be a key of ``repositories``.
 * The configuration loader takes every relative path from the directory of the
   file, but the requirements reader wants its source directory relative to the
   repository, because an anchor's path is repository-relative. The source
@@ -28,21 +29,28 @@ are being taken is already a :class:`~affirmatrix.sources.SourceError`.
   exist), and a source directory that does not lie under the repository is
   refused. The extractor's root is the repository's path itself, since Doxygen
   names files relative to it.
-* ``producer.outcomes`` is read by the loader and not yet composed: it is
-  ignored here.
+* Each run of ``producer.outcomes`` lies under the repository its
+  ``repository`` key names. The producer's repository is the default. The runs
+  of one repository go to one outcome extractor, rooted at the path of that
+  repository, with the runs in configuration order. The anchors of its
+  outcomes name that repository. The outcomes need ``producer.specifications``.
+  Without it the composition is refused, because a result cannot map to a test
+  specification without the test-case export. ``producer.implementations`` is
+  optional: without it no Witnesses edge is supplied.
 """
 
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from affirmatrix.config import Config
+from affirmatrix.config import Config, ProducerConfig, RunInputs, SpecificationInputs
 from affirmatrix.records import EdgeRecord, NodeRecord, RecordSource
 from affirmatrix.sources import SourceError
 from affirmatrix.sources.content import CSourceExtractor
+from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
 from affirmatrix.sources.reqs import RequirementsReader
 from affirmatrix.sources.store import StoreLoader
 
@@ -73,20 +81,29 @@ def from_config(config: Config) -> RecordSource:
     Raises :class:`~affirmatrix.sources.SourceError` when no producer is
     configured, when ``producer.repository`` is missing or not a configured
     repository, when the requirements source directory does not lie under
-    that repository, and (from the readers themselves) when a configured input
+    that repository, when runs are configured without
+    ``producer.specifications``, when a run names a repository that is not
+    configured, and (from the readers themselves) when a configured input
     cannot be read.
     """
     producer = config.producer
     content_configured = producer is not None and (
         producer.implementations is not None or producer.specifications is not None
     )
-    if producer is None or (producer.requirements is None and not content_configured):
+    if producer is None or (
+        producer.requirements is None and not content_configured and not producer.outcomes
+    ):
         if config.producer_root is None:
             raise SourceError(
                 "no producer is available: give --current or configure producer.root"
             )
         return StoreLoader(root=config.producer_root)
 
+    if producer.outcomes and producer.specifications is None:
+        raise SourceError(
+            "producer.outcomes is set but producer.specifications is not; a result "
+            "maps to a test specification through the test-case export"
+        )
     name = producer.repository
     if name is None:
         raise SourceError(
@@ -120,7 +137,42 @@ def from_config(config: Config) -> RecordSource:
                 specifications=producer.specifications,
             )
         )
+    if producer.outcomes and producer.specifications is not None:
+        members.extend(
+            _outcome_extractors(producer, producer.specifications, name, config.repositories)
+        )
     return ComposedProducer(members)
+
+
+def _outcome_extractors(
+    producer: ProducerConfig,
+    specifications: SpecificationInputs,
+    default: str,
+    repositories: Mapping[str, Path],
+) -> list[RecordSource]:
+    """One outcome extractor for each repository the runs name, in order of first appearance."""
+    groups: dict[str, list[RunInputs]] = {}
+    for run in producer.outcomes:
+        groups.setdefault(run.repository or default, []).append(run)
+    extractors: list[RecordSource] = []
+    for name, runs in groups.items():
+        path = repositories.get(name)
+        if path is None:
+            known = ", ".join(sorted(repositories)) or "none"
+            raise SourceError(
+                f"producer.outcomes: the run artifact {runs[0].artifact} names repository "
+                f"{name!r}, which is not a configured repository (configured: {known})"
+            )
+        extractors.append(
+            TwisterOutcomeExtractor(
+                path,
+                runs,
+                repository=name,
+                specifications=specifications,
+                implementations=producer.implementations,
+            )
+        )
+    return extractors
 
 
 def _under(source: Path, repository_path: Path, name: str) -> Path:

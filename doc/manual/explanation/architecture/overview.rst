@@ -71,12 +71,12 @@ Four things stand around the tool.
   repository.
 - **The record producers.** Whatever turns sources into node and edge
   records. This repository's own case is still built from the would-be store,
-  a hand-transcribed fixture under ``tests/fixtures/``. The requirements reader
-  and the content extractor are composed by the command line from the
-  configured ``producer`` block into one current stream, which is how a project
-  with a sphinx-needs export and Doxygen output builds its case; the outcome
-  extractor reads twister run artifacts and is built as a library component,
-  but the command line does not compose it yet.
+  a hand-transcribed fixture under ``tests/fixtures/``. The requirements reader,
+  the content extractor and the outcome extractor are composed by the command
+  line from the configured ``producer`` block into one current stream, which is
+  how a project with a sphinx-needs export, Doxygen output and twister run
+  artifacts builds its case. The outcome extractor reads each run under a
+  configured repository.
 
 Outside the tool: any write to git, continuous integration, and storage of
 content of any kind. A pipeline that wants to run the tool runs the command
@@ -145,9 +145,8 @@ detail.
        the configuration.
    * - requirements reader, content extractor, outcome extractor
      - ``sources.reqs``, ``sources.content``, ``sources.outcomes``
-     - The three readers are built. The command line composes the requirements
-       reader and the content extractor. It does not compose the outcome
-       extractor yet.
+     - The three readers are built. The command line composes all three, in that
+       order.
    * - commitment layer
      - ``commitment``
      - Node hash, edge hash and design root as pure primitives.
@@ -324,8 +323,8 @@ different artifact: they drive the design and are not graph participants
 After iteration 0: state and known limits
 -----------------------------------------
 
-**What carries behaviour.** Every component in the table above. The outcome
-extractor is built as a library; the command line does not compose it yet. Of the
+**What carries behaviour.** Every component in the table above. The command
+line composes the three readers into the current stream. Of the
 three gates the design names, only the package gate exists; the commit gate's
 conditions are all extraction conditions and the release gate needs a sealed
 package and a release to check.

@@ -305,8 +305,8 @@ def test_graph_check_json_keeps_the_by_kind_mappings(would_be_store_copy: Path, 
 # --- over a case synced from a composed producer -------------------------------
 
 
-def _synced_from_composed(tmp_path: Path, composed_config) -> tuple[Path, Path]:
-    config_path = composed_config()
+def _synced_from_composed(tmp_path: Path, composed_config, **overrides) -> tuple[Path, Path]:
+    config_path = composed_config(**overrides)
     root = tmp_path / "case"
     assert main(["--config", str(config_path), "case", "init", "--case", str(root)]) == 0
     assert main(["--config", str(config_path), "case", "sync", "--case", str(root)]) == 0
@@ -339,4 +339,30 @@ def test_graph_status_over_a_composed_producer_exits_0_with_every_edge_pending(
     rows = json.loads(capsys.readouterr().out)["edges"]
     assert status == 0
     assert len(rows) == 62
+    assert {row["state"] for row in rows} == {"pending"}
+
+
+def test_graph_check_over_a_case_synced_with_outcomes_reports_214_pending(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    _, root = _synced_from_composed(tmp_path, composed_config, outcomes=True)
+    capsys.readouterr()
+    status = main(["graph", "check", "--case", str(root), "--json"])
+    report = json.loads(capsys.readouterr().out)
+    assert status == 0
+    assert report["pending"] == 214
+    assert report["nodesByKind"]["TestOutcome"] == 76
+    assert report["edgesByKind"]["Confirms"] == 76
+    assert report["edgesByKind"]["Witnesses"] == 76
+
+
+def test_graph_status_over_a_producer_with_outcomes_exits_0_with_every_edge_pending(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    config_path, root = _synced_from_composed(tmp_path, composed_config, outcomes=True)
+    capsys.readouterr()
+    status = main(["--config", str(config_path), "graph", "status", "--case", str(root), "--json"])
+    rows = json.loads(capsys.readouterr().out)["edges"]
+    assert status == 0
+    assert len(rows) == 214
     assert {row["state"] for row in rows} == {"pending"}

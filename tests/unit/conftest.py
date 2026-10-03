@@ -37,7 +37,9 @@ def composed_config(tmp_path: Path) -> Callable[..., Path]:
     written; nothing is copied and nothing under the fixture is written. The
     repository is the fixture's ``sources`` tree (where the extractor finds the
     C files Doxygen names) and the requirement source directory is a path under
-    it that need not exist. Each keyword overrides one part.
+    it that need not exist. Each keyword overrides one part. ``outcomes=True``
+    adds the repository ``evidence`` (the fixture directory itself, so the run
+    artifact ``twister/twister.json`` lies under it) and one run that names it.
     """
 
     def write(
@@ -47,6 +49,7 @@ def composed_config(tmp_path: Path) -> Callable[..., Path]:
         producer: dict | None = None,
         requirements: bool = True,
         content: bool = True,
+        outcomes: bool = False,
     ) -> Path:
         evidence = TOOLBOX_EVIDENCE
         block: dict = {"repository": "toolbox"}
@@ -65,13 +68,21 @@ def composed_config(tmp_path: Path) -> Callable[..., Path]:
                 "export": str(evidence / "needs" / "test-specification" / "needs.json"),
                 "doxygen": str(evidence / "xml" / "dox-safe-data-testspec"),
             }
+        mapped = (
+            repositories if repositories is not None else {"toolbox": str(evidence / "sources")}
+        )
+        if outcomes:
+            mapped = {**mapped, "evidence": str(evidence)}
+            block["outcomes"] = [
+                {
+                    "artifact": str(evidence / "twister" / "twister.json"),
+                    "revision": str(evidence / "revisions" / "toolbox.sha"),
+                    "name": str(evidence / "revisions" / "run.name"),
+                    "repository": "evidence",
+                }
+            ]
         block.update(producer or {})
-        document = {
-            "repositories": (
-                repositories if repositories is not None else {"toolbox": str(evidence / "sources")}
-            ),
-            "producer": block,
-        }
+        document = {"repositories": mapped, "producer": block}
         path = (where or tmp_path) / "affirmatrix.yaml"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(yaml.safe_dump(document), encoding="utf-8")

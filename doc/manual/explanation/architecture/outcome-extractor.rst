@@ -5,7 +5,7 @@ The engine consumes records. A test run leaves a report and two short records
 beside it. :class:`affirmatrix.sources.outcomes.TwisterOutcomeExtractor` turns
 them into one TestOutcome record for each test result the report holds, and
 into the edges that tie each outcome to what it confirms and what it
-witnesses. The command line does not compose it yet (see the last section).
+witnesses. The command line composes it into the current stream (see the last section).
 
 What it reads
 -------------
@@ -194,11 +194,15 @@ refuses:
 A failure in one run stops the whole extractor. The operator corrects the
 input and builds it again.
 
-Not yet composed
-----------------
+How the command line composes it
+--------------------------------
 
-The command line composes the requirements reader and the content extractor
-into the current stream. It reads ``producer.outcomes`` from the configuration
-and does not yet pass it to this extractor. The repository name and the root
-for run artifacts are not yet configured. Until then the extractor is a library
-component.
+The command line chains the requirements reader, the content extractor and
+this extractor into the current stream, in that order. Each run in
+``producer.outcomes`` has an optional ``repository`` key. The key names the
+configured repository that the files of the run lie under, and the producer's
+repository is the default. The composition builds one extractor for each
+repository that the runs name. The ``root`` of the extractor is the path of that
+repository. The runs keep their order in the configuration. The extractor needs
+the test-case export, so ``producer.specifications`` must be set. The
+implementation export is optional. Without it, no Witnesses edge is supplied.

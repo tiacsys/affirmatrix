@@ -385,6 +385,27 @@ def test_case_sync_over_a_composed_producer_writes_60_nodes_and_62_edges_all_pen
     assert {edge.state for edge in edges} == {LinkState.PENDING}
 
 
+def test_case_sync_over_a_composed_producer_with_outcomes_writes_136_nodes_214_edges_pending(
+    tmp_path: Path, composed_config
+) -> None:
+    status, _, root = _composed_sync(tmp_path, composed_config, outcomes=True)
+    assert status == 0
+    store = case.AffirmationStore(root=root)
+    assert sum(1 for _ in store.nodes()) == 136
+    edges = list(store.edges())
+    assert len(edges) == 214
+    assert {edge.state for edge in edges} == {LinkState.PENDING}
+
+
+def test_case_sync_with_outcomes_and_no_specifications_exits_2_and_writes_nothing(
+    tmp_path: Path, composed_config, capsys
+) -> None:
+    status, _, root = _composed_sync(tmp_path, composed_config, content=False, outcomes=True)
+    assert status == 2
+    assert "producer.specifications" in capsys.readouterr().out
+    assert sum(1 for _ in case.AffirmationStore(root=root).nodes()) == 0
+
+
 def test_case_sync_with_a_source_directory_outside_the_repository_exits_2_and_writes_nothing(
     tmp_path: Path, composed_config, capsys
 ) -> None:

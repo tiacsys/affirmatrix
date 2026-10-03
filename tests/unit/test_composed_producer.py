@@ -21,6 +21,7 @@ from affirmatrix.records import ContentAnchor, EdgeRecord, LinkState, NodeRecord
 from affirmatrix.sources import SourceError
 from affirmatrix.sources.composed import ComposedProducer, from_config
 from affirmatrix.sources.content import ExtractorError
+from affirmatrix.sources.outcomes import TwisterOutcomeExtractor
 from affirmatrix.sources.store import StoreLoader
 
 ConfigWriter = Callable[..., Path]
@@ -171,17 +172,17 @@ def test_from_config_reader_keys_win_over_producer_root(
     assert isinstance(from_config(loaded), ComposedProducer)
 
 
-def test_from_config_with_outcomes_only_falls_back_to_the_root_and_ignores_outcomes(
-    composed_config: ConfigWriter, would_be_store_copy: Path, tmp_path: Path
+def test_from_config_with_outcomes_only_is_refused_not_read_from_the_root(
+    composed_config: ConfigWriter, would_be_store_copy: Path
 ) -> None:
-    run = {"artifact": str(tmp_path / "a"), "revision": str(tmp_path / "r"), "name": "n"}
     path = composed_config(
         requirements=False,
         content=False,
-        producer={"root": str(would_be_store_copy), "outcomes": [run]},
+        outcomes=True,
+        producer={"root": str(would_be_store_copy)},
     )
-    source = from_config(_load(path))
-    assert isinstance(source, StoreLoader)
+    with pytest.raises(SourceError, match=r"producer\.specifications"):
+        from_config(_load(path))
 
 
 def test_from_config_refuses_a_repository_name_missing_from_the_map(
@@ -274,3 +275,136 @@ def test_from_config_surfaces_a_missing_source_file_as_a_source_error_when_strea
     source = from_config(_load(path))  # the exports and Doxygen trees read; no source yet
     with pytest.raises(SourceError):
         list(source.nodes())
+
+
+# --- outcomes -----------------------------------------------------------------
+
+EVIDENCE = Path(__file__).resolve().parents[1] / "fixtures" / "toolbox_evidence"
+
+
+def _run(name_record: Path | None = None, **extra: str) -> dict[str, str]:
+    return {
+        "artifact": str(EVIDENCE / "twister" / "twister.json"),
+        "revision": str(EVIDENCE / "revisions" / "toolbox.sha"),
+        "name": str(name_record or EVIDENCE / "revisions" / "run.name"),
+        **extra,
+    }
+
+
+_MIRRORED = {
+    "toolbox": str(EVIDENCE / "sources"),
+    "evidence": str(EVIDENCE),
+    "mirror": str(EVIDENCE),
+}
+
+
+def _name_record(tmp_path: Path, text: str) -> Path:
+    record = tmp_path / f"{text}.name"
+    record.write_text(text + "\n", encoding="utf-8")
+    return record
+
+
+def _extractors(source) -> list[TwisterOutcomeExtractor]:
+    return [m for m in source.sources if isinstance(m, TwisterOutcomeExtractor)]
+
+
+def test_from_config_with_outcomes_supplies_136_nodes_and_214_edges(
+    composed_config: ConfigWriter,
+) -> None:
+    source = from_config(_load(composed_config(outcomes=True)))
+    assert (len(list(source.nodes())), len(list(source.edges()))) == (136, 214)
+
+
+def test_from_config_chains_the_outcome_extractor_after_the_content_extractor(
+    composed_config: ConfigWriter,
+) -> None:
+    kinds = [n.kind for n in from_config(_load(composed_config(outcomes=True))).nodes()]
+    assert "TestOutcome" not in kinds[:60]
+    assert kinds[60:] == ["TestOutcome"] * 76
+
+
+def test_from_config_anchors_an_outcome_at_its_repository_name_and_the_artifact_path(
+    composed_config: ConfigWriter,
+) -> None:
+    source = from_config(_load(composed_config(outcomes=True)))
+    outcomes = [n for n in source.nodes() if n.kind == "TestOutcome"]
+    anchors = [a for n in outcomes for a in n.content_anchors.values()]
+    assert {(a.repository, a.path) for a in anchors} == {("evidence", "twister/twister.json")}
+    assert all(a.locator.startswith("nodeid:") for a in anchors)
+
+
+def test_from_config_takes_the_producers_repository_for_a_run_with_no_repository_key(
+    composed_config: ConfigWriter,
+) -> None:
+    path = composed_config(
+        requirements=False,
+        repositories={"toolbox": str(EVIDENCE)},
+        producer={"outcomes": [_run()]},
+    )
+    (extractor,) = _extractors(from_config(_load(path)))
+    assert extractor.repository == "toolbox"
+    anchors = {a.repository for n in extractor.nodes() for a in n.content_anchors.values()}
+    assert anchors == {"toolbox"}
+
+
+def test_from_config_reads_the_runs_of_one_repository_with_one_extractor_in_file_order(
+    composed_config: ConfigWriter, tmp_path: Path
+) -> None:
+    second = _name_record(tmp_path, "run-two")
+    runs = [_run(repository="evidence"), _run(second, repository="evidence")]
+    path = composed_config(outcomes=True, producer={"outcomes": runs})
+    (extractor,) = _extractors(from_config(_load(path)))
+    assert [run.name.name for run in extractor.runs] == ["run.name", "run-two.name"]
+
+
+def test_from_config_builds_one_extractor_for_each_repository_the_runs_name(
+    composed_config: ConfigWriter, tmp_path: Path
+) -> None:
+    second = _name_record(tmp_path, "run-two")
+    path = composed_config(
+        outcomes=True,
+        repositories=_MIRRORED,
+        producer={"outcomes": [_run(repository="evidence"), _run(second, repository="mirror")]},
+    )
+    extractors = _extractors(from_config(_load(path)))
+    assert [(e.repository, e.root, len(e.runs)) for e in extractors] == [
+        ("evidence", EVIDENCE, 1),
+        ("mirror", EVIDENCE, 1),
+    ]
+
+
+def test_from_config_refuses_a_run_naming_a_repository_that_is_not_configured(
+    composed_config: ConfigWriter,
+) -> None:
+    path = composed_config(producer={"outcomes": [_run(repository="nowhere")]})
+    with pytest.raises(SourceError, match=r"twister\.json names repository 'nowhere'"):
+        from_config(_load(path))
+
+
+def test_from_config_refuses_outcomes_without_specifications(
+    composed_config: ConfigWriter,
+) -> None:
+    path = composed_config(content=False, outcomes=True)
+    with pytest.raises(SourceError, match=r"producer\.specifications"):
+        from_config(_load(path))
+
+
+def test_from_config_without_implementations_supplies_no_witnesses_edge(
+    composed_config: ConfigWriter,
+) -> None:
+    path = composed_config(requirements=False, outcomes=True, producer={"implementations": None})
+    (extractor,) = _extractors(from_config(_load(path)))
+    assert [e.kind for e in extractor.edges()] == ["Confirms"] * 76
+
+
+def test_from_config_leaves_a_duplicate_identity_across_repositories_to_the_graph_builder(
+    composed_config: ConfigWriter,
+) -> None:
+    path = composed_config(
+        outcomes=True,
+        repositories=_MIRRORED,
+        producer={"outcomes": [_run(repository="evidence"), _run(repository="mirror")]},
+    )
+    source = from_config(_load(path))
+    with pytest.raises(graph.GraphError):
+        graph.build(source)
