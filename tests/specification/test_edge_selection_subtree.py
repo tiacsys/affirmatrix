@@ -22,9 +22,6 @@ import pytest
 from affirmatrix import proof
 
 from . import subtree_support as support
-from .provenance_support import red
-
-_LEAK = "a selection by subtree also takes an edge that leaves the subtree"
 
 
 def _requirement_endpoints(edges: set[support.Edge]) -> set[str]:
@@ -40,7 +37,6 @@ def _subtrees() -> dict[str, frozenset[str]]:
     }
 
 
-@red(345, _LEAK)
 def test_the_subtree_is_the_requirement_and_every_requirement_that_refines_it(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -90,7 +86,6 @@ def test_a_requirement_outside_the_subtree_adds_no_edge(
     assert edges, "the selection is not empty, so the check above can fail"
 
 
-@red(346, _LEAK)
 def test_edge_show_lists_a_refines_edge_only_when_both_ends_are_in_the_subtree(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -114,7 +109,6 @@ def test_edge_show_lists_a_refines_edge_only_when_both_ends_are_in_the_subtree(
     assert edges == {edge for edge in support.INSIDE_TOP if edge[0] == "Refines"}
 
 
-@red(346, _LEAK)
 def test_edge_affirm_affirms_only_the_edges_inside_the_subtree(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -136,7 +130,6 @@ def test_edge_affirm_affirms_only_the_edges_inside_the_subtree(
     assert support.affirmed_edges(world) == support.INSIDE_TOP
 
 
-@red(346, _LEAK)
 def test_case_remove_removes_only_the_edges_inside_the_subtree(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -198,7 +191,6 @@ def test_a_verifies_or_implements_edge_is_in_the_subtree_by_the_requirement_it_n
     assert {edge for edge in support.all_edges() - left if edge[0] != "Refines"} == inside
 
 
-@red(347, _LEAK)
 def test_a_leaf_requirement_selects_its_verifies_and_implements_edges_and_no_refines_edge(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -222,7 +214,6 @@ def test_a_leaf_requirement_selects_its_verifies_and_implements_edges_and_no_ref
     }
 
 
-@red(346, _LEAK)
 def test_a_subtree_below_a_requirement_that_is_not_a_top_leaves_out_its_own_refines_edge(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -283,7 +274,6 @@ def test_a_subtree_selection_for_an_unknown_requirement_matches_nothing(
     assert support.held_edges(world) == support.all_edges()
 
 
-@red(346, _LEAK)
 def test_the_edges_of_a_subtree_selection_are_the_edges_that_the_proof_scope_cuts(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

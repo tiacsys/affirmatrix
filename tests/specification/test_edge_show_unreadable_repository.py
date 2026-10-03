@@ -28,11 +28,9 @@ from . import node_show_support as nodes
 from . import provenance_support as prov
 from . import repository_reads_support as reads
 from . import unreadable_support as support
-from .provenance_support import red
 
 pytestmark = base.requires_git
 
-_CRASH = "an unreadable repository ends edge show in a traceback, with exit status 1"
 _VARIANTS = pytest.mark.parametrize("variant", support.VARIANTS)
 _LINE = re.compile(
     r"^\s*before-content @ (?P<end>from|to) \(revision (?P<revision>[0-9a-f]{40})\)"
@@ -84,7 +82,6 @@ def _two_affirmed(
 
 
 @_VARIANTS
-@red(365, _CRASH)
 def test_edge_show_reports_before_content_it_cannot_read_as_not_available(
     variant: str,
     tmp_path: Path,
@@ -116,7 +113,6 @@ def test_edge_show_reports_before_content_it_cannot_read_as_not_available(
 
 @pytest.mark.parametrize("variant", ("objects", "stand-in"))
 @pytest.mark.parametrize("which", ("to", "from"))
-@red(365, _CRASH)
 def test_edge_show_still_shows_the_content_of_the_endpoint_that_it_can_read(
     which: str,
     variant: str,
@@ -154,7 +150,6 @@ def test_edge_show_still_shows_the_content_of_the_endpoint_that_it_can_read(
 
 
 @_VARIANTS
-@red(366, _CRASH)
 def test_an_unreadable_before_content_does_not_change_the_exit_of_edge_show(
     variant: str,
     tmp_path: Path,
@@ -194,7 +189,6 @@ def test_an_unreadable_before_content_does_not_change_the_exit_of_edge_show(
 
 
 @_VARIANTS
-@red(365, _CRASH)
 def test_the_machine_readable_report_gives_a_null_content_and_an_error_for_an_unreadable_end(
     variant: str,
     tmp_path: Path,
@@ -229,7 +223,6 @@ def test_the_machine_readable_report_gives_a_null_content_and_an_error_for_an_un
 
 @pytest.mark.parametrize("variant", ("objects", "stand-in"))
 @pytest.mark.parametrize("which", ("to", "from"))
-@red(365, _CRASH)
 def test_the_machine_readable_report_keeps_the_content_of_the_readable_end_and_has_no_error(
     which: str,
     variant: str,
@@ -268,7 +261,6 @@ def test_the_machine_readable_report_keeps_the_content_of_the_readable_end_and_h
 
 
 @_VARIANTS
-@red(365, _CRASH)
 def test_the_text_line_for_an_unreadable_end_has_the_form_of_the_page(
     variant: str,
     tmp_path: Path,

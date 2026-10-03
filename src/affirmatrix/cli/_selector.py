@@ -1,7 +1,9 @@
-"""The edge selection grammar shared by show, affirm, and remove (SEG-SREQ-099…104).
+"""The edge selection grammar shared by show, affirm, and remove (SEG-SREQ-099…104, 345…347).
 
 One grammar of narrowing fields — kind, either endpoint, and subtree — rather
-than a distinct address form per verb. A selector with every field absent
+than a distinct address form per verb. A subtree selects the edges that lie
+inside it: a refinement edge when both its ends are members, a verifies or
+implements edge by the requirement it names. A selector with every field absent
 is still an edge selection: it names every edge, which ``edge show`` and
 ``case remove`` may legitimately act on but ``edge affirm`` refuses
 (SEG-SREQ-104) as a distinct rule of its own verb, not this grammar's.
@@ -17,6 +19,7 @@ from affirmatrix.graph import Graph
 from affirmatrix.records import EdgeRecord
 
 _REFINES = "Refines"
+_BY_REQUIREMENT = frozenset({"Verifies", "Implements"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,9 +70,14 @@ def select(edges: Iterable[EdgeRecord], selector: Selector, graph: Graph) -> lis
 
     :implements: SEG-SREQ-100
     :implements: SEG-SREQ-101
+    :implements: SEG-SREQ-345
+    :implements: SEG-SREQ-346
+    :implements: SEG-SREQ-347
 
     ``graph`` is consulted only when ``below`` narrows by subtree; the other
     three fields are plain equality over the edge's own kind and endpoints.
+    The subtree admits an edge by :func:`_inside`: an edge that leaves the
+    subtree, such as the one from its top to its own parent, is not selected.
     """
     subtree = _subtree_ids(graph, selector.below) if selector.below is not None else None
     matched = [
@@ -78,10 +86,25 @@ def select(edges: Iterable[EdgeRecord], selector: Selector, graph: Graph) -> lis
         if (selector.kind is None or edge.kind == selector.kind)
         and (selector.from_id is None or edge.from_id == selector.from_id)
         and (selector.to_id is None or edge.to_id == selector.to_id)
-        and (subtree is None or edge.from_id in subtree or edge.to_id in subtree)
+        and (subtree is None or _inside(edge, subtree))
     ]
     matched.sort(key=lambda edge: (edge.kind, edge.from_id, edge.to_id))
     return matched
+
+
+def _inside(edge: EdgeRecord, subtree: frozenset[str]) -> bool:
+    """Whether the edge lies inside the subtree.
+
+    A refinement edge lies inside when both its ends are members. A verifies
+    or implements edge lies inside by the requirement it names, which is its
+    target, whichever subtree the test specification or the implementation
+    belongs to. Any other kind keeps the plain rule: one end is a member.
+    """
+    if edge.kind == _REFINES:
+        return edge.from_id in subtree and edge.to_id in subtree
+    if edge.kind in _BY_REQUIREMENT:
+        return edge.to_id in subtree
+    return edge.from_id in subtree or edge.to_id in subtree
 
 
 def _subtree_ids(graph: Graph, root: str) -> frozenset[str]:

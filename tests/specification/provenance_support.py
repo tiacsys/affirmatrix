@@ -116,11 +116,6 @@ TO = "REQ-A"
 requires_git = base.requires_git
 
 
-def red(claim: int, why: str) -> pytest.MarkDecorator:
-    """Mark a specification that is red until the claim is built. Strict: a pass is a failure."""
-    return pytest.mark.xfail(strict=True, raises=AssertionError, reason=f"SEG-SREQ-{claim}: {why}")
-
-
 # --- people and times --------------------------------------------------------
 
 
