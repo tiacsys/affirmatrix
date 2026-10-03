@@ -262,16 +262,18 @@ remainder, after it removes the prefix.
    :id: SEG-SREQ-275
    :refines: SEG-SREQ-153
 
-   Where need types are configured for an export, the content extractor
-   shall supply a record for a need of that export when, and only when,
-   the need's type is one of those types.
+   Where need types are configured for an export and no list of need
+   identifiers is configured for it, the content extractor shall supply
+   a record for a need of that export when, and only when, the need's
+   type is one of those types.
 
 .. sreq:: Without configured types, every need supplies a record
    :id: SEG-SREQ-276
    :refines: SEG-SREQ-153
 
-   While no need type is configured for an export, the content extractor
-   shall supply a record for every need of that export.
+   While neither need types nor a list of need identifiers is configured
+   for an export, the content extractor shall supply a record for every
+   need of that export.
 
 .. sreq:: A need of another type is not refused
    :id: SEG-SREQ-277
@@ -288,16 +290,25 @@ remainder, after it removes the prefix.
    Where a list of need identifiers is configured for the implementation
    export, the content extractor shall supply a record for a need of
    that export when, and only when, the need's identifier is in the
-   list.
+   list and, where need types are configured for that export, the need's
+   type is one of those types.
 
 .. sreq:: A listed identifier that names no need is refused by the content extractor
    :id: SEG-SREQ-360
    :refines: SEG-SREQ-153
 
    If a need identifier in the list configured for the implementation
-   export names no need of that export, then the content extractor shall
-   refuse the configuration when it reads the export, naming the
-   identifier.
+   export names no need of that export that the configured need types
+   admit, then the content extractor shall refuse the configuration when
+   it reads the export, naming every such identifier.
+
+.. sreq:: A need outside the identifier list is not refused by the content extractor
+   :id: SEG-SREQ-374
+   :refines: SEG-SREQ-153
+
+   Where a list of need identifiers is configured for the implementation
+   export, the content extractor shall not refuse the export because of a
+   need whose identifier is not in the list.
 
 .. sreq:: A symbol that several members share is narrowed by the test module
    :id: SEG-SREQ-278
@@ -376,6 +387,24 @@ remainder, after it removes the prefix.
 
    If the content extractor cannot supply one or more nodes, then it shall
    report every one of them in a single error, each with its reason.
+
+.. sreq:: A repository path that is not a directory is reported once
+   :id: SEG-SREQ-373
+   :refines: SEG-SREQ-152
+
+   If the path configured for a repository that one or more streams read
+   through does not exist or is not a directory, then the content
+   extractor shall report that repository once, by its configured name
+   and with its path, instead of reporting the nodes that read through it.
+
+The extractor checks the repository paths before it reads any stream. It
+reports every such repository in one error, and each one once, even when
+both streams read through it. That line comes before any line about a
+need, and no line about a need is given for this cause. A directory that
+holds the files but is not a version-control repository is a valid path
+here: the extractor reads files and needs no history. A repository that the
+requirements reader names is not checked, because that reader opens no file
+in it.
 
 .. sreq:: A test without a documentation comment is an error
    :id: SEG-SREQ-283

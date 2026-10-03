@@ -181,18 +181,18 @@ Edges and anchor
    :id: SEG-SREQ-339
    :refines: SEG-SREQ-189
 
-   Where need types are configured for the implementation export, the
-   outcome extractor shall take a need of that export as an
-   implementation need when, and only when, the need's type is one of
-   those types.
+   Where need types are configured for the implementation export and no
+   list of need identifiers is configured for it, the outcome extractor
+   shall take a need of that export as an implementation need when, and
+   only when, the need's type is one of those types.
 
 .. sreq:: Without configured types every need is an implementation need
    :id: SEG-SREQ-340
    :refines: SEG-SREQ-189
 
-   While no need type is configured for the implementation export, the
-   outcome extractor shall take every need of that export as an
-   implementation need.
+   While neither need types nor a list of need identifiers is configured
+   for the implementation export, the outcome extractor shall take every
+   need of that export as an implementation need.
 
 .. sreq:: The Witnesses read uses the same identifier list
    :id: SEG-SREQ-359
@@ -201,16 +201,25 @@ Edges and anchor
    Where a list of need identifiers is configured for the implementation
    export, the outcome extractor shall take a need of that export as an
    implementation need when, and only when, the need's identifier is in
-   the list.
+   the list and, where need types are configured for that export, the
+   need's type is one of those types.
 
 .. sreq:: A listed identifier that names no need is refused by the Witnesses read
    :id: SEG-SREQ-361
    :refines: SEG-SREQ-189
 
    If a need identifier in the list configured for the implementation
-   export names no need of that export, then the outcome extractor shall
-   refuse the configuration when it reads the export, naming the
-   identifier.
+   export names no need of that export that the configured need types
+   admit, then the outcome extractor shall refuse the configuration when
+   it reads the export, naming every such identifier.
+
+.. sreq:: A need outside the identifier list is not refused by the outcome extractor
+   :id: SEG-SREQ-375
+   :refines: SEG-SREQ-189
+
+   Where a list of need identifiers is configured for the implementation
+   export, the outcome extractor shall not refuse the export because of a
+   need whose identifier is not in the list.
 
 .. sreq:: A TestOutcome's anchor names the run artifact and the result
    :id: SEG-SREQ-190
