@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -178,9 +179,7 @@ def test_two_runs_supply_their_outcomes_in_order_each_with_its_own_revision(
 ) -> None:
     root = _tree(tmp_path)
     (root / "run" / "run.name").write_text("first\n", encoding="utf-8")
-    _bundle(
-        root / "later", [_suite("sc", {"sc.s.a": "failed"})], revision="def456", name="second"
-    )
+    _bundle(root / "later", [_suite("sc", {"sc.s.a": "failed"})], revision="def456", name="second")
     bundles = [root / "run", root / "later"]
     nodes = list(_extractor(root, bundles=bundles).nodes())
     assert [(node.local_id, node.revision) for node in nodes] == [
@@ -287,8 +286,10 @@ def test_a_status_outside_the_closed_set_is_refused_naming_the_result(
 
 def test_an_unmapped_result_is_refused_naming_the_run_and_the_result(tmp_path: Path) -> None:
     root = _tree(tmp_path, suites=[_suite("sc", {"sc.s.missing": "passed"})])
-    with pytest.raises(OutcomeError, match=r"twister\.json.*'sc\.s\.missing' maps to no"):
+    with pytest.raises(OutcomeError) as refused:
         _extractor(root)
+    assert re.search(r"twister\.json", str(refused.value))
+    assert re.search(r"'sc\.s\.missing'.* maps to no", str(refused.value))
 
 
 def test_an_ambiguous_result_is_refused_naming_both_needs(tmp_path: Path) -> None:
