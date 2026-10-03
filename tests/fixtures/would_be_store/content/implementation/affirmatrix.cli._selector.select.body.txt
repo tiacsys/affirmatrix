@@ -1,4 +1,4 @@
-    subtree = _subtree_ids(graph, selector.below) if selector.below is not None else None
+    subtree = _subtree_of(graph, selector.below) if selector.below is not None else None
     matched = [
         edge
         for edge in edges

@@ -31,15 +31,6 @@ from affirmatrix.records import LinkState
 from . import evidence_edge_support as evidence
 from . import subtree_support as support
 
-RED_371 = (
-    "SEG-SREQ-371: a subtree selection admits only Refines, Verifies and Implements "
-    "edges, but today an edge of another kind with one end in the subtree is admitted"
-)
-RED_372 = (
-    "SEG-SREQ-372: a subtree selection for a node that is not a requirement of the graph "
-    "admits no edge, but today it admits the edges of the node and of its refiners"
-)
-
 #: The edges of the store that a case holds: all but the kinds that no case holds.
 HELD = frozenset(edge for edge in evidence.everything() if edge[0] not in ("Confirms", "Witnesses"))
 #: A node of each kind that is not a requirement, and a name that no node carries.
@@ -52,10 +43,6 @@ NOT_REQUIREMENTS = (
 )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_371,
-)
 def test_a_subtree_selection_shows_only_refines_verifies_and_implements_edges(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -87,10 +74,6 @@ def test_a_subtree_selection_shows_only_refines_verifies_and_implements_edges(
         assert edges == inside, requirement
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_371,
-)
 def test_case_remove_with_a_subtree_selection_removes_only_the_three_kinds_of_a_subtree(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -155,10 +138,6 @@ def _edge(kind: str, source: str, target: str) -> records.EdgeRecord:
     return records.EdgeRecord(source, target, kind, LinkState.PENDING)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_371,
-)
 def test_select_admits_no_edge_of_a_kind_outside_the_three_for_a_subtree() -> None:
     """The selection function takes no Confirms, Witnesses, Calls or Excuses edge by subtree.
 
@@ -194,10 +173,6 @@ def test_select_admits_no_edge_of_a_kind_outside_the_three_for_a_subtree() -> No
         assert select(others, Selector(below="REQ-A", kind=kind), built) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_372,
-)
 def test_edge_show_below_a_node_that_is_not_a_requirement_matches_nothing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -220,10 +195,6 @@ def test_edge_show_below_a_node_that_is_not_a_requirement_matches_nothing(
         assert (status, edges) == (2, set()), name
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_372,
-)
 def test_edge_affirm_below_a_node_that_is_not_a_requirement_affirms_nothing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -245,10 +216,6 @@ def test_edge_affirm_below_a_node_that_is_not_a_requirement_affirms_nothing(
         assert support.affirmed_edges(world) == set(), name
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_372,
-)
 def test_case_remove_below_a_node_that_is_not_a_requirement_removes_nothing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -273,10 +240,6 @@ def test_case_remove_below_a_node_that_is_not_a_requirement_removes_nothing(
         assert support.held_edges(world) == HELD, name
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=RED_372,
-)
 def test_select_by_the_subtree_of_a_node_that_is_not_a_requirement_returns_no_edge() -> None:
     """The selection function takes no edge by the subtree of an outcome or any other node.
 

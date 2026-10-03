@@ -6,9 +6,13 @@ def select(edges: Iterable[EdgeRecord], selector: Selector, graph: Graph) -> lis
     :implements: SEG-SREQ-345
     :implements: SEG-SREQ-346
     :implements: SEG-SREQ-347
+    :implements: SEG-SREQ-371
+    :implements: SEG-SREQ-372
 
     ``graph`` is consulted only when ``below`` narrows by subtree; the other
     three fields are plain equality over the edge's own kind and endpoints.
     The subtree admits an edge by :func:`_inside`: an edge that leaves the
     subtree, such as the one from its top to its own parent, is not selected.
+    When ``below`` does not name a requirement of the graph, the subtree is
+    empty and nothing is selected.
     """

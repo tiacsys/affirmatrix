@@ -257,7 +257,11 @@ So the edge from the top of the subtree to its own parent is not selected, and
 nor is the edge from a member to a second parent outside the subtree. A
 ``Verifies`` or ``Implements`` edge is inside when the requirement that it names
 is in the subtree (:need:`SEG-SREQ-347`), whichever subtree the test
-specification or the implementation belongs to.
+specification or the implementation belongs to. A subtree selects only these
+three kinds of edge (:need:`SEG-SREQ-371`). A subtree of a node that is not a
+requirement selects nothing, so the request has no match and exits with status 2
+(:need:`SEG-SREQ-372`). The other kinds, such as ``Calls``, are reached with
+``--kind``, ``--from`` and ``--to``.
 
 When the repository that holds the before-content of an endpoint cannot be read,
 ``-v`` does not stop (:need:`SEG-SREQ-365`). The row of the endpoint has
