@@ -41,6 +41,11 @@ prefix and reads the rest within the repository of the stream. Each stream
 names its own repository, and an anchor holds the path inside that
 repository.
 
+A path root is a directory inside the repository. Doxygen can name a file
+relative to a directory below the repository root, for example ``a/b.h`` for
+the file ``include/a/b.h``. The extractor puts the path root in front of the
+remainder, after it removes the prefix.
+
 .. sreq:: The content extractor supplies C nodes from exports and located source
    :id: SEG-SREQ-152
    :refines: SEG-SYS-001
@@ -245,6 +250,14 @@ repository.
    that location is for, then the content extractor shall report an error
    for that node instead of hashing it.
 
+.. sreq:: A member with no recorded body is an error
+   :id: SEG-SREQ-350
+   :refines: SEG-SREQ-159
+
+   If the Doxygen output records no body for the member that a node's
+   symbol names, then the content extractor shall report an error for
+   that node instead of hashing it.
+
 .. sreq:: Configured need types, and only those, supply records
    :id: SEG-SREQ-275
    :refines: SEG-SREQ-153
@@ -276,7 +289,24 @@ repository.
    test-case need and the need names a test module, the content extractor
    shall locate the need through the member whose file lies within the
    directory the test module names. The file's path is the path within the
-   repository, after any configured path prefix is removed.
+   repository, after any configured path prefix is removed and any
+   configured path root is put in front.
+
+.. sreq:: An absent or empty test module names none
+   :id: SEG-SREQ-343
+   :refines: SEG-SREQ-159
+
+   While the test module of a test-case need is absent, null or the
+   empty text, the content extractor shall treat the need as naming no
+   test module.
+
+.. sreq:: A test module that is not text is an error
+   :id: SEG-SREQ-344
+   :refines: SEG-SREQ-159
+
+   If the test module of a test-case need is present and is neither null
+   nor text, then the content extractor shall report an error for that
+   node instead of locating it.
 
 .. sreq:: A Doxygen path is mapped into the repository by a configured prefix
    :id: SEG-SREQ-279
@@ -294,6 +324,25 @@ repository.
    If a path a Doxygen output names does not begin with the path prefix
    configured for that output, then the content extractor shall report an
    error for that node instead of reading it.
+
+.. sreq:: A path root is put in front of the remainder
+   :id: SEG-SREQ-349
+   :refines: SEG-SREQ-159
+
+   Where a path root is configured for a Doxygen output, the content
+   extractor shall resolve each path that output names by removing the
+   configured path prefix, if any, putting the path root in front of the
+   remainder, and reading the result within the repository configured
+   for that output's stream.
+
+.. sreq:: A remainder that is not a relative path is an error
+   :id: SEG-SREQ-342
+   :refines: SEG-SREQ-159
+
+   If the remainder of a path after the configured path prefix is
+   removed is empty or begins with a path separator, then the content
+   extractor shall report an error for that node, naming the path and
+   the prefix, instead of reading it.
 
 .. sreq:: An anchor names the repository of its stream and the path within it
    :id: SEG-SREQ-281
@@ -318,3 +367,13 @@ repository.
    blank lines, plain comments and conditional lines between them, then
    the content extractor shall report an error for that node instead of
    hashing an empty comment.
+
+.. sreq:: Every misshapen need of an export is reported in one error
+   :id: SEG-SREQ-351
+   :refines: SEG-SREQ-152
+
+   If one or more needs of an export the content extractor reads lack a
+   text field it reads, declare an id other than their key, or carry a
+   link field that is not a list of identifiers, then the content
+   extractor shall report every such need in one error, each with its
+   reason.

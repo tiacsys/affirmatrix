@@ -1029,3 +1029,45 @@ Draft posture
    The command-line interface shall perform no version-control operation
    against the case that changes the case, its history, its index or its
    working tree.
+
+Repository reads
+----------------
+
+The command line reads a content repository, and the history of the case,
+by running the version-control system in that repository. The answer must
+come from the repository at the path the read is given. It must not come
+from a repository that the environment of the operator names.
+
+
+.. sreq:: A repository read answers from the repository at its path
+   :id: SEG-SREQ-332
+   :refines: SEG-SYS-010
+
+   The command-line interface shall answer every repository read from the
+   repository at the path the read is given, whatever repository the
+   environment names.
+
+.. sreq:: A repository read drops the variables that name a repository
+   :id: SEG-SREQ-333
+   :refines: SEG-SREQ-332
+
+   The command-line interface shall perform every repository read, in a
+   content repository and in the repository of the case, with the
+   environment variables GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE,
+   GIT_OBJECT_DIRECTORY, GIT_ALTERNATE_OBJECT_DIRECTORIES, GIT_COMMON_DIR
+   and GIT_NAMESPACE removed.
+
+.. sreq:: A read of very many paths is made in parts
+   :id: SEG-SREQ-334
+   :refines: SEG-SREQ-332
+
+   If a repository read names more paths than one call of the
+   version-control system accepts, then the command-line interface shall
+   perform the read in parts and give the answer that one call would give.
+
+.. sreq:: A part that fails fails the read
+   :id: SEG-SREQ-335
+   :refines: SEG-SREQ-332
+
+   If any part of a read made in parts fails, then the command-line
+   interface shall treat the repository as one that cannot be read.

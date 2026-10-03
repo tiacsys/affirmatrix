@@ -73,6 +73,38 @@ parts.
    outcome extractor shall report an error for that result instead of
    dropping it.
 
+.. sreq:: The test-case needs are those of the configured types
+   :id: SEG-SREQ-336
+   :refines: SEG-SREQ-180
+
+   Where need types are configured for the test-case export, the outcome
+   extractor shall take a need of that export as a test-case need when,
+   and only when, the need's type is one of those types.
+
+.. sreq:: Without configured types every need is a test-case need
+   :id: SEG-SREQ-337
+   :refines: SEG-SREQ-180
+
+   While no need type is configured for the test-case export, the
+   outcome extractor shall take every need of that export as a test-case
+   need.
+
+.. sreq:: A need of another type is not refused
+   :id: SEG-SREQ-338
+   :refines: SEG-SREQ-180
+
+   Where need types are configured for the test-case export or for the
+   implementation export, the outcome extractor shall not refuse the
+   export because of a need whose type is not one of those types.
+
+.. sreq:: Every unmapped or ambiguous result is reported in one error
+   :id: SEG-SREQ-354
+   :refines: SEG-SREQ-181
+
+   If one or more results of a run artifact map to no test-case need or
+   to more than one, then the outcome extractor shall report every such
+   result in one error, each with its reason.
+
 .. sreq:: A TestOutcome's content is its identity, run and result
    :id: SEG-SREQ-182
    :refines: SEG-SREQ-176
@@ -145,6 +177,23 @@ Edges and anchor
    TestOutcome to every Implementation whose implementation need satisfies
    a requirement that the outcome's test-case need verifies.
 
+.. sreq:: The implementation needs are those of the configured types
+   :id: SEG-SREQ-339
+   :refines: SEG-SREQ-189
+
+   Where need types are configured for the implementation export, the
+   outcome extractor shall take a need of that export as an
+   implementation need when, and only when, the need's type is one of
+   those types.
+
+.. sreq:: Without configured types every need is an implementation need
+   :id: SEG-SREQ-340
+   :refines: SEG-SREQ-189
+
+   While no need type is configured for the implementation export, the
+   outcome extractor shall take every need of that export as an
+   implementation need.
+
 .. sreq:: A TestOutcome's anchor names the run artifact and the result
    :id: SEG-SREQ-190
    :refines: SEG-SREQ-143
@@ -202,3 +251,13 @@ Run bundle
    If a need export the outcome extractor reads carries a build timestamp,
    then the outcome extractor shall refuse the export instead of supplying
    records from it.
+
+.. sreq:: Every misshapen need of an outcome-extractor export is reported in one error
+   :id: SEG-SREQ-353
+   :refines: SEG-SREQ-176
+
+   If one or more needs of an export the outcome extractor reads lack a
+   text field it reads, declare an id other than their key, or carry a
+   link field that is not a list of identifiers, then the outcome
+   extractor shall report every such need in one error, each with its
+   reason.
