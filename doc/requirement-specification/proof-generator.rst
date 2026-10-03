@@ -21,7 +21,9 @@ the refusal arrives with the gate's report attached.
    :refines: SEG-SYS-005
 
    The proof generator shall include in a package's scope every node reachable
-   from the requested requirements through strong edges.
+   from the requested requirements through strong edges, where a Refines edge
+   leads only from a requirement to the requirements that refine it, never
+   to the requirement it refines.
 
 .. sreq:: Scope carries the evidence for what it covers
    :id: SEG-SREQ-066

@@ -217,3 +217,20 @@ map follow the same rule as every other relative path in the file
    If the configuration names both a source directory and a source map for
    the requirements reader, or neither, then the configuration loader
    shall refuse the configuration.
+
+.. sreq:: Need types that are empty or not text are refused
+   :id: SEG-SREQ-341
+   :refines: SEG-SREQ-191
+
+   If the configuration gives the need types of an export as anything
+   other than a non-empty list of text values, then the configuration
+   loader shall refuse the configuration, naming the block.
+
+.. sreq:: The Doxygen path root is carried
+   :id: SEG-SREQ-348
+   :refines: SEG-SREQ-191
+
+   The configuration loader shall carry, for each Doxygen output the
+   content extractor reads, the directory inside the repository that the
+   content extractor puts in front of each path of that output, after
+   any path prefix is removed.

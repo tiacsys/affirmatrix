@@ -113,3 +113,13 @@ never from that file.
    If a source map is configured and does not name a source file for the
    docname of a need of a configured type, then the requirements reader
    shall refuse the export, naming every such docname.
+
+.. sreq:: Every misshapen need of the requirement export is reported in one error
+   :id: SEG-SREQ-352
+   :refines: SEG-SREQ-144
+
+   If one or more needs of the requirement export lack a text field the
+   requirements reader reads, declare an id other than their key, or
+   carry a parent-link field that is not a list of identifiers, then the
+   requirements reader shall report every such need in one error, each
+   with its reason.
