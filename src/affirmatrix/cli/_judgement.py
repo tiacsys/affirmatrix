@@ -45,9 +45,7 @@ def endpoint_repository_name(node: NodeRecord) -> str | None:
     return next(iter(names)) if len(names) == 1 else None
 
 
-def resolve_revision(
-    node: NodeRecord, *, config: Config, given: str | None, label: str
-) -> str:
+def resolve_revision(node: NodeRecord, *, config: Config, given: str | None, label: str) -> str:
     """One endpoint's source revision: given, discovered, or refused.
 
     :implements: SEG-SREQ-107

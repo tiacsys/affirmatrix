@@ -44,9 +44,7 @@ def test_kind_narrows_the_selection() -> None:
 
 def test_endpoints_narrow_the_selection() -> None:
     built = _built_graph()
-    matched = _selector.select(
-        built.edges, _selector.Selector(from_id="C", to_id="B"), built
-    )
+    matched = _selector.select(built.edges, _selector.Selector(from_id="C", to_id="B"), built)
     assert [(e.from_id, e.to_id) for e in matched] == [("C", "B")]
 
 

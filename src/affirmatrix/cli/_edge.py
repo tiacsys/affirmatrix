@@ -307,10 +307,7 @@ def _print_shown(rows: list[dict[str, object]]) -> None:
         for item in row.get("comparison", []) or []:
             recorded = item["recorded"] if item["recorded"] is not None else "—"
             current = item["current"] if item["current"] is not None else "—"
-            print(
-                f"  {item['endpoint']} {item['name']}: {recorded} → {current} "
-                f"({item['status']})"
-            )
+            print(f"  {item['endpoint']} {item['name']}: {recorded} → {current} ({item['status']})")
         for endpoint, entry in (row.get("beforeContent") or {}).items():
             if entry["content"] is None:
                 continue

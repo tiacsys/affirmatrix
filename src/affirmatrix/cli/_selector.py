@@ -39,10 +39,7 @@ class Selector:
     def is_empty(self) -> bool:
         """Whether no field narrows at all — a selection naming every edge."""
         return (
-            self.kind is None
-            and self.from_id is None
-            and self.to_id is None
-            and self.below is None
+            self.kind is None and self.from_id is None and self.to_id is None and self.below is None
         )
 
 
