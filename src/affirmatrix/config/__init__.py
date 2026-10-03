@@ -393,9 +393,7 @@ def _optional_types(block: Mapping[str, object], where: str) -> frozenset[str] |
     return frozenset(value)
 
 
-def _requirements_inputs(
-    producer: Mapping[str, object], base: Path
-) -> RequirementsInputs | None:
+def _requirements_inputs(producer: Mapping[str, object], base: Path) -> RequirementsInputs | None:
     """The requirement export, the Requirement need types and where the sources are.
 
     :implements: SEG-SREQ-193
@@ -458,9 +456,7 @@ def _source_map(block: Mapping[str, object], where: str, base: Path) -> dict[str
     return result
 
 
-def _specification_inputs(
-    producer: Mapping[str, object], base: Path
-) -> SpecificationInputs | None:
+def _specification_inputs(producer: Mapping[str, object], base: Path) -> SpecificationInputs | None:
     """The test-case export and the Doxygen output read for test specifications.
 
     :implements: SEG-SREQ-195
