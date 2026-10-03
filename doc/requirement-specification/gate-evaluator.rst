@@ -133,3 +133,11 @@ The report and its vocabulary
 
    The gate evaluator shall report each outcome whose result is skipped as an
    informational finding in its report.
+
+.. sreq:: A discarded outcome is reported as information
+   :id: SEG-SREQ-356
+   :refines: SEG-SREQ-131
+
+   The gate evaluator shall report each outcome that the satisfaction
+   evaluator discards as incomplete evidence as an informational finding
+   in its report.
