@@ -808,6 +808,22 @@ edge that leaves the subtree is reached with ``--from`` and ``--to``.
    shall admit a Verifies edge or an Implements edge when, and only
    when, the requirement that edge names lies in the subtree.
 
+.. sreq:: A subtree selection admits only Refines, Verifies and Implements edges
+   :id: SEG-SREQ-371
+   :refines: SEG-SREQ-100
+
+   When an edge selection narrows by subtree, the command-line interface
+   shall admit no edge of a kind other than Refines, Verifies and
+   Implements.
+
+.. sreq:: A subtree of a node that is not a requirement admits no edge
+   :id: SEG-SREQ-372
+   :refines: SEG-SREQ-100
+
+   When an edge selection narrows by subtree and the identifier it names
+   is not that of a requirement of the graph, the command-line interface
+   shall admit no edge.
+
 .. sreq:: Kind and both endpoints together address at most one edge
    :id: SEG-SREQ-101
    :refines: SEG-SREQ-099
@@ -1131,6 +1147,11 @@ the version-control system is not on the path, when the repository is absent
 or is not a repository, when its objects are missing, when it does not hold
 the revision or the path asked for, or when any part of a read made in parts
 fails. A repository that is not configured is a different case.
+
+This meaning belongs to reads made through the version-control system. It
+differs from the check of the content extractor, which reads files: that
+check refuses a repository path that does not exist or is not a directory,
+and a directory that holds the files but no history passes it.
 
 The command line reads a content repository, and the history of the case,
 by running the version-control system in that repository. The answer must

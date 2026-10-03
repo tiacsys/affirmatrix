@@ -230,8 +230,32 @@ map follow the same rule as every other relative path in the file
    :refines: SEG-SREQ-191
 
    If the configuration gives the need types of an export as anything
-   other than a non-empty list of text values, then the configuration
-   loader shall refuse the configuration, naming the block.
+   other than a non-empty list of non-empty text values, then the
+   configuration loader shall refuse the configuration, naming the block.
+
+.. sreq:: Implementation need identifiers that are empty or not text are refused
+   :id: SEG-SREQ-362
+   :refines: SEG-SREQ-191
+
+   If the configuration gives the need identifiers of the implementation
+   export as anything other than a non-empty list of non-empty text
+   values, then the configuration loader shall refuse the configuration,
+   naming the block.
+
+.. sreq:: Null need types are not given
+   :id: SEG-SREQ-369
+   :refines: SEG-SREQ-191
+
+   While the need types given for the test-case export or the
+   implementation export are null, the configuration loader shall treat
+   the need types as not given.
+
+.. sreq:: A null list of implementation need identifiers is not given
+   :id: SEG-SREQ-370
+   :refines: SEG-SREQ-191
+
+   While the list of need identifiers given for the implementation export
+   is null, the configuration loader shall treat the list as not given.
 
 .. sreq:: The Doxygen path root is carried
    :id: SEG-SREQ-348
@@ -241,3 +265,33 @@ map follow the same rule as every other relative path in the file
    content extractor reads, the directory inside the repository that the
    content extractor puts in front of each path of that output, after
    any path prefix is removed.
+
+The names of the keys
+---------------------
+
+A specification block or an implementation block may carry ``path-root``.
+It is the directory inside the repository that the content extractor puts
+in front of each Doxygen path after the prefix is removed. It is text and
+is not resolved against the directory of the file, like ``doxygen-prefix``.
+A trailing separator is optional. An implementation block may also carry
+``need-ids``, the list of need identifiers that narrows the implementation
+needs. A key whose value is empty (``types:`` with nothing after it) is the
+same as a key that is not given.
+
+The loader knows the keys below and refuses every other key. At the top of
+the file: ``case``, ``implementation``, ``repositories``, ``roles`` and
+``producer``. In ``producer``: ``root``, ``repository``, ``requirements``,
+``specifications`` and ``implementations``. In ``requirements``: ``export``,
+``types``, ``source``, ``source-map``, ``parent-field`` and ``repository``.
+In ``specifications`` and ``implementations``: ``export``, ``doxygen``,
+``types``, ``doxygen-prefix``, ``path-root`` and ``repository``; and
+``need-ids`` in ``implementations`` only. A mistyped key then stops the run
+instead of being dropped.
+
+.. sreq:: A key the configuration loader does not know is refused
+   :id: SEG-SREQ-376
+   :refines: SEG-SREQ-117
+
+   If the configuration holds a key that the configuration loader does not
+   know, then the configuration loader shall refuse the configuration,
+   naming the block that holds the key and the key.
